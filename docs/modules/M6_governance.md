@@ -112,3 +112,17 @@ Live smoke (executive vs marketing, free mode, live Postgres): executive retriev
 - Sub-module cycles: 5 (M6.1–M6.5), one developer re-route (audit query redaction). Sub-agent call count: n/a (orchestrator to supply).
 - Cloud spend this module: $0.00 (free path only).
 - Claude session usage: run `/cost` for this session's token usage.
+
+## Changes after close
+
+- **2026-10-28 (via `/change`, ADR in `context/DECISIONS.md`): M6.1 marketing scope revised.**
+  `ACCESS_POLICY["marketing"]` changed from `{Beauty_and_Personal_Care, Toys_and_Games, Books}`
+  to `{Electronics, Beauty_and_Personal_Care, Toys_and_Games}` so the PRD §2 marketing persona's
+  flagship question (complaints about wireless earbuds = `Electronics`) resolves in-scope. Support
+  and marketing now overlap only on `Electronics`; they stay distinct otherwise. Surfaced by the
+  Design-Track value review. Scoped re-test: `test_access_policy.py` 9 passed (marketing exact set,
+  unrestricted roles `{}`, unknown role → `AccessDenied`, support≠marketing with overlap pinned to
+  `{Electronics}`, `source_type` pin intact). Cloud spend $0. One pre-existing unrelated failure
+  remains in that file — `test_query_endpoint_returns_502_for_denied_role` expects 502 but the M8.1
+  API-boundary edge check now returns a typed 400 for unknown roles; the "Next" note above (written
+  at M6 close) still says 502, which M8.1 superseded. Left for a separate fix.

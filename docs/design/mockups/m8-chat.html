@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>M8 Chat / Serving UI — hi-fi mockup</title>
+<!--
+  Retail Intelligence Copilot · Design track iteration 2 · Stage 3 (hi-fi mockup) for CHECKPOINT D2.
+  This is a MOCKUP: self-contained HTML with realistic CANNED data. It is NOT application code and
+  is NOT wired to the real backend. It realizes docs/design/01_wireframes.md against the real
+  POST /query contract (answer, citations[], audit{...}, thread_id, user_id).
+  Three ⚑ pending-backend-field gaps are flagged honestly in the UI (see the "mock data" toggle,
+  top-right) — they are not silently invented.
+  Fonts are the system stack (no external request) so the artifact is fully self-contained.
+-->
+<style>
+  /* ============================= TOKENS ============================= */
+  :root {
+    color-scheme: light;
+    --bg:          #eef0f4;
+    --surface:     #ffffff;
+    --surface-2:   #f6f7fb;
+    --surface-3:   #eef1f7;
+    --fg:          #141821;
+    --fg-2:        #4b5263;
+    --muted:       #828b9c;
+    --border:      rgba(20,24,31,0.12);
+    --border-2:    rgba(20,24,31,0.06);
+    --accent:      #2a72d4;
+    --accent-ink:  #1b559e;
+    --accent-weak: #e6f0fb;
+    --good:        #0f9d58;
+    --good-ink:    #0a7a43;
+    --good-weak:   #e4f5ec;
+    --warn:        #c77700;
+    --warn-weak:   #fbf0dc;
+    --danger:      #d23c3c;
+    --danger-ink:  #b02a2a;
+    --danger-weak: #fbe6e6;
+    --user-bubble: #e9f1fc;
+    /* chart palette — ordinal, kept consistent across themes */
+    --c1: #2a72d4;
+    --c2: #3ea0a0;
+    --c3: #9a7bd0;
+    --bar-track:   #e3e8ef;
+    --mono-bg:     #f1f3f7;
+    --shadow:      0 1px 2px rgba(20,24,31,.06), 0 10px 30px rgba(20,24,31,.07);
+    --radius:      14px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:          #0b0d12;
+      --surface:     #14171f;
+      --surface-2:   #191d26;
+      --surface-3:   #20242f;
+      --fg:          #eef1f7;
+      --fg-2:        #b0b8c6;
+      --muted:       #7b8698;
+      --border:      rgba(255,255,255,0.13);
+      --border-2:    rgba(255,255,255,0.06);
+      --accent:      #4c93ec;
+      --accent-ink:  #87b7f2;
+      --accent-weak: #13314f;
+      --good:        #2ec27e;
+      --good-ink:    #4cd698;
+      --good-weak:   #10281d;
+      --warn:        #e0a53a;
+      --warn-weak:   #2e2410;
+      --danger:      #ef6a6a;
+      --danger-ink:  #f29191;
+      --danger-weak: #2e1515;
+      --user-bubble: #182536;
+      --c1: #4c93ec;
+      --c2: #4fbcbc;
+      --c3: #b199e6;
+      --bar-track:   #272c38;
+      --mono-bg:     #10131a;
+      --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  /* explicit override guard — the "data-theme" wins over the media query */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0b0d12; --surface:#14171f; --surface-2:#191d26; --surface-3:#20242f;
+    --fg:#eef1f7; --fg-2:#b0b8c6; --muted:#7b8698;
+    --border:rgba(255,255,255,0.13); --border-2:rgba(255,255,255,0.06);
+    --accent:#4c93ec; --accent-ink:#87b7f2; --accent-weak:#13314f;
+    --good:#2ec27e; --good-ink:#4cd698; --good-weak:#10281d;
+    --warn:#e0a53a; --warn-weak:#2e2410;
+    --danger:#ef6a6a; --danger-ink:#f29191; --danger-weak:#2e1515;
+    --user-bubble:#182536; --c1:#4c93ec; --c2:#4fbcbc; --c3:#b199e6;
+    --bar-track:#272c38; --mono-bg:#10131a;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  body {
+    margin: 0; color: var(--fg); font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1240px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 16px 36px;
+  }
+
+  /* ============================= DEMO BAR ============================= */
+  .demobar {
+    display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 9px 13px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .demobar .tag {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--warn); background: var(--warn-weak); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border));
+    border-radius: 999px; padding: 3px 9px; font-weight: 700; white-space: nowrap;
+  }
+  .demobar .dctl { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--fg-2); }
+  .demobar label { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .demobar select, .demobar button.mini {
+    font-family: var(--sans); font-size: 12.5px; color: var(--fg);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px;
+  }
+  .demobar .sp { flex: 1 1 auto; }
+  .iconbtn {
+    appearance: none; cursor: pointer; width: 32px; height: 32px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--fg-2); font-size: 14px;
+  }
+  .iconbtn:focus-visible, select:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  /* pending-fields popover */
+  .pending {
+    display: none; margin-bottom: 14px;
+    background: var(--surface); border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--border));
+    border-radius: 12px; padding: 13px 15px; box-shadow: var(--shadow); font-size: 12.5px; color: var(--fg-2);
+  }
+  .pending.open { display: block; }
+  .pending h3 { margin: 0 0 7px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--warn); }
+  .pending ol { margin: 0; padding-left: 18px; }
+  .pending li { margin: 4px 0; }
+  .pending code { font-family: var(--mono); font-size: 11.5px; background: var(--mono-bg); padding: 1px 5px; border-radius: 5px; }
+
+  /* ============================= SHELL ============================= */
+  .shell { display: grid; grid-template-columns: 236px 1fr 300px; gap: 14px; align-items: start; }
+  @media (max-width: 1080px) { .shell { grid-template-columns: 220px 1fr; } .evidence-dock { display: none; } }
+  @media (max-width: 760px)  { .shell { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- role rail ---- */
+  .rail { display: flex; flex-direction: column; gap: 13px; position: sticky; top: 12px; }
+  .rail .card { padding: 14px; }
+  .rail h2 { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 9px; font-weight: 700; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 9px; flex: none; color: #fff; font-weight: 800; font-size: 16px;
+    background: linear-gradient(145deg, var(--accent), var(--accent-ink)); display: grid; place-items: center;
+  }
+  .brand .bn { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .brand .bs { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  select.role {
+    width: 100%; font-family: var(--sans); font-size: 14px; color: var(--fg);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 10px; margin-top: 2px;
+  }
+  .scope {
+    margin-top: 11px; border-radius: 10px; padding: 10px 11px; font-size: 12px; line-height: 1.45;
+    border: 1px solid var(--border-2);
+  }
+  .scope.scoped   { background: var(--accent-weak); }
+  .scope.open-acc { background: var(--good-weak); }
+  .scope .st { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--fg); }
+  .scope .st .lk { font-size: 12px; }
+  .scope p { margin: 6px 0 0; color: var(--fg-2); }
+  .scope .cats { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .scope .cats .ct {
+    font-family: var(--mono); font-size: 10.5px; color: var(--accent-ink);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
+  }
+  .scope .flag {
+    margin-top: 8px; font-size: 10.5px; color: var(--warn); font-family: var(--mono);
+    display: flex; gap: 5px; align-items: flex-start; line-height: 1.4;
+  }
+  .whatlink { margin-top: 9px; font-size: 11.5px; }
+  .whatlink button {
+    appearance: none; background: none; border: none; cursor: pointer; padding: 0;
+    color: var(--accent-ink); font: inherit; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .session { display: flex; flex-direction: column; gap: 7px; }
+  .session .r { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .session .r .k { color: var(--fg-2); }
+  .session .r .v { font-family: var(--mono); font-weight: 600; font-size: 11.5px; }
+  .session .r .v.good { color: var(--good-ink); }
+
+  /* ---- conversation panel ---- */
+  .panel { display: flex; flex-direction: column; min-height: 600px; overflow: hidden; }
+  .panel .phead {
+    display: flex; align-items: center; gap: 9px; padding: 12px 16px; border-bottom: 1px solid var(--border-2);
+  }
+  .panel .phead .pt { font-weight: 700; font-size: 14px; }
+  .panel .phead .pm { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+  .stream { padding: 18px 16px; display: flex; flex-direction: column; gap: 18px; flex: 1 1 auto; }
+
+  .turn { display: flex; gap: 11px; }
+  .turn .av {
+    width: 28px; height: 28px; border-radius: 8px; flex: none; display: grid; place-items: center;
+    font-size: 11px; font-weight: 800;
+  }
+  .turn.user .av { background: var(--user-bubble); color: var(--accent-ink); }
+  .turn.bot .av  { background: linear-gradient(145deg, var(--accent), var(--accent-ink)); color: #fff; }
+  .turn .body { min-width: 0; flex: 1 1 auto; }
+  .turn.user .body {
+    align-self: flex-start; background: var(--user-bubble); border-radius: 12px; padding: 9px 13px; font-size: 14px;
+  }
+
+  /* scope ribbon on an answer */
+  .ribbon {
+    display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 1.4;
+    border-radius: 10px; padding: 8px 11px; margin-bottom: 11px; border: 1px solid var(--border-2);
+  }
+  .ribbon.scoped   { background: var(--accent-weak); color: var(--fg-2); }
+  .ribbon.open-acc { background: var(--good-weak); color: var(--fg-2); }
+  .ribbon b { color: var(--fg); }
+  .ribbon .lk { flex: none; }
+
+  .answer { font-size: 14px; color: var(--fg); }
+  .answer .line { margin: 0 0 7px; }
+  .answer .lead { font-size: 16px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 10px; }
+  .answer .quote {
+    font-size: 17px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 12px; line-height: 1.35;
+    padding-left: 12px; border-left: 3px solid var(--accent);
+  }
+  /* support issue/fix rows */
+  .kv { display: flex; gap: 10px; margin: 0 0 6px; align-items: baseline; }
+  .kv .k {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; font-weight: 700; color: #fff;
+    background: var(--accent); border-radius: 5px; padding: 2px 7px; flex: none; min-width: 42px; text-align: center;
+  }
+  .kv .k.fix { background: var(--good); }
+  .kv .t { font-size: 14px; }
+
+  /* inline citation marker */
+  .cmark {
+    appearance: none; cursor: pointer; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+    background: var(--accent-weak); color: var(--accent-ink); font-family: var(--mono); font-size: 10.5px;
+    font-weight: 700; border-radius: 5px; padding: 0 5px; line-height: 1.6; vertical-align: baseline; margin-left: 2px;
+  }
+  .cmark:hover { background: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
+
+  /* policy card (support) */
+  .policy {
+    margin: 10px 0; border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--surface-2);
+  }
+  .policy .ph {
+    display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-bottom: 1px solid var(--border-2);
+    font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+  }
+  .policy .pq { padding: 10px 12px; font-size: 13.5px; font-style: italic; color: var(--fg-2); }
+
+  /* theme chips (marketing) */
+  .themes { margin: 4px 0 2px; display: flex; flex-direction: column; gap: 8px; }
+  .theme-row { display: grid; grid-template-columns: 136px 1fr 44px; gap: 10px; align-items: center; }
+  @media (max-width: 440px) { .theme-row { grid-template-columns: 96px 1fr 40px; } }
+  .theme-row .tl { font-size: 12.5px; color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .theme-row .tv { font-family: var(--mono); font-size: 12px; font-weight: 700; text-align: right; color: var(--fg); }
+  .track { height: 18px; background: var(--bar-track); border-radius: 5px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 5px; }
+
+  /* data strip wrapper (chart cards) */
+  .datacard { border: 1px solid var(--border); border-radius: 12px; padding: 12px 13px; margin: 11px 0; background: var(--surface); }
+  .datacard .dc-h { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; }
+  .datacard .dc-h .h { font-size: 12.5px; font-weight: 700; }
+  .datacard .dc-h .src {
+    font-family: var(--mono); font-size: 10px; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 999px; padding: 2px 7px; margin-left: auto;
+  }
+  .datacard .dc-note { font-size: 11px; color: var(--muted); margin-top: 9px; display: flex; gap: 5px; align-items: center; }
+
+  /* executive ranked bars */
+  .ranked { display: flex; flex-direction: column; gap: 9px; }
+  .rrow { display: grid; grid-template-columns: 18px 92px 1fr 70px; gap: 9px; align-items: center; }
+  @media (max-width: 440px) { .rrow { grid-template-columns: 16px 70px 1fr 58px; } }
+  .rrow .rk { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--muted); text-align: right; }
+  .rrow .rl { font-size: 12.5px; color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rrow .rv { font-family: var(--mono); font-size: 12px; font-weight: 700; text-align: right; }
+  .rrow.worst .rl, .rrow.worst .rv { color: var(--fg); font-weight: 800; }
+
+  /* trend sparkline */
+  .trend svg { display: block; width: 100%; height: auto; }
+  .trend .xlab { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 5px; }
+  .trend .cap { font-size: 12.5px; color: var(--fg-2); margin-top: 7px; }
+  .trend .cap b { color: var(--good-ink); }
+
+  /* warning line (degradation) */
+  .warnline {
+    display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4;
+    background: var(--warn-weak); border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--border));
+    border-radius: 10px; padding: 9px 11px; margin: 0 0 11px; color: var(--fg);
+  }
+  .warnline .ic { flex: none; color: var(--warn); font-weight: 800; }
+  /* no-evidence block */
+  .noevid {
+    display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.45;
+    background: var(--surface-2); border: 1px dashed var(--border); border-radius: 11px; padding: 12px 13px; margin-bottom: 11px;
+  }
+  .noevid .ic { flex: none; font-size: 16px; color: var(--muted); }
+  .noevid b { color: var(--fg); }
+
+  /* evidence chips row */
+  .evrow { display: flex; flex-wrap: wrap; gap: 7px; margin: 11px 0 11px; }
+  .evrow .lbl { width: 100%; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .chip-cite {
+    appearance: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--fg-2);
+    border-radius: 999px; padding: 4px 10px 4px 7px; font-size: 12px; max-width: 100%;
+  }
+  .chip-cite:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--fg); }
+  .chip-cite.active { background: var(--accent-weak); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); color: var(--accent-ink); }
+  .chip-cite .n { font-family: var(--mono); font-weight: 800; color: var(--accent-ink); font-size: 11px; }
+  .chip-cite .cl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---- trust strip ---- */
+  .trust { border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--surface-2); }
+  .trust .th {
+    display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 8px 10px; width: 100%;
+    background: none; border: none; cursor: pointer; font: inherit; text-align: left;
+  }
+  .pill {
+    font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2);
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  }
+  .pill.route  { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+  .pill.ground { color: var(--good-ink);  border-color: color-mix(in srgb, var(--good) 35%, var(--border)); }
+  .pill.ground.partial { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+  .pill.ground.none    { color: var(--muted); }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.cost { color: var(--good-ink); }
+  .trust .caret { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: 11px; display: inline-flex; gap: 5px; align-items: center; }
+  .trust .fallback-note {
+    width: 100%; font-size: 10.5px; color: var(--warn); font-family: var(--mono); margin-top: 2px;
+  }
+  .trust .tbody { padding: 0 11px 11px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 9px; }
+  .trust .tbody[hidden] { display: none; }
+  .trust .f { background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px; padding: 7px 9px; }
+  .trust .f .k { font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .trust .f .v { font-family: var(--mono); font-size: 12px; font-weight: 600; margin-top: 2px; word-break: break-word; }
+  .trust .f .v.good { color: var(--good-ink); }
+  .trust .f .v.warn { color: var(--warn); }
+  .trust .f.wide { grid-column: 1 / -1; }
+  .trust .f .issues { font-family: var(--mono); font-size: 11px; color: var(--warn); margin-top: 3px; }
+
+  /* ---- composer ---- */
+  .composer { border-top: 1px solid var(--border-2); padding: 12px 16px; display: flex; gap: 9px; align-items: center; }
+  .composer input {
+    flex: 1 1 auto; min-width: 0; font-family: var(--sans); font-size: 14px; padding: 11px 13px;
+    border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--fg);
+  }
+  .composer input:disabled { opacity: .55; }
+  .composer button.send {
+    font-family: var(--sans); font-weight: 700; font-size: 14px; color: #fff; background: var(--accent);
+    border: none; border-radius: 10px; padding: 11px 18px; cursor: pointer;
+  }
+  .composer button.send:disabled { opacity: .5; cursor: default; }
+  .composer-note { padding: 0 16px 12px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* ---- error banner ---- */
+  .banner { margin: 0 16px 0; border-radius: 11px; padding: 11px 13px; border: 1px solid; display: flex; gap: 10px; align-items: flex-start; }
+  .banner .ic { flex: none; font-size: 16px; }
+  .banner .bt { font-weight: 700; font-size: 13.5px; }
+  .banner .bd { font-size: 12.5px; margin-top: 2px; }
+  .banner .bd code { font-family: var(--mono); font-size: 11.5px; background: var(--mono-bg); padding: 1px 5px; border-radius: 5px; }
+  .banner .acts { margin-top: 9px; display: flex; gap: 8px; }
+  .banner .acts button {
+    appearance: none; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600;
+    border-radius: 8px; padding: 6px 11px; border: 1px solid var(--border); background: var(--surface);
+  }
+  .banner.e400 { background: var(--warn-weak); border-color: color-mix(in srgb, var(--warn) 40%, var(--border)); }
+  .banner.e400 .ic, .banner.e400 .bt { color: var(--warn); }
+  .banner.e502 { background: var(--danger-weak); border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); }
+  .banner.e502 .ic, .banner.e502 .bt { color: var(--danger-ink); }
+
+  /* ---- empty state ---- */
+  .empty { text-align: center; padding: 34px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .empty .elogo {
+    width: 54px; height: 54px; border-radius: 15px; color: #fff; font-weight: 800; font-size: 24px;
+    background: linear-gradient(145deg, var(--accent), var(--accent-ink)); display: grid; place-items: center; margin-bottom: 8px;
+  }
+  .empty h2 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
+  .empty .tagline { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .empty .tryh { margin: 20px 0 9px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .starters { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 440px; }
+  .starter {
+    appearance: none; cursor: pointer; text-align: left; font: inherit; font-size: 13.5px; color: var(--fg);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px;
+  }
+  .starter:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+
+  /* ---- loading skeleton ---- */
+  .load .stages { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 11px; }
+  .load .stage {
+    font-family: var(--mono); font-size: 11px; padding: 3px 9px; border-radius: 999px; color: var(--muted);
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .load .stage.on { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-weak); }
+  .skel { height: 11px; border-radius: 6px; margin: 8px 0; background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+  .skel.w1 { width: 92%; } .skel.w2 { width: 78%; } .skel.w3 { width: 60%; }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+  @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+  .load .cancel {
+    margin-top: 10px; appearance: none; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--fg-2); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px;
+  }
+
+  /* ============================= EVIDENCE DOCK ============================= */
+  .evidence-dock { position: sticky; top: 12px; }
+  .evidence-dock .ehead {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border-2);
+  }
+  .evidence-dock .ehead .et { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .evidence-dock .ebody { padding: 13px 14px; display: flex; flex-direction: column; gap: 11px; }
+  .evidence-dock .eempty { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .ev-item { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .ev-item.active { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+  .ev-item .eh { display: flex; align-items: center; gap: 7px; padding: 8px 10px; background: var(--surface-2); }
+  .ev-item .eh .n { font-family: var(--mono); font-weight: 800; color: var(--accent-ink); font-size: 11px; }
+  .ev-item .eh .el { font-size: 12.5px; font-weight: 600; color: var(--fg); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ev-item .eh .etag { font-family: var(--mono); font-size: 9.5px; margin-left: auto; color: var(--muted); border: 1px solid var(--border-2); border-radius: 999px; padding: 1px 6px; }
+  .ev-item .eid { font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 7px 10px 0; word-break: break-all; }
+  .ev-item .esnip { padding: 6px 10px 10px; font-size: 12.5px; color: var(--fg-2); font-style: italic; line-height: 1.5; }
+  .ev-item .esnip .mock {
+    display: inline-block; font-style: normal; font-family: var(--mono); font-size: 9.5px; color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border)); border-radius: 5px; padding: 0 5px; margin-left: 5px; vertical-align: 1px;
+  }
+
+  /* bottom-sheet variant (phone) */
+  .sheet-backdrop { display: none; }
+  @media (max-width: 1080px) {
+    .evidence-dock.sheet { display: block; position: fixed; inset: auto 0 0 0; z-index: 40; border-radius: 16px 16px 0 0; max-height: 72vh; overflow: auto; margin: 0; box-shadow: 0 -12px 40px rgba(0,0,0,.3); }
+    .evidence-dock.sheet .ehead .close { margin-left: auto; appearance: none; cursor: pointer; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; width: 26px; height: 26px; color: var(--fg-2); }
+    .sheet-backdrop.on { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 39; }
+  }
+  @media (min-width: 1081px) { .evidence-dock .ehead .close { display: none; } }
+
+  .foot { margin-top: 20px; font-size: 11px; color: var(--muted); font-family: var(--mono); text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ DEMO / MOCKUP CONTROL BAR ============ -->
+  <div class="demobar" role="region" aria-label="Mockup controls">
+    <span class="tag">Mockup · canned data</span>
+    <span class="dctl"><label for="scenarioSel">Scenario</label>
+      <select id="scenarioSel" aria-label="Scenario / state">
+        <option value="grounded">Grounded answer</option>
+        <option value="empty">Empty / first run</option>
+        <option value="loading">Loading / in-flight</option>
+        <option value="sql_error">Degraded · SQL could not compute</option>
+        <option value="none">Degraded · no supporting evidence</option>
+        <option value="fallback">Grounded · llm draft blocked (fallback)</option>
+        <option value="e400">Error · 400 unknown role</option>
+        <option value="e502">Error · 502 upstream failure</option>
+      </select>
+    </span>
+    <span class="sp"></span>
+    <button class="iconbtn" id="pendingBtn" aria-expanded="false" aria-controls="pendingPanel" title="Mock data & pending backend fields">&#9432;</button>
+    <button class="iconbtn" id="themeBtn" title="Toggle light / dark" aria-label="Toggle light/dark theme">&#9680;</button>
+  </div>
+
+  <div class="pending" id="pendingPanel" role="region" aria-label="Mock data and pending backend fields">
+    <h3>Mock / illustrative data in this file &mdash; pending backend fields</h3>
+    <p style="margin:0 0 7px">All answers here are canned. Three signals shown in the UI are <b>not</b> fields the real
+      <code>POST /query</code> response carries today; they are flagged so this review is not misled:</p>
+    <ol>
+      <li><b>Citation snippet text</b> &mdash; <code>citations[]</code> returns only <code>n</code>,
+        <code>source_id</code>, <code>label</code>. Snippet quotes in the Evidence panel are mock
+        (marked <span style="color:var(--warn)">mock</span>). Needs a <code>citations[].snippet</code> field or a derivation rule.</li>
+      <li><b>Scope category names</b> &mdash; <code>GET /roles</code> returns names only; the per-role
+        category list lives server-side (<code>ACCESS_POLICY</code>). The category chips shown in the rail are
+        illustrative and flagged; enumerating them needs a <code>scope</code> field on the response.</li>
+      <li><b>Degradation copy</b> &mdash; the human sentences for <code>sql_error</code> and
+        <code>grounding.path == "none"</code> are authored by the UI from field <i>presence</i>; there is no
+        message/severity field in the response.</li>
+    </ol>
+  </div>
+
+  <!-- ============ SHELL ============ -->
+  <div class="shell">
+
+    <!-- ---- ROLE RAIL ---- -->
+    <aside class="rail">
+      <div class="card">
+        <div class="brand">
+          <div class="logo">R</div>
+          <div>
+            <div class="bn">Retail Intelligence Copilot</div>
+            <div class="bs">grounded &middot; cited &middot; $0/query</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Signed in as</h2>
+        <select class="role" id="roleSel" aria-label="Persona / role">
+          <option value="support">Support agent</option>
+          <option value="marketing">Marketing / product</option>
+          <option value="executive">Executive</option>
+        </select>
+        <div id="scopeCard"></div>
+      </div>
+      <div class="card">
+        <h2>Session</h2>
+        <div class="session" id="sessionCard"></div>
+      </div>
+    </aside>
+
+    <!-- ---- CONVERSATION PANEL ---- -->
+    <main class="card panel">
+      <div class="phead">
+        <span class="pt" id="panelTitle">Conversation</span>
+        <span class="pm" id="panelMeta"></span>
+      </div>
+      <div class="stream" id="stream" aria-live="polite"></div>
+      <div id="bannerSlot"></div>
+      <form class="composer" id="composer" onsubmit="return false;">
+        <input id="qInput" placeholder="Ask about reviews, complaints, policies, or the numbers&hellip;" aria-label="Ask a question">
+        <button type="button" class="send" id="sendBtn">Send</button>
+      </form>
+      <div class="composer-note">Mockup &mdash; answers are pre-scripted to show the interface. The governed backend that produces them runs today at $0.</div>
+    </main>
+
+    <!-- ---- EVIDENCE DOCK ---- -->
+    <aside class="card evidence-dock" id="evidenceDock">
+      <div class="ehead">
+        <span class="et">Evidence</span>
+        <button class="close" id="sheetClose" aria-label="Close evidence">&times;</button>
+      </div>
+      <div class="ebody" id="evidenceBody">
+        <div class="eempty">Click a citation chip or a <code style="font-family:var(--mono)">[n]</code> marker in an answer &mdash; the evidence it rests on appears here.</div>
+      </div>
+    </aside>
+  </div>
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+  <div class="foot">
+    M8 Chat / Serving UI &middot; hi-fi mockup for CHECKPOINT D2 &middot; theme-aware, bound to the real <code style="font-family:var(--mono)">POST /query</code> contract<br>
+    Scope is a read-only fact filtered at retrieval, before the model &mdash; never a control. Canned data; see the &#9432; note for pending backend fields.
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   THEME
+====================================================================== */
+(function () {
+  var btn = document.getElementById('themeBtn');
+  function cur() {
+    var a = document.documentElement.getAttribute('data-theme');
+    if (a) return a;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function () {
+    document.documentElement.setAttribute('data-theme', cur() === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+/* pending-fields popover */
+(function () {
+  var b = document.getElementById('pendingBtn'), p = document.getElementById('pendingPanel');
+  b.addEventListener('click', function () {
+    var open = p.classList.toggle('open');
+    b.setAttribute('aria-expanded', String(open));
+  });
+})();
+
+/* ======================================================================
+   CANNED DATA  (realistic; field names match POST /query response)
+====================================================================== */
+function esc(s) { return String(s).replace(/[&<>"]/g, function (m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
+
+/* role → scope (names ILLUSTRATIVE — ⚑ pending backend field #2) */
+var SCOPE = {
+  support:   { scoped: true,  cats: ['Electronics','Home_and_Kitchen','Automotive','Pet_Supplies'] },
+  marketing: { scoped: true,  cats: ['Electronics','Beauty_and_Personal_Care','Toys_and_Games'] },
+  executive: { scoped: false, cats: [] }
+};
+
+var QUESTION = {
+  support:   "Is this headphone's disconnection a known issue, and the common fix?",
+  marketing: "Top 3 complaints about our wireless earbuds this quarter — is sentiment improving?",
+  executive: "Which product categories have the worst rating-to-price ratio, and why?"
+};
+
+var STARTERS = {
+  support: [
+    "Is this headphone's disconnection a known issue, and the common fix?",
+    "What does the returns policy say about items damaged in shipping?"
+  ],
+  marketing: [
+    "Top 3 complaints about our wireless earbuds this quarter — is sentiment improving?",
+    "What themes show up most in our toy-line reviews?"
+  ],
+  executive: [
+    "Which product categories have the worst rating-to-price ratio, and why?",
+    "Where should we focus next quarter to lift satisfaction?"
+  ]
+};
+
+/* a full canned POST /query response per persona (grounded, good path) */
+var RESPONSE = {
+  support: {
+    answer: null, /* rendered by shape template */
+    citations: [
+      { n: 1, source_id: 'B07PXV3V7X#2', source_type: 'review',
+        label: 'review B07PXV3V7X (Electronics)',
+        snippet: '…keeps disconnecting after about ten minutes, I have to re-pair it almost every time I use it…' },
+      { n: 2, source_id: 'returns_policy#3', source_type: 'policy',
+        label: 'Returns Policy / §3',
+        snippet: 'Faulty electronics may be returned within 30 days for replacement or refund once a firmware reset has been attempted.' }
+    ],
+    audit: {
+      role: 'support', intent: 'review_rag', tool_path: ['review_rag','docs_rag'],
+      grounding: { path: 'llm', issues: [] },
+      sources: ['B07PXV3V7X#2','returns_policy#3'],
+      tokens: 1180, cost_usd: 0, latency_ms: 412,
+      memory: { history_turns_used: 1, persisted: 2 }
+    },
+    thread_id: 'th_9f2a', user_id: 'u_support_01'
+  },
+  marketing: {
+    citations: [
+      { n: 1, source_id: 'sql', source_type: 'sql',
+        label: 'SQL result',
+        snippet: 'quarterly complaint-theme counts and sentiment, computed over in-scope categories only.' },
+      { n: 2, source_id: 'B09EARBUD1#0', source_type: 'review',
+        label: 'review B09EARBUD1 (Electronics)',
+        snippet: '…battery barely lasts two hours now, and one earbud cuts out during calls…' }
+    ],
+    audit: {
+      role: 'marketing', intent: 'sql_rag', tool_path: ['sql_agent','review_rag'],
+      grounding: { path: 'llm', issues: [] },
+      sources: ['sql','B09EARBUD1#0'],
+      tokens: 1520, cost_usd: 0, latency_ms: 638,
+      memory: { history_turns_used: 0, persisted: 1 }
+    },
+    thread_id: 'th_4c7b', user_id: 'u_mkt_02'
+  },
+  executive: {
+    citations: [
+      { n: 1, source_id: 'sql', source_type: 'sql',
+        label: 'SQL result',
+        snippet: 'rating-to-price ratio (avg stars ÷ avg price) by category, all categories, lowest first.' },
+      { n: 2, source_id: 'B01BOOK22#1', source_type: 'review',
+        label: 'review B01BOOK22 (Books)',
+        snippet: '…paid way too much for a thin paperback that started falling apart after one read…' }
+    ],
+    audit: {
+      role: 'executive', intent: 'sql_rag', tool_path: ['sql_agent','review_rag'],
+      grounding: { path: 'llm', issues: [] },
+      sources: ['sql','B01BOOK22#1'],
+      tokens: 1340, cost_usd: 0, latency_ms: 521,
+      memory: { history_turns_used: 0, persisted: 0 }
+    },
+    thread_id: 'th_1a55', user_id: 'u_exec_03'
+  }
+};
+
+/* marketing analytics (fed by the same scoped SQL retrieval) */
+var MKT_THEMES = [ {t:'battery life', v:42}, {t:'fit / comfort', v:28}, {t:'connectivity', v:18} ];
+var MKT_TREND  = [ {w:'W1', s:3.4}, {w:'W4', s:3.5}, {w:'W7', s:3.6}, {w:'W10', s:3.8}, {w:'W13', s:3.9} ];
+
+/* executive ranked metric (same SQL leg) — lower ratio = worse */
+var EXEC_RANK = [
+  { cat:'Books',  ratio:2.1 },
+  { cat:'Toys & Games', ratio:2.8 },
+  { cat:'Beauty', ratio:3.4 }
+];
+
+/* ======================================================================
+   SHAPE TEMPLATES  (role + audit.intent → body layout)
+====================================================================== */
+var CHART_COLORS = ['var(--c1)','var(--c2)','var(--c3)'];
+
+function cmark(n) { return '<button class="cmark" data-cite="'+n+'" aria-label="Show evidence '+n+'">['+n+']</button>'; }
+
+/* -- support: snippet issue/fix + governing policy card -- */
+function bodySupport() {
+  return '' +
+    '<div class="kv"><span class="k">ISSUE</span><span class="t">Bluetooth disconnection on this model is a widely reported issue. '+cmark(1)+'</span></div>' +
+    '<div class="kv"><span class="k fix">FIX</span><span class="t">Re-pair the headphones after a firmware update; most cases resolve. '+cmark(1)+'</span></div>' +
+    '<div class="policy">' +
+      '<div class="ph">&#128220; Governing policy</div>' +
+      '<div class="pq">&ldquo;Faulty electronics may be returned within 30 days for a replacement or refund once a firmware reset has been attempted.&rdquo; '+cmark(2)+'</div>' +
+    '</div>';
+}
+
+/* -- marketing: theme list + sentiment trend (from SQL) -- */
+function bodyMarketing() {
+  var themes = MKT_THEMES.map(function (x, i) {
+    return '<div class="theme-row">' +
+      '<div class="tl">'+esc(x.t)+'</div>' +
+      '<div class="track"><div class="fill" style="width:'+x.v+'%;background:'+CHART_COLORS[i]+'"></div></div>' +
+      '<div class="tv">'+x.v+'%</div></div>';
+  }).join('');
+  return '' +
+    '<p class="line">Top complaints about the wireless earbuds this quarter, by share of mentions: '+cmark(1)+'</p>' +
+    '<div class="datacard">' +
+      '<div class="dc-h"><span class="h">Complaint themes</span><span class="src">source: review_rag, in scope</span></div>' +
+      '<div class="themes" role="img" aria-label="Complaint themes: battery life 42 percent, fit and comfort 28 percent, connectivity 18 percent">'+themes+'</div>' +
+    '</div>' +
+    '<p class="line">Sentiment is improving across the quarter. '+cmark(1)+'</p>' +
+    trendChart() +
+    '<p class="line">Reviewers echo the battery and connectivity complaints directly. '+cmark(2)+'</p>';
+}
+
+function trendChart() {
+  var W = 320, H = 92, pad = 8;
+  var xs = MKT_TREND, min = 3.0, max = 4.0;
+  function px(i){ return pad + i*((W-2*pad)/(xs.length-1)); }
+  function py(s){ return H-pad - ((s-min)/(max-min))*(H-2*pad); }
+  var pts = xs.map(function (p,i){ return px(i)+','+py(p.s); }).join(' ');
+  var area = 'M'+px(0)+','+(H-pad)+' L'+xs.map(function(p,i){return px(i)+','+py(p.s);}).join(' L')+' L'+px(xs.length-1)+','+(H-pad)+' Z';
+  var dots = xs.map(function (p,i){ return '<circle cx="'+px(i)+'" cy="'+py(p.s)+'" r="3" fill="var(--c2)"/>'; }).join('');
+  var labels = xs.map(function (p){ return '<span>'+p.w+'</span>'; }).join('');
+  return '<div class="datacard trend">' +
+    '<div class="dc-h"><span class="h">Sentiment trend (avg stars)</span><span class="src">source: SQL [1]</span></div>' +
+    '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Sentiment trend rising from 3.4 to 3.9 stars over the quarter">' +
+      '<path d="'+area+'" fill="var(--c2)" fill-opacity="0.14"/>' +
+      '<polyline points="'+pts+'" fill="none" stroke="var(--c2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      dots +
+    '</svg>' +
+    '<div class="xlab">'+labels+'</div>' +
+    '<div class="cap">3.4&#9733; &rarr; <b>3.9&#9733; &middot; improving</b> over the quarter.</div>' +
+    '<div class="dc-note">&#128274; Computed only over your in-scope categories &mdash; same retrieval that grounded the answer.</div>' +
+  '</div>';
+}
+
+/* -- executive: headline + ranked metric + one-line cause -- */
+function bodyExecutive() {
+  var max = 5;
+  var rows = EXEC_RANK.map(function (x, i) {
+    var pct = Math.round((x.ratio/max)*100);
+    var worst = i === 0 ? ' worst' : '';
+    return '<div class="rrow'+worst+'">' +
+      '<div class="rk">'+(i+1)+'</div>' +
+      '<div class="rl">'+esc(x.cat)+'</div>' +
+      '<div class="track"><div class="fill" style="width:'+pct+'%;background:'+CHART_COLORS[i]+'"></div></div>' +
+      '<div class="rv">'+x.ratio.toFixed(1)+' &#9733;/$</div></div>';
+  }).join('');
+  return '' +
+    '<p class="quote">Books have the worst rating-to-price ratio across the catalog. '+cmark(1)+'</p>' +
+    '<div class="datacard">' +
+      '<div class="dc-h"><span class="h">Rating-to-price ratio &mdash; worst first</span><span class="src">source: SQL [1]</span></div>' +
+      '<div class="ranked" role="img" aria-label="Rating to price ratio, worst first: Books 2.1, Toys and Games 2.8, Beauty 3.4 stars per dollar">'+rows+'</div>' +
+      '<div class="dc-note">Lower = worse value. Computed over all categories (executive is unrestricted).</div>' +
+    '</div>' +
+    '<p class="line"><b>Why:</b> low ratings are concentrated in mass-market paperback titles priced above perceived value. '+cmark(2)+'</p>';
+}
+
+var SHAPE = { support: bodySupport, marketing: bodyMarketing, executive: bodyExecutive };
+
+/* ======================================================================
+   TRUST STRIP  (audit → one-click reveal)
+====================================================================== */
+function groundLabel(path) {
+  if (path === 'llm') return { cls:'', txt:'grounded (llm)' };
+  if (path === 'extractive') return { cls:'partial', txt:'grounded (extractive)' };
+  return { cls:'none', txt:'none (unsupported)' };
+}
+function groundExplain(path) {
+  return path === 'llm' ? 'model-written, cite-checked'
+       : path === 'extractive' ? 'verbatim extract from sources'
+       : 'no supporting evidence';
+}
+
+function trustStrip(audit, opts) {
+  opts = opts || {};
+  var g = groundLabel(audit.grounding.path);
+  var partial = opts.partial ? ' partial' : '';
+  var cls = opts.partial ? 'partial' : g.cls;
+  var fallback = (audit.grounding.issues && audit.grounding.issues.length)
+    ? '<span class="fallback-note">&#9888; fallback: '+esc(audit.grounding.issues[0])+'</span>' : '';
+  var srcList = audit.sources.length ? audit.sources.map(esc).join(', ') : '—';
+  var mem = audit.memory
+    ? ('used '+audit.memory.history_turns_used+' prior turn'+(audit.memory.history_turns_used===1?'':'s')+' &middot; persisted '+audit.memory.persisted)
+    : 'off for this turn';
+  var issuesField = (audit.grounding.issues && audit.grounding.issues.length)
+    ? '<div class="f wide"><div class="k">Grounding issues (A.grounding.issues[])</div><div class="issues">'+audit.grounding.issues.map(esc).join(' · ')+'</div></div>' : '';
+  var sqlField = audit.sql_error
+    ? '<div class="f wide"><div class="k">SQL (A.sql_error)</div><div class="v warn">&#9888; '+esc(audit.sql_error)+' — answer leans on remaining evidence</div></div>' : '';
+
+  return '<div class="trust">' +
+    '<button class="th" aria-expanded="false">' +
+      '<span class="pill route">&#8683; '+esc(audit.intent)+'</span>' +
+      '<span class="pill ground '+cls+'"><span class="dot"></span>'+g.txt+'</span>' +
+      '<span class="pill">&#9201; '+audit.latency_ms+'ms</span>' +
+      '<span class="pill cost">&#36;'+audit.cost_usd.toFixed(2)+'</span>' +
+      '<span class="caret">why <span aria-hidden="true">&#9662;</span></span>' +
+      fallback +
+    '</button>' +
+    '<div class="tbody" hidden>' +
+      field('Route (A.intent)', esc(audit.intent)) +
+      field('Tool path (A.tool_path[])', audit.tool_path.join(' &rarr; ')) +
+      field('Grounding (A.grounding.path)', g.txt + ' — ' + groundExplain(audit.grounding.path)) +
+      field('Evidence used (A.sources[])', audit.sources.length + ' source'+(audit.sources.length===1?'':'s')+' ('+srcList+')') +
+      field('Tokens (A.tokens)', audit.tokens.toLocaleString()) +
+      field('Cost (A.cost_usd)', '&#36;'+audit.cost_usd.toFixed(2), 'good') +
+      field('Latency (A.latency_ms)', audit.latency_ms + ' ms') +
+      field('Memory (A.memory.*)', mem) +
+      sqlField + issuesField +
+    '</div></div>';
+}
+function field(k, v, cls) {
+  return '<div class="f"><div class="k">'+k+'</div><div class="v'+(cls?(' '+cls):'')+'">'+v+'</div></div>';
+}
+
+/* ======================================================================
+   SCOPE  (rail card + inline ribbon)
+====================================================================== */
+function scopeCard(role) {
+  var sc = SCOPE[role];
+  if (!sc.scoped) {
+    return '<div class="scope open-acc">' +
+      '<div class="st">&#128275; Unrestricted</div>' +
+      '<p>All categories are in scope. Retrieval is not filtered for this role.</p>' +
+      '</div>';
+  }
+  var cats = sc.cats.map(function (c) { return '<span class="ct">'+esc(c)+'</span>'; }).join('');
+  return '<div class="scope scoped">' +
+    '<div class="st"><span class="lk">&#128274;</span> Filtered to your categories</div>' +
+    '<p>Evidence is filtered to your role&rsquo;s categories <b>at retrieval, before the model</b> &mdash; the search was scoped, nothing was hidden by the model.</p>' +
+    '<div class="cats">'+cats+'</div>' +
+    '<div class="flag">&#9873; category names are illustrative &mdash; enumerating them needs a <code style="font-family:var(--mono)">scope</code> response field (pending).</div>' +
+    '<div class="whatlink"><button id="whatBtn" aria-label="What does scoped mean">What does &ldquo;before the model&rdquo; mean?</button></div>' +
+    '</div>';
+}
+
+function scopeRibbon(role) {
+  var sc = SCOPE[role];
+  if (!sc.scoped) {
+    return '<div class="ribbon open-acc"><span class="lk">&#128275;</span><span><b>Unrestricted.</b> Answered from evidence across all categories.</span></div>';
+  }
+  return '<div class="ribbon scoped"><span class="lk">&#128274;</span><span><b>Answered from evidence inside your role&rsquo;s scope.</b> Retrieval was filtered server-side, before the model.</span></div>';
+}
+
+/* ======================================================================
+   SESSION CARD
+====================================================================== */
+function sessionCard(role, scenario) {
+  var r = RESPONSE[role];
+  var showLive = (scenario === 'grounded' || scenario === 'fallback' || scenario === 'sql_error' || scenario === 'none');
+  var a = r.audit;
+  var cost = showLive ? '&#36;'+ (a.cost_usd).toFixed(2) : '&#36;0.00';
+  var tok = showLive ? a.tokens.toLocaleString() : '0';
+  var lat = showLive ? a.latency_ms + ' ms' : '—';
+  return '' +
+    row('Cost (A.cost_usd)', cost, true) +
+    row('Tokens (A.tokens)', tok) +
+    row('Latency (A.latency_ms)', lat) +
+    row('thread_id', showLive ? r.thread_id : '—') +
+    row('user_id', r.user_id) +
+    row('Provider', 'invisible');
+  function row(k, v, good) {
+    return '<div class="r"><span class="k">'+k+'</span><span class="v'+(good?' good':'')+'">'+v+'</span></div>';
+  }
+}
+
+/* ======================================================================
+   EVIDENCE PANEL
+====================================================================== */
+var ACTIVE_CITES = [];
+function renderEvidenceEmpty() {
+  document.getElementById('evidenceBody').innerHTML =
+    '<div class="eempty">Click a citation chip or a <code style="font-family:var(--mono)">[n]</code> marker in an answer &mdash; the evidence it rests on appears here.</div>';
+}
+function openEvidence(activeN) {
+  var body = document.getElementById('evidenceBody');
+  if (!ACTIVE_CITES.length) { renderEvidenceEmpty(); return; }
+  body.innerHTML = ACTIVE_CITES.map(function (c) {
+    var active = (c.n === activeN) ? ' active' : '';
+    return '<div class="ev-item'+active+'" id="ev-'+c.n+'">' +
+      '<div class="eh"><span class="n">['+c.n+']</span><span class="el">'+esc(c.label)+'</span><span class="etag">'+esc(c.source_type||'')+'</span></div>' +
+      '<div class="eid">source_id: '+esc(c.source_id)+'</div>' +
+      '<div class="esnip">&ldquo;'+esc(c.snippet)+'&rdquo;<span class="mock" title="snippet text is not a response field today">mock</span></div>' +
+    '</div>';
+  }).join('');
+  // phone: open as bottom sheet
+  var dock = document.getElementById('evidenceDock');
+  if (window.matchMedia('(max-width: 1080px)').matches) {
+    dock.classList.add('sheet');
+    document.getElementById('sheetBackdrop').classList.add('on');
+  }
+  var el = document.getElementById('ev-' + activeN);
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+}
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+function closeSheet() {
+  document.getElementById('evidenceDock').classList.remove('sheet');
+  document.getElementById('sheetBackdrop').classList.remove('on');
+}
+
+/* ======================================================================
+   ASSISTANT-TURN BUILDERS PER SCENARIO
+====================================================================== */
+function assistantGrounded(role) {
+  var r = RESPONSE[role];
+  ACTIVE_CITES = r.citations;
+  return '<div class="answer">' +
+    scopeRibbon(role) +
+    SHAPE[role]() +
+    evChips(r.citations) +
+    trustStrip(r.audit) +
+    '</div>';
+}
+
+function assistantFallback(role) {
+  // grounded answer but the llm draft was blocked → fell back to extractive
+  var r = RESPONSE[role];
+  var audit = JSON.parse(JSON.stringify(r.audit));
+  audit.grounding = { path: 'extractive', issues: ['llm draft blocked', 'uncited claim removed'] };
+  ACTIVE_CITES = r.citations;
+  return '<div class="answer">' +
+    scopeRibbon(role) +
+    SHAPE[role]() +
+    evChips(r.citations) +
+    trustStrip(audit, { partial: true }) +
+    '</div>';
+}
+
+function assistantSqlError(role) {
+  // SQL leg degraded: metric/trend suppressed, RAG still grounded+cited
+  var r = RESPONSE[role];
+  var audit = JSON.parse(JSON.stringify(r.audit));
+  audit.sql_error = 'could not compute';
+  audit.sources = r.citations.filter(function (c) { return c.source_id !== 'sql'; }).map(function (c) { return c.source_id; });
+  audit.grounding = { path: 'extractive', issues: [] };
+  var cites = r.citations.filter(function (c) { return c.source_id !== 'sql'; }).map(function (c, i) { return Object.assign({}, c, { n: i + 1 }); });
+  ACTIVE_CITES = cites;
+  var ragLine = (role === 'executive')
+    ? '<p class="line">From the review evidence, dissatisfaction centers on overpriced, low-durability titles. '+cmark(1)+'</p>'
+    : '<p class="line">From the review evidence, battery life and connectivity remain the leading complaints. '+cmark(1)+'</p>';
+  return '<div class="answer">' +
+    scopeRibbon(role) +
+    '<div class="warnline"><span class="ic">&#9888;</span><span>Couldn&rsquo;t compute the numbers for this one. Answering from the review evidence instead &mdash; the metric/trend is omitted.</span></div>' +
+    ragLine +
+    evChips(cites) +
+    trustStrip(audit, { partial: true }) +
+    '</div>';
+}
+
+function assistantNone(role) {
+  var audit = {
+    role: role, intent: 'review_rag', tool_path: ['review_rag'],
+    grounding: { path: 'none', issues: [] }, sources: [],
+    tokens: 210, cost_usd: 0, latency_ms: 188,
+    memory: RESPONSE[role].audit.memory
+  };
+  ACTIVE_CITES = [];
+  renderEvidenceEmpty();
+  return '<div class="answer">' +
+    scopeRibbon(role) +
+    '<div class="noevid"><span class="ic">&#9675;</span><span><b>No supporting evidence was found for this question.</b><br>Nothing in your scope matched &mdash; try rephrasing, or ask something your role covers.</span></div>' +
+    trustStrip(audit) +
+    '</div>';
+}
+
+function evChips(cites) {
+  if (!cites.length) return '';
+  var chips = cites.map(function (c) {
+    return '<button class="chip-cite" data-cite="'+c.n+'"><span class="n">['+c.n+']</span><span class="cl">'+esc(c.label)+'</span></button>';
+  }).join('');
+  return '<div class="evrow"><span class="lbl">Evidence &mdash; click to inspect</span>'+chips+'</div>';
+}
+
+/* ======================================================================
+   NON-TURN SCENARIOS (empty / loading / errors)
+====================================================================== */
+function renderEmpty(role) {
+  var starters = STARTERS[role].map(function (q) {
+    return '<button class="starter" data-starter="'+esc(q)+'">&ldquo;'+esc(q)+'&rdquo;</button>';
+  }).join('');
+  return '<div class="empty">' +
+    '<div class="elogo">R</div>' +
+    '<h2>Retail Intelligence Copilot</h2>' +
+    '<div class="tagline">grounded &middot; cited &middot; $0/query</div>' +
+    '<div class="tryh">Try &mdash; for your role</div>' +
+    '<div class="starters">'+starters+'</div>' +
+    '</div>';
+}
+
+function renderLoading(role) {
+  var q = QUESTION[role];
+  return turnUser(q) +
+    '<div class="turn bot"><div class="av">R</div><div class="body"><div class="load">' +
+      '<div class="stages">' +
+        '<span class="stage on">routing</span>' +
+        '<span class="stage on">retrieving (scoped)</span>' +
+        '<span class="stage">grounding</span>' +
+        '<span class="stage">answer</span>' +
+      '</div>' +
+      '<div class="skel w1"></div><div class="skel w2"></div><div class="skel w3"></div>' +
+      '<button class="cancel" id="cancelBtn">Cancel</button>' +
+    '</div></div></div>';
+}
+
+function errorBanner(kind) {
+  if (kind === 'e400') {
+    return '<div class="banner e400" role="alert">' +
+      '<span class="ic">&#10022;</span>' +
+      '<div><div class="bt">Can&rsquo;t run that request.</div>' +
+      '<div class="bd"><code>HTTP 400 &middot; Unknown role: \'buyer\'</code><br>Pick a valid role from the list and try again.</div>' +
+      '<div class="acts"><button id="reselectBtn">Reselect role</button></div></div></div>';
+  }
+  return '<div class="banner e502" role="alert">' +
+    '<span class="ic">&#9889;</span>' +
+    '<div><div class="bt">The copilot had an upstream problem.</div>' +
+    '<div class="bd"><code>HTTP 502 &middot; Upstream failure: TimeoutError: retrieval timed out</code><br>Your question wasn&rsquo;t changed &mdash; you can retry.</div>' +
+    '<div class="acts"><button id="retryBtn">Retry</button><button id="copyBtn">Copy details</button></div></div></div>';
+}
+
+function turnUser(q) {
+  return '<div class="turn user"><div class="av">You</div><div class="body">'+esc(q)+'</div></div>';
+}
+function turnBot(inner) {
+  return '<div class="turn bot"><div class="av">R</div><div class="body">'+inner+'</div></div>';
+}
+
+/* ======================================================================
+   MAIN RENDER
+====================================================================== */
+var state = { role: 'support', scenario: 'grounded' };
+
+function render() {
+  var role = state.role, sc = state.scenario;
+  document.getElementById('scopeCard').innerHTML = scopeCard(role);
+  document.getElementById('sessionCard').innerHTML = sessionCard(role, sc);
+
+  var stream = document.getElementById('stream');
+  var banner = document.getElementById('bannerSlot');
+  var input = document.getElementById('qInput');
+  var send = document.getElementById('sendBtn');
+  banner.innerHTML = '';
+  input.disabled = false; send.disabled = false;
+  ACTIVE_CITES = [];
+  renderEvidenceEmpty();
+  closeSheet();
+
+  var meta = '';
+  if (sc === 'empty') {
+    stream.innerHTML = renderEmpty(role);
+    meta = 'no messages yet';
+  } else if (sc === 'loading') {
+    stream.innerHTML = renderLoading(role);
+    input.disabled = true; send.disabled = true;
+    meta = 'in flight…';
+  } else if (sc === 'e400' || sc === 'e502') {
+    stream.innerHTML = turnUser(QUESTION[role]);
+    banner.innerHTML = errorBanner(sc);
+    meta = 'request failed';
+  } else {
+    var bot;
+    if (sc === 'fallback') bot = assistantFallback(role);
+    else if (sc === 'sql_error') bot = assistantSqlError(role);
+    else if (sc === 'none') bot = assistantNone(role);
+    else bot = assistantGrounded(role);
+    stream.innerHTML = turnUser(QUESTION[role]) + turnBot(bot);
+    meta = 'thread · 1 turn';
+  }
+  document.getElementById('panelMeta').textContent = meta;
+  wireTurnEvents();
+}
+
+function wireTurnEvents() {
+  // trust strip expand/collapse
+  document.querySelectorAll('.trust .th').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var body = btn.parentNode.querySelector('.tbody');
+      var open = body.hasAttribute('hidden');
+      if (open) body.removeAttribute('hidden'); else body.setAttribute('hidden', '');
+      btn.setAttribute('aria-expanded', String(open));
+      var caret = btn.querySelector('.caret');
+      caret.innerHTML = open ? 'hide <span aria-hidden="true">&#9652;</span>' : 'why <span aria-hidden="true">&#9662;</span>';
+    });
+  });
+  // citation chips + inline [n] markers
+  document.querySelectorAll('[data-cite]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var n = parseInt(el.getAttribute('data-cite'), 10);
+      document.querySelectorAll('.chip-cite').forEach(function (c) {
+        c.classList.toggle('active', parseInt(c.getAttribute('data-cite'), 10) === n);
+      });
+      openEvidence(n);
+    });
+  });
+  // starters
+  document.querySelectorAll('[data-starter]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      document.getElementById('scenarioSel').value = 'grounded';
+      state.scenario = 'grounded';
+      render();
+    });
+  });
+  // loading cancel
+  var cancel = document.getElementById('cancelBtn');
+  if (cancel) cancel.addEventListener('click', function () {
+    document.getElementById('scenarioSel').value = 'empty'; state.scenario = 'empty'; render();
+  });
+  // error actions
+  var reselect = document.getElementById('reselectBtn');
+  if (reselect) reselect.addEventListener('click', function () { document.getElementById('roleSel').focus(); });
+  var retry = document.getElementById('retryBtn');
+  if (retry) retry.addEventListener('click', function () {
+    document.getElementById('scenarioSel').value = 'loading'; state.scenario = 'loading'; render();
+  });
+  var copy = document.getElementById('copyBtn');
+  if (copy) copy.addEventListener('click', function () { copy.textContent = 'Copied'; });
+  // scope explainer
+  var whatBtn = document.getElementById('whatBtn');
+  if (whatBtn) whatBtn.addEventListener('click', function () {
+    whatBtn.insertAdjacentHTML('afterend',
+      '<p style="margin:7px 0 0;font-size:11.5px;color:var(--fg-2)">Your role&rsquo;s category filter is applied to the search <b>before</b> any text reaches the language model &mdash; so the model never sees, and cannot reveal, out-of-scope data.</p>');
+    whatBtn.style.display = 'none';
+  });
+}
+
+/* controls */
+document.getElementById('roleSel').addEventListener('change', function (e) { state.role = e.target.value; render(); });
+document.getElementById('scenarioSel').addEventListener('change', function (e) { state.scenario = e.target.value; render(); });
+
+/* composer: scripted — simulate a round-trip into the grounded state */
+document.getElementById('sendBtn').addEventListener('click', function () {
+  var inp = document.getElementById('qInput');
+  if (!inp.value.trim()) return;
+  document.getElementById('scenarioSel').value = 'loading'; state.scenario = 'loading'; render();
+  setTimeout(function () {
+    document.getElementById('scenarioSel').value = 'grounded'; state.scenario = 'grounded'; render();
+  }, 1100);
+  inp.value = '';
+});
+document.getElementById('qInput').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('sendBtn').click(); }
+});
+
+render();
+</script>
+</body>
+</html>

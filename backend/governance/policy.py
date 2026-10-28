@@ -11,7 +11,7 @@ ACCESS_POLICY: dict[str, Filters] = {
     "admin": {},
     "analyst": {},
     "support": {"category": ["Electronics", "Home_and_Kitchen", "Automotive", "Pet_Supplies"]},
-    "marketing": {"category": ["Beauty_and_Personal_Care", "Toys_and_Games", "Books"]},
+    "marketing": {"category": ["Electronics", "Beauty_and_Personal_Care", "Toys_and_Games"]},
 }
 
 

@@ -2,6 +2,8 @@
 
 No module in progress.
 
+M6.1 marketing scope revised via `/change` (ADR 2026-10-28): now Electronics, Beauty_and_Personal_Care, Toys_and_Games (Books dropped).
+
 **M8 — Serving & UI is DONE** (closed 2026-10-28). Built in 4 sub-modules: M8.1
 backend serving hardening (CORS from `Settings.cors_allow_origins`, `GET /roles`
 from `ACCESS_POLICY`, unknown-role → typed 400 via an API-boundary edge check);

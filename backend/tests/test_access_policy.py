@@ -21,7 +21,11 @@ def test_two_roles_yield_different_where_params() -> None:
     mkt_where, mkt_params = build_where(scope_for_role("marketing"))
     assert (exec_where, exec_params) == ("", [])
     assert "category = ANY(%s)" in sup_where
-    assert sup_params != mkt_params and set(sup_params[0]).isdisjoint(mkt_params[0])
+    assert sup_params != mkt_params
+    assert mkt_params[0] == ["Electronics", "Beauty_and_Personal_Care", "Toys_and_Games"]
+    assert set(sup_params[0]) & set(mkt_params[0]) == {"Electronics"}
+    assert "Home_and_Kitchen" in sup_params[0] and "Home_and_Kitchen" not in mkt_params[0]
+    assert "Beauty_and_Personal_Care" in mkt_params[0] and "Beauty_and_Personal_Care" not in sup_params[0]
 
 
 def test_policy_only_uses_accepted_filter_keys() -> None:

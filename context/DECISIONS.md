@@ -423,3 +423,22 @@ Durable design decisions (newest at the bottom). Decision → why.
   no deploy, no secrets, no cloud login. Nothing provisions or spends. Real Azure
   provisioning remains out of scope and gated. Why: same cost gate as M1–M7 — packaging is
   safe to commit; a live deploy is a deliberate, logged, approved step.
+- **M6 (ADR, 2026-10-28, via `/change`): marketing scope gains `Electronics`.**
+  `ACCESS_POLICY["marketing"]` becomes `{Electronics, Beauty_and_Personal_Care, Toys_and_Games}`
+  (was `{Beauty_and_Personal_Care, Toys_and_Games, Books}` — `Books` dropped as least
+  marketing-relevant). Decision: align the access policy with the PRD §2 marketing persona's
+  own flagship question ("complaints about our wireless earbuds… is sentiment improving?") —
+  earbuds are `Electronics`, which marketing/product plainly owns the campaigns for. Surfaced by
+  the Design-Track value review: the marketing demo could not be answered honestly in-scope and
+  the mockup had papered over it by mislabelling an earbud review as `Toys_and_Games`. Why: the
+  M6 note already flagged the category subsets as "placeholder choices to confirm with the
+  business"; this resolves that placeholder toward the product's stated intent. The PRD §2
+  persona questions are unchanged (no product-direction change), so only the M6 spec and
+  `policy.py` move, not `PRD.md`. Scopes stay visibly distinct (support keeps
+  `Home_and_Kitchen/Automotive/Pet_Supplies`; marketing keeps `Beauty/Toys`; overlap is
+  `Electronics` only), so the scope-filtering demo still shows real role-dependent retrieval.
+  Rejected alternative: change the marketing *demo question* to one already in scope — rejected
+  because it would leave `PRD.md` §2 and the demo diverging, trading a policy mismatch for a PRD
+  mismatch. Also carried as design-build conditions (separate specs): PII-redact the proposed
+  `citations[].snippet` at the boundary, and keep the mockup's hard-coded category chips out of
+  the build until an `audit.scope` field exists.

@@ -20,9 +20,13 @@ system, then a frontend rebuild. The ordering is intentional and dated in
 |---|---|---|
 | `00_brief.md` | D1 | Objective, personas + jobs-to-be-done, v1 gaps, UX success criteria |
 | `01_wireframes.md` | — | Lo-fi annotated layouts for every state |
-| `mockups/*.html` | D2 | Hi-fi, theme-aware, interactive mockups (the "Figma page") |
+| `mockups/*.html` | D2 | Hi-fi, theme-aware, interactive mockups (the "Figma page"), derived from the brief |
 | `02_decisions.md` | — | Design decision log + "deferred / where we stopped and why" |
 | `03_handoff.md` | — | Build spec the Developer implements (components, states, data bindings, role→render, a11y) |
+
+The mockup is derived from the brief and wireframes — not the other way round.
+The artifact is the cheap part; the reasoning in `02_decisions.md` and the build
+spec in `03_handoff.md` are the product.
 
 ## Checkpoints
 

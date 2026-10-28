@@ -50,6 +50,11 @@ provider-adapter, and `build_where` as the single retrieval choke point). New co
         (e.g. `executive`, `admin`) and a restricting `Filters` (e.g. `{"category": [...]}` and/or
         `{"source": ...}`) for scoped roles (e.g. `support`, `marketing`); an unknown/empty role
         raises `AccessDenied`. `executive` scope ≠ `support` scope.
+  - [ ] `marketing` scope is `{"category": ["Electronics", "Beauty_and_Personal_Care",
+        "Toys_and_Games"]}` — it includes `Electronics` so the PRD §2 marketing persona's
+        flagship question (complaints about *wireless earbuds* = Electronics) resolves in-scope.
+        Marketing and `support` overlap only on `Electronics`; the two scoped roles stay
+        distinct otherwise (see the 2026-10-28 ADR in `context/DECISIONS.md`).
   - [ ] `router.derive_scope(role)` delegates to `scope_for_role`; the returned scope only uses
         keys in `FILTER_COLUMNS` (`source_type`/`source`/`category`) so `build_where` accepts it,
         and `source_type` pinning in the agents still wins over a scope key (unchanged).
