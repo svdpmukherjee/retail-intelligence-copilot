@@ -1,0 +1,103 @@
+[
+  {
+    "question": "What is the return window for electronics?",
+    "role": "analyst",
+    "must_include": [
+      "15 days"
+    ],
+    "relevant_doc_ids": [
+      "authored/return-refund-policy"
+    ]
+  },
+  {
+    "question": "How long does a refund take to reach my original payment method?",
+    "role": "analyst",
+    "must_include": [
+      "5 to 7 business days"
+    ],
+    "relevant_doc_ids": [
+      "authored/return-refund-policy"
+    ]
+  },
+  {
+    "question": "How long is the warranty on home appliances?",
+    "role": "analyst",
+    "must_include": [
+      "24-month"
+    ],
+    "relevant_doc_ids": [
+      "authored/warranty-terms"
+    ]
+  },
+  {
+    "question": "How much does express shipping cost?",
+    "role": "support",
+    "must_include": [
+      "12.99"
+    ],
+    "relevant_doc_ids": [
+      "authored/shipping-delivery"
+    ]
+  },
+  {
+    "question": "Which items are excluded from price matching?",
+    "role": "analyst",
+    "must_include": [
+      "clearance",
+      "flash sales"
+    ],
+    "relevant_doc_ids": [
+      "authored/price-match-policy"
+    ]
+  },
+  {
+    "question": "Do gift cards expire?",
+    "role": "executive",
+    "must_include": [
+      "never expire"
+    ],
+    "relevant_doc_ids": [
+      "authored/gift-card-terms"
+    ]
+  },
+  {
+    "question": "What benefits do Gold loyalty members get?",
+    "role": "analyst",
+    "must_include": [
+      "free express shipping"
+    ],
+    "relevant_doc_ids": [
+      "authored/loyalty-program-rules"
+    ]
+  },
+  {
+    "question": "How much is a cracked screen deducted from a trade-in offer?",
+    "role": "admin",
+    "must_include": [
+      "40 percent"
+    ],
+    "relevant_doc_ids": [
+      "authored/trade-in-program"
+    ]
+  },
+  {
+    "question": "How quickly does support respond to email enquiries?",
+    "role": "support",
+    "must_include": [
+      "24 hours"
+    ],
+    "relevant_doc_ids": [
+      "authored/customer-support-sla"
+    ]
+  },
+  {
+    "question": "What should I do if a lithium battery swells or overheats?",
+    "role": "support",
+    "must_include": [
+      "stop using"
+    ],
+    "relevant_doc_ids": [
+      "authored/battery-safety-notice"
+    ]
+  }
+]

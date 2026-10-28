@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retail-intelligence-copilot"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic-settings",
+    "httpx",
+    "pytest",
+    "ruff",
+    "black",
+    "sentence-transformers",
+    "psycopg[binary]",
+    "pgvector",
+    "deltalake[pyarrow]",
+    "duckdb",
+    "pypdf",
+]
+
+[project.optional-dependencies]
+# Only to regenerate data/docs/manuals/*.pdf (committed); not needed at runtime.
+docs-gen = ["reportlab"]
+
+[tool.setuptools]
+packages = ["app", "agents", "retrieval", "memory", "governance", "eval"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

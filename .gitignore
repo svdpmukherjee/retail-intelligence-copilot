@@ -1,0 +1,51 @@
+# ---- Python ----
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+
+# ---- Environment / secrets ----
+.env
+.env.*
+!.env.example
+*.local
+
+# ---- Data (large; never commit raw corpus or PII) ----
+data/raw/
+data/bronze/
+data/silver/
+data/gold/
+*.parquet
+*.delta
+
+# ---- Infra state ----
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# ---- Claude Code local settings ----
+.claude/settings.local.json
+
+# ---- Editor / OS ----
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ---- Logs ----
+*.log
+logs/

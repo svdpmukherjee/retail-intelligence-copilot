@@ -1,0 +1,28 @@
+[project]
+name = "retail-intelligence-etl"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pyspark>=3.5,<4",
+    "delta-spark>=3.2,<4",
+    "pydantic-settings",
+    "pytest",
+    "ruff",
+    "black",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Run from data/: repo root exposes `data.etl`, backend exposes `app.config`.
+pythonpath = ["..", "../backend"]
