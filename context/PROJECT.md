@@ -16,3 +16,8 @@ updates it at session end. One row per module (see `PRD.md §10`).
 | M9 | Documentation (architecture diagrams + consolidated design record) | TODO |
 
 Status values: TODO → IN PROGRESS → DONE.
+
+**Design Track (v2, design-first iteration):** apart from the module loop. Run via
+`/design`; produces a design package in `docs/design/`, then feeds an M8 rebuild.
+Status: TODO. Framed honestly as iteration 2 (v1 = engineering spike). A first
+interactive mockup was explored this session before the track was formalized.

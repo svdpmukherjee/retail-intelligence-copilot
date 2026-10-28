@@ -37,15 +37,16 @@ open a **new session** for the next one.
 | Developer | `developer` sub-agent | implement the spec into the repo |
 | Tester | `tester` sub-agent | verify code against the spec's acceptance criteria only (scoped), report pass/fail |
 | Documenter | `documenter` sub-agent | write the module's progress note with visuals |
+| Designer | `designer` sub-agent | design-first pass for a UI surface (brief → wireframe → hi-fi mockup → decisions + developer handoff); on-demand (`/design`), **not** in the per-module loop |
 | Solution Architect | `solution-architect` sub-agent | independent business-value review at milestones — on-demand (`/value-review`), **not** in the per-module loop |
 
 **Handoff rule:** sub-agents never hand work to each other directly. They hand
 off through **files**. You pass the file paths between them.
 
-**Outside the loop:** two rituals sit apart from the per-module loop — `/change`
+**Outside the loop:** three rituals sit apart from the per-module loop — `/change`
 (an architect-style review before revising something already built, run by you
-the orchestrator in-thread) and `/value-review` (calls the Solution Architect at
-a milestone). Neither is a normal module step.
+the orchestrator in-thread), `/value-review` (calls the Solution Architect at
+a milestone), and `/design` (the Design Track below). None is a normal module step.
 
 ## Module Development Loop (two-level: module → sub-modules)
 
@@ -95,6 +96,32 @@ the module status to DONE in `context/PROJECT.md`, record any notable choice in
 previous Mermaid block, add the new nodes, highlight only this module's
 additions, fill the "added this module" list), clear `context/CURRENT_TASK.md`.
 Tell the user: "Module <ID> done. Open a new session for the next."
+
+## Design Track (v2, design-first iteration — run via `/design`)
+
+Apart from the per-module loop. v1 (M1–M8) was an **engineering spike** that
+proved the pipeline; this track adds the design process that should precede a
+frontend build, then feeds a rebuild. Frame it honestly as **iteration 2**, never
+as design-first — git history and `WORKLOG.md` are dated. Given a surface (default
+the M8 chat UI):
+
+1. **Brief.** Call `designer` → `docs/design/00_brief.md` (personas +
+   jobs-to-be-done, v1 UI gaps, UX success criteria). Stop at **CHECKPOINT D1**.
+2. **Wireframe.** After approval, `designer` → `docs/design/01_wireframes.md`
+   (lo-fi, every state).
+3. **Hi-fi mockup.** `designer` → `docs/design/mockups/<surface>.html`; publish it
+   as an artifact for the human to click. Stop at **CHECKPOINT D2**.
+4. **Decisions + handoff.** After approval, `designer` → `docs/design/02_decisions.md`
+   (incl. "deferred / where we stopped and why") and `docs/design/03_handoff.md`
+   (components, states, data bindings to `POST /query` + `audit`, role→render
+   rules, a11y).
+5. **Value/fit (optional).** If asked, call `solution-architect` on the design.
+6. **Hand off to build.** When the human says so, run `/module M8` as a **rebuild**
+   with `03_handoff.md` as a primary planner input.
+
+The human is the client; D1/D2 approvals are the real sign-off. No simulated
+PM/client personas. Any analytics view is fed by the same M6-scoped retrieval —
+design must not outrun governance. See `docs/design/README.md`.
 
 ## Session protocol
 
