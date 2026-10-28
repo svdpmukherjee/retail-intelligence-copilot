@@ -11,13 +11,27 @@ export default function LoadingState({ query, onCancel }: Props) {
   return (
     <>
       <UserTurn query={query} />
-      <div className="turn" aria-busy="true">
-        <p className="muted">{STAGES.join(" → ")}</p>
-        <div className="skeleton" aria-hidden="true" />
-        <div className="skeleton short" aria-hidden="true" />
-        <button type="button" className="link" onClick={onCancel}>
-          Cancel
-        </button>
+      <div className="turn bot" aria-busy="true">
+        <div className="av" aria-hidden="true">
+          R
+        </div>
+        <div className="body">
+          <div className="load">
+            <div className="stages">
+              {STAGES.map((s, i) => (
+                <span key={s} className={`stage${i < 2 ? " on" : ""}`}>
+                  {s}
+                </span>
+              ))}
+            </div>
+            <div className="skel w1" aria-hidden="true" />
+            <div className="skel w2" aria-hidden="true" />
+            <div className="skel w3" aria-hidden="true" />
+            <button type="button" className="cancel" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );

@@ -39,6 +39,7 @@ function renderCenter(
   query: string,
   role: string,
   a: CenterActions,
+  activeN: number | null,
 ): ReactNode {
   switch (state) {
     case "empty":
@@ -58,7 +59,7 @@ function renderCenter(
       return (
         <>
           <UserTurn query={query} />
-          <AssistantTurn res={res} state={state} onCiteClick={a.onCiteClick} />
+          <AssistantTurn res={res} state={state} activeN={activeN} onCiteClick={a.onCiteClick} />
         </>
       );
   }
@@ -146,34 +147,36 @@ export default function App() {
   };
 
   return (
-    <div className="shell">
-      <RoleRail
-        roles={roles}
-        role={role}
-        onRole={setRole}
-        audit={currentResponse?.audit ?? null}
-        threadId={threadId}
-        userId={userId}
-        roleSelectRef={roleSelectRef}
-      />
-      <ConversationPanel
-        title="Retail Intelligence Copilot"
-        meta={meta}
-        role={role}
-        question={question}
-        inFlight={inFlight}
-        onQuestion={setQuestion}
-        onSubmit={onSubmit}
-        panelState={state}
-      >
-        {renderCenter(state, currentResponse, currentError, lastQuery, role, actions)}
-      </ConversationPanel>
-      <EvidencePanel
-        citations={currentResponse?.citations ?? []}
-        activeN={activeCiteN}
-        open={sheetOpen}
-        onClose={closeSheet}
-      />
+    <div className="wrap">
+      <div className="shell">
+        <RoleRail
+          roles={roles}
+          role={role}
+          onRole={setRole}
+          audit={currentResponse?.audit ?? null}
+          threadId={threadId}
+          userId={userId}
+          roleSelectRef={roleSelectRef}
+        />
+        <ConversationPanel
+          title="Retail Intelligence Copilot"
+          meta={meta}
+          role={role}
+          question={question}
+          inFlight={inFlight}
+          onQuestion={setQuestion}
+          onSubmit={onSubmit}
+          panelState={state}
+        >
+          {renderCenter(state, currentResponse, currentError, lastQuery, role, actions, activeCiteN)}
+        </ConversationPanel>
+        <EvidencePanel
+          citations={currentResponse?.citations ?? []}
+          activeN={activeCiteN}
+          open={sheetOpen}
+          onClose={closeSheet}
+        />
+      </div>
     </div>
   );
 }

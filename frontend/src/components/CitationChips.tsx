@@ -2,20 +2,26 @@ import type { Citation } from "../api/types";
 
 interface Props {
   citations: Citation[];
+  activeN: number | null;
   onCiteClick: (n: number) => void;
 }
 
-export default function CitationChips({ citations, onCiteClick }: Props) {
+export default function CitationChips({ citations, activeN, onCiteClick }: Props) {
   if (citations.length === 0) return null;
   return (
-    <ul className="chips" aria-label="Citations">
+    <div className="evrow" role="group" aria-label="Citations">
+      <span className="lbl">Evidence — click to inspect</span>
       {citations.map((c) => (
-        <li key={c.n}>
-          <button type="button" className="chip chip-btn" onClick={() => onCiteClick(c.n)}>
-            [{c.n}] {c.label}
-          </button>
-        </li>
+        <button
+          key={c.n}
+          type="button"
+          className={`chip-cite${c.n === activeN ? " active" : ""}`}
+          onClick={() => onCiteClick(c.n)}
+        >
+          <span className="n">[{c.n}]</span>
+          <span className="cl">{c.label}</span>
+        </button>
       ))}
-    </ul>
+    </div>
   );
 }

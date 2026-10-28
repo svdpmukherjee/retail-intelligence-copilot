@@ -23,24 +23,46 @@ export default function ErrorBanner({ error, onReselectRole, onRetry }: Props) {
 
   if (is400) {
     return (
-      <div className="banner" role="alert" data-state="error-400">
-        <p>{msg}</p>
-        <button type="button" className="btn" onClick={onReselectRole}>
-          Reselect role
-        </button>
+      <div className="banner e400" role="alert" data-state="error-400">
+        <span className="ic" aria-hidden="true">
+          &#10022;
+        </span>
+        <div>
+          <div className="bt">Can&rsquo;t run that request.</div>
+          <div className="bd">
+            <code>{msg}</code>
+            <br />
+            Pick a valid role from the list and try again.
+          </div>
+          <div className="acts">
+            <button type="button" onClick={onReselectRole}>
+              Reselect role
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
   return (
-    <div className="banner" role="alert" data-state="error-502">
-      <p>Something went wrong: {msg.length > MAX_LEN ? `${msg.slice(0, MAX_LEN)}…` : msg}</p>
-      <div className="row">
-        <button type="button" className="btn" onClick={onRetry}>
-          Retry
-        </button>
-        <button type="button" className="btn" onClick={copyDetails}>
-          Copy details
-        </button>
+    <div className="banner e502" role="alert" data-state="error-502">
+      <span className="ic" aria-hidden="true">
+        &#9889;
+      </span>
+      <div>
+        <div className="bt">The copilot had an upstream problem.</div>
+        <div className="bd">
+          <code>{msg.length > MAX_LEN ? `${msg.slice(0, MAX_LEN)}…` : msg}</code>
+          <br />
+          Your question wasn&rsquo;t changed &mdash; you can retry.
+        </div>
+        <div className="acts">
+          <button type="button" onClick={onRetry}>
+            Retry
+          </button>
+          <button type="button" onClick={copyDetails}>
+            Copy details
+          </button>
+        </div>
       </div>
     </div>
   );

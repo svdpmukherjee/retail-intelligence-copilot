@@ -1,19 +1,47 @@
 import type { Metric } from "../../answer";
 
-// Labelled SVG; the aria-label states the data in words. The same fact is
-// also carried by the answer text above.
-export default function Bars({ metrics, caption }: { metrics: Metric[]; caption: string }) {
+export const CHART_COLORS = ["var(--c1)", "var(--c2)", "var(--c3)"];
+
+function words(metrics: Metric[]): string {
+  return metrics.map((m) => `${m.label} ${m.value}`).join(", ");
+}
+
+// Ranked rows (executive). The aria-label states the data in words; the same
+// fact is also carried by the answer text above.
+export function Ranked({ metrics, caption }: { metrics: Metric[]; caption: string }) {
   const max = Math.max(...metrics.map((m) => m.value), 1);
-  const h = 22;
-  const words = metrics.map((m) => `${m.label} ${m.value}`).join(", ");
   return (
-    <svg role="img" aria-label={`${caption}: ${words}`} viewBox={`0 0 300 ${metrics.length * h}`} className="bars">
-      <title>{`${caption}: ${words}`}</title>
+    <div className="ranked" role="img" aria-label={`${caption}: ${words(metrics)}`}>
       {metrics.map((m, i) => (
-        <g key={i} transform={`translate(0 ${i * h})`}>
-          <rect x="0" y="3" height="14" width={(m.value / max) * 290} rx="3" fill="var(--accent)" />
-        </g>
+        <div key={i} className="rrow">
+          <div className="rk">{i + 1}</div>
+          <div className="rl" title={m.label}>{m.label}</div>
+          <div className="track">
+            <div className="fill" style={{ width: `${(m.value / max) * 100}%`, background: CHART_COLORS[i % CHART_COLORS.length] }} />
+          </div>
+          <div className="rv">{m.value}</div>
+        </div>
       ))}
-    </svg>
+    </div>
   );
 }
+
+// Labelled share rows (marketing themes).
+export function Themes({ metrics, caption }: { metrics: Metric[]; caption: string }) {
+  const max = Math.max(...metrics.map((m) => m.value), 1);
+  return (
+    <div className="themes" role="img" aria-label={`${caption}: ${words(metrics)}`}>
+      {metrics.map((m, i) => (
+        <div key={i} className="theme-row">
+          <div className="tl" title={m.label}>{m.label}</div>
+          <div className="track">
+            <div className="fill" style={{ width: `${(m.value / max) * 100}%`, background: CHART_COLORS[i % CHART_COLORS.length] }} />
+          </div>
+          <div className="tv">{m.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default Ranked;

@@ -13,6 +13,7 @@ import SupportShape from "./shapes/SupportShape";
 interface Props {
   res: QueryResponse;
   state: PanelState;
+  activeN?: number | null;
   onCiteClick: (n: number) => void;
 }
 
@@ -20,31 +21,51 @@ interface Props {
 // Unknown roles fall through to DefaultShape. Charts need "sql" in audit.sources.
 const SHAPES = { support: SupportShape, marketing: MarketingShape, executive: ExecutiveShape };
 
-export default function AssistantTurn({ res, state, onCiteClick }: Props) {
+export default function AssistantTurn({ res, state, activeN = null, onCiteClick }: Props) {
   const { audit, citations } = res;
   const lines = splitClaims(res.answer);
   const Shape = SHAPES[audit.role as keyof typeof SHAPES] ?? DefaultShape;
   const suppressCharts = state === "degraded-SQL" || !audit.sources.includes("sql");
   return (
-    <div className="turn turn-assistant" data-state={state}>
-      <ScopeRibbon scope={audit.scope} />
-      {state === "degraded-SQL" && (
-        <div className="banner banner-warn" role="status">
-          {SQL_DEGRADED}
+    <div className="turn bot" data-state={state}>
+      <div className="av" aria-hidden="true">
+        R
+      </div>
+      <div className="body">
+        <div className="answer">
+          <ScopeRibbon scope={audit.scope} />
+          {state === "degraded-SQL" && (
+            <div className="warnline" role="status">
+              <span className="ic" aria-hidden="true">
+                &#9888;
+              </span>
+              <span>{SQL_DEGRADED}</span>
+            </div>
+          )}
+          {state === "fallback" && (
+            <div className="warnline" role="status">
+              <span className="ic" aria-hidden="true">
+                &#9888;
+              </span>
+              <span>{FALLBACK_NOTE}</span>
+            </div>
+          )}
+          {state === "no-evidence" ? (
+            <div className="noevid">
+              <span className="ic" aria-hidden="true">
+                &#9675;
+              </span>
+              <span>{NO_EVIDENCE}</span>
+            </div>
+          ) : (
+            <>
+              <Shape res={res} lines={lines} suppressCharts={suppressCharts} onCiteClick={onCiteClick} />
+              <CitationChips citations={citations} activeN={activeN} onCiteClick={onCiteClick} />
+            </>
+          )}
+          <TrustStrip audit={audit} fallback={state === "fallback"} />
         </div>
-      )}
-      {state === "fallback" && <p className="muted">{FALLBACK_NOTE}</p>}
-      {state === "no-evidence" ? (
-        <div className="calm">
-          <p>{NO_EVIDENCE}</p>
-        </div>
-      ) : (
-        <>
-          <Shape res={res} lines={lines} suppressCharts={suppressCharts} onCiteClick={onCiteClick} />
-          <CitationChips citations={citations} onCiteClick={onCiteClick} />
-        </>
-      )}
-      <TrustStrip audit={audit} fallback={state === "fallback"} />
+      </div>
     </div>
   );
 }

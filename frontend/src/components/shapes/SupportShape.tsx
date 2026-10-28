@@ -8,17 +8,33 @@ export default function SupportShape({ res, lines, onCiteClick }: ShapeProps) {
   const policy = res.citations.find((c) => c.source_id !== "sql" && POLICY.test(`${c.source_id} ${c.label}`));
   return (
     <div className="shape shape-support">
-      {lines.map((l, i) => (
-        <div key={i} className="row">
-          <span className={`tag ${FIX.test(l) ? "tag-fix" : "tag-issue"}`}>{FIX.test(l) ? "FIX" : "ISSUE"}</span>
-          <ClaimLine line={l} onCiteClick={onCiteClick} />
-        </div>
-      ))}
+      {lines.map((l, i) => {
+        const fix = FIX.test(l);
+        return (
+          <div key={i} className="kv">
+            <span className={`k${fix ? " fix" : ""}`}>{fix ? "FIX" : "ISSUE"}</span>
+            <ClaimLine line={l} variant="t" onCiteClick={onCiteClick} />
+          </div>
+        );
+      })}
       {policy && (
-        <aside className="card policy" aria-label="Governing policy">
-          <h2>Governing policy</h2>
-          <p>{policy.label}</p>
-          {policy.snippet && <blockquote>{policy.snippet}</blockquote>}
+        <aside className="policy" aria-label="Governing policy">
+          <div className="ph">
+            <span aria-hidden="true">&#128220;</span> Governing policy &middot; {policy.label}
+          </div>
+          {policy.snippet && (
+            <div className="pq">
+              &ldquo;{policy.snippet}&rdquo;{" "}
+              <button
+                type="button"
+                className="cmark"
+                aria-label={`Show evidence ${policy.n}`}
+                onClick={() => onCiteClick(policy.n)}
+              >
+                [{policy.n}]
+              </button>
+            </div>
+          )}
         </aside>
       )}
     </div>

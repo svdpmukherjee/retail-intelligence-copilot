@@ -211,3 +211,12 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   scoped `/change`**, not a reopen. 13 sub-agent calls, ~11 min, $0. Spec:
   `.claude/specs/M8v2_serving_ui.md`; note: `docs/modules/M8v2_serving_ui.md`. Open items (human):
   visual-design `/change` + browser visual-QA + per-persona screenshots under `docs/img/`.
+- 2026-10-29: **M8 v2 visual-fidelity `/change` DONE.** Approach A: ported the D2 mockup
+  stylesheet as the visual contract into `App.css` (109 → ~417 lines, full light/dark tokens +
+  type/spacing/shadows) and re-marked every shell/rail/panel/shape/trust/evidence/state component
+  to the mockup DOM — restyle only, behaviour/data-bindings/state-machine/governance invariant.
+  Fixed a session-card overflow (long thread_id/user_id spilling onto the chat). New gate browser
+  visual-QA driven live (desktop 1440px + phone 500px, light + dark): all structurally distinct
+  surfaces match; governance verified live (scope chips only from `audit.scope`, snippets redacted,
+  scope read-only). `npm run build` green, category grep clean, $0. ADR + resolution in
+  `DECISIONS.md`; details in `docs/modules/M8v2_serving_ui.md`.

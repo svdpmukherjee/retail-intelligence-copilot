@@ -10,8 +10,16 @@ export default function ExecutiveShape({ res, lines, suppressCharts, onCiteClick
   const body = rest.slice(0, -1);
   return (
     <div className="shape shape-executive">
-      {headline && <div className="headline"><ClaimLine line={headline} onCiteClick={onCiteClick} /></div>}
-      {metrics.length > 0 && <Bars metrics={metrics} caption="Ranked metric from SQL" />}
+      {headline && <ClaimLine line={headline} variant="quote" onCiteClick={onCiteClick} />}
+      {metrics.length > 0 && (
+        <div className="datacard">
+          <div className="dc-h">
+            <span className="h">Ranked metric</span>
+            <span className="src">source: SQL</span>
+          </div>
+          <Bars metrics={metrics} caption="Ranked metric from SQL" />
+        </div>
+      )}
       {body.map((l, i) => (
         <ClaimLine key={i} line={l} onCiteClick={onCiteClick} />
       ))}

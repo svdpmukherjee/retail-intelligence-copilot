@@ -8,20 +8,24 @@ interface Props {
 export default function EmptyState({ role, onStarter }: Props) {
   return (
     <div className="empty">
+      <div className="elogo" aria-hidden="true">
+        R
+      </div>
       <h2>Retail Intelligence Copilot</h2>
-      <p className="muted">{TAGLINE}</p>
+      <div className="tagline">{TAGLINE}</div>
       {role === "" ? (
-        <p className="muted">Select a role to get started.</p>
+        <div className="tryh">Select a role to get started.</div>
       ) : (
-        <ul className="chips" aria-label="Starter questions">
-          {startersFor(role).map((q) => (
-            <li key={q}>
-              <button type="button" className="chip chip-btn" onClick={() => onStarter(q)}>
-                {q}
+        <>
+          <div className="tryh">Try &mdash; for your role</div>
+          <div className="starters">
+            {startersFor(role).map((q) => (
+              <button key={q} type="button" className="starter" onClick={() => onStarter(q)}>
+                &ldquo;{q}&rdquo;
               </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -173,3 +173,56 @@ Mockup reference: `docs/design/mockups/m8-chat.html`.
 - Cloud spend: **$0** (free provider mode; nothing provisioned; deployment stays inert).
 - Cloud spend this module: $0.00 (free mode; deployment inert). See `COST.md`.
 - Claude session usage: run `/cost` for this session's token usage.
+
+---
+
+## Visual-fidelity `/change` (2026-10-29)
+
+A scoped `/change` (ADR 2026-10-29 in `context/DECISIONS.md`, **Approach A**) closed the known
+visual-fidelity gap: the v2 build was functionally correct but did not match the D2 mockup
+(`docs/design/mockups/m8-chat.html`) — `App.css` was ~109 lines / ~8 flat tokens with no shadows,
+radius, or type scale, and the component DOM diverged from the DOM the mockup's stylesheet targets.
+
+**What changed (restyle only — no behaviour, data-binding, state-machine, or governance change):**
+
+- `frontend/src/App.css` replaced with a port of the mockup stylesheet (**109 → ~417 lines**):
+  full light + dark token sets (both the `prefers-color-scheme` and `[data-theme="dark"]` guards),
+  type scale, `--shadow`/`--radius`, `color-mix` usage, and all component styling. The mockup's
+  demo-only chrome (`.demobar`, `.pending`, `.foot`) was deliberately not ported.
+- Every shell / rail / panel / shape / trust / evidence / state component re-marked to the mockup's
+  DOM so the ported CSS applies (e.g. trust strip → `button.th` + `.pill.route`/`.pill.ground` + a
+  `.tbody` grid of `.f` field cards; executive → `.quote`/`.lead` + `.datacard` + `.ranked`/`.rrow`;
+  support → `.kv .k/.t` + `.policy`; marketing → `.themes`/`.theme-row`; chips → `.chip-cite`;
+  evidence → `.ev-item .eh/.eid/.esnip`). Two optional display-only props added (`ClaimLine.variant`,
+  `CitationChips.activeN`); data flow unchanged.
+- **Session-card overflow fix** (found during QA): long `thread_id`/`user_id` values overflowed the
+  rail card onto the chat. `.session .r .v` now has `min-width:0` + `overflow-wrap:anywhere` +
+  right-aligned, with `.k { flex:none }` — long ids wrap inside the card.
+
+**New gate — browser visual-QA** (the process gap the v1 note flagged). Driven live against the
+running stack (pgvector + backend `PROVIDER_MODE=free` with a local LLM + Vite) at desktop (1440px)
+and phone (500px, the OS window minimum) widths, light and dark:
+
+| Surface / state | Result |
+|---|---|
+| Empty, loading (staged pills + shimmer + Cancel) | Match |
+| Grounded — support shape (FIX rows, policy card, `[n]` markers, fallback note, grounding-issues) | Match |
+| Grounded — marketing shape (Themes datacard + bar, `source: SQL`) — chart populates from real SQL | Match |
+| Grounded — executive shape (`.quote`/`.lead`) | Match |
+| Scope ribbon + scope card from `audit.scope` (support 4 cats / marketing 3 incl. Electronics / executive unrestricted, no chips) | Match |
+| Citation chips; trust strip collapsed + expanded (field grid, memory, issues) | Match |
+| Evidence panel + redacted snippets + type tags; bottom-sheet + close on phone | Match |
+| Session card live metrics (after the overflow fix) | Match |
+| Dark mode (full token adaptation); phone 1-col stacked, no horizontal scroll | Match |
+
+**Honest divergences (data-driven, not styling defects):** support rows all render `FIX` (the real
+extractive answer is cited lines, not an authored issue/fix split); marketing showed one theme-row
+and no trend (trend needs ≥2 metrics; the aggregate returned one row); an executive query that routes
+to `docs_rag` shows no ranked bars (the marketing run proved the SQL chart path populates).
+
+**Not driven live** (lower-risk banner/calm-block variants; CSS ported, fallback/issues observed):
+`400` (the role picker offers only valid roles), `502/500` (needs the backend downed), pure
+`no-evidence` calm block, `degraded-SQL` amber. User accepted this coverage as sufficient.
+
+**Gates:** `npm run build` green; category-name grep over `frontend/src` empty; snippets still bound
+to `citations[].snippet` (redacted server-side); scope read-only. Cloud spend **$0**.

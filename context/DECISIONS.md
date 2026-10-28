@@ -462,3 +462,37 @@ Durable design decisions (newest at the bottom). Decision → why.
   with real browser QA. **Process lesson:** a design-track handoff should enumerate the visual spec
   (tokens/type/spacing), not just point at the mockup, and a UI module's gate should include a browser
   visual check, not only build + API-JSON assertions.
+- **M8 v2 visual fidelity (ADR, 2026-10-28, via `/change`): Approach A — lift the mockup
+  stylesheet as the visual contract and conform component markup to its DOM.** The built UI
+  diverges from the D2 mockup (`docs/design/mockups/m8-chat.html`) both in CSS (App.css ~109
+  lines / ~8 flat tokens / no shadows-radius-type-scale, vs the mockup's ~440-line sheet with
+  ~30 tokens, `--shadow`/`--radius`, `color-mix`, a real type scale) AND in component DOM —
+  e.g. the trust strip renders `.trust-head`/`.pill pill-llm`/`<dl class="kv">` where the
+  mockup wants `button.th` + `.pill.route`/`.pill.ground .dot` + a `.tbody` grid of `.f` field
+  cards; ExecutiveShape renders `.headline`+`Bars` where the mockup wants `.quote`/`.lead` +
+  `.datacard` + a `.ranked`/`.rrow` grid (same for support `.kv .k/.t`+`.policy`, marketing
+  `.themes`/`.theme-row`, `.chip-cite`, `.ev-item`, empty/loading/banner). So the sheet cannot
+  be swapped under the current markup; the markup must conform to the mockup's DOM. **Decision:**
+  port the mockup's stylesheet verbatim as `App.css` and re-markup each affected component
+  (center/rail/evidence/state) to the mockup's DOM, holding every behavioural surface invariant —
+  props, handlers, the state machine, field bindings, and the governance guards (scope chips only
+  from `audit.scope`, no hard-coded category literals, snippets stay `redact()`-ed, scope
+  read-only). Only rendered structure + class names change; no backend (M8v2.1) or TS-types
+  (M8v2.2) change. Scope = sub-modules M8v2.3/.4/.5, run as one coherent restyle pass. **New gate:
+  browser visual-QA** — drive each role (support/marketing/executive/default) × each state (empty,
+  loading, grounded, fallback, degraded-SQL, no-evidence, 400, 502) in light+dark at desktop +
+  phone widths against the mockup before done, closing the "no browser visual check ran" process
+  gap. **Why:** the brief names the mockup stylesheet the visual contract, so an App.css-only
+  restyle of existing class names (Option B) knowingly can't reproduce the mockup's structural
+  components and fails a strict compare; a hybrid (Option C) leaves two half-aligned class
+  vocabularies in one sheet, messier to maintain than a clean lift. **Rejected:** (B) CSS-only
+  restyle — approximate fidelity, under-delivers the contract; (C) hybrid partial re-markup —
+  medium churn, mixed class vocabulary. Cost $0 (free mode, nothing provisions).
+  **Resolved (2026-10-29):** executed and closed. `App.css` 109 → ~417 lines (mockup stylesheet
+  ported), all affected components re-marked to the mockup DOM; `npm run build` green, category
+  grep clean, snippets still bound to redacted `citations[].snippet`. Browser visual-QA driven
+  live (desktop 1440px + phone 500px, light + dark) — all structurally distinct surfaces match
+  the mockup; governance verified live. One bug found + fixed during QA: long `thread_id`/`user_id`
+  overflowed the session card onto the chat (`.session .r .v` → `min-width:0` + `overflow-wrap:
+  anywhere`, right-aligned). 4 edge states (400/502/no-evidence/degraded-SQL) not driven live
+  (user accepted coverage). $0.

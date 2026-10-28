@@ -17,12 +17,15 @@ interface Props {
 export default function RoleRail({ roles, role, onRole, audit, threadId, userId, roleSelectRef }: Props) {
   return (
     <aside className="rail">
-      <BrandCard />
+      <section className="card brandcard" aria-label="Product">
+        <BrandCard />
+        <ThemeToggle />
+      </section>
       <section className="card" aria-label="Role">
         <label htmlFor="role-select">
-          <h2>Role</h2>
+          <h2>Signed in as</h2>
         </label>
-        <select id="role-select" ref={roleSelectRef} value={role} onChange={(e) => onRole(e.target.value)}>
+        <select id="role-select" className="role" ref={roleSelectRef} value={role} onChange={(e) => onRole(e.target.value)}>
           <option value="">Select a role...</option>
           {roles.map((r) => (
             <option key={r} value={r}>
@@ -30,10 +33,9 @@ export default function RoleRail({ roles, role, onRole, audit, threadId, userId,
             </option>
           ))}
         </select>
+        <ScopeCard role={role} audit={audit} />
       </section>
-      <ScopeCard role={role} audit={audit} />
       <SessionCard audit={audit} threadId={threadId} userId={userId} />
-      <ThemeToggle />
     </aside>
   );
 }

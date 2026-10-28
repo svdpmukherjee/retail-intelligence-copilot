@@ -46,6 +46,20 @@ widen my scope.
       labelled charts, `prefers-reduced-motion`, keyboard paths, light/dark tokens.
 - [ ] `npm run build` (typecheck + vite build) passes; backend contract test file
       passes; one real end-to-end smoke renders a grounded, cited answer. Cost $0.
+- [ ] **Visual fidelity (ADR 2026-10-28, via `/change`):** the SPA realizes the D2
+      mockup (`docs/design/mockups/m8-chat.html`) as its **visual contract** — its full
+      design-token set, type scale, spacing, shadows/radius, and the card/chat/
+      evidence/chart/trust/state styling — in both light and dark, at desktop and phone
+      widths. The mockup's stylesheet is ported as `App.css` and each affected component's
+      markup conforms to the mockup's DOM. This is a **restyle only**: no change to
+      behaviour, data bindings, the state machine, or the governance guards — scope chips
+      still render only from `audit.scope.categories` (zero hard-coded category literals),
+      snippets stay `redact()`-ed, scope stays read-only.
+- [ ] **Browser visual-QA (new gate):** with the app running at `localhost:5173`, drive
+      each role (support/marketing/executive/default) across each state (empty, loading,
+      grounded, fallback, degraded-SQL, no-evidence, 400, 502) in light **and** dark at
+      desktop + phone widths, and confirm each matches the mockup before marking done
+      (closes the "no browser visual check ran" gap logged in the v1 note).
 
 ## Sub-modules (ordered, each build → verify → integrate)
 
@@ -184,6 +198,19 @@ widen my scope.
   manual check of the added surface (rail+scope-from-field; shapes+trust expand;
   states+evidence snippet+a11y). No JS unit runner (build+typecheck is the gate,
   per v1 convention).
+- **Visual-fidelity `/change` (ADR 2026-10-28)**: after the restyle, `npm run build`
+  still passes (typecheck proves no binding/structure regression), and two grep guards
+  hold — the frontend contains zero literal category names, and no raw (un-`redact`-ed)
+  snippet path was introduced. Then a **browser visual-QA** pass (below) is the gate that
+  proves the restyle matched the mockup without drifting behaviour. The restyle touches
+  presentation only; no new tester unit is added beyond re-running the build + guards.
+- **Browser visual-QA** (visual-fidelity `/change`): launch backend `PROVIDER_MODE=free`
+  + `npm run dev`, open `localhost:5173`, and compare to the mockup for each role
+  (support/marketing/executive/default) × each state (empty, loading, grounded, fallback,
+  degraded-SQL, no-evidence, 400, 502) in light **and** dark at desktop + phone widths.
+  Confirm tokens/type/spacing/shadows, the three answer shapes, the trust strip collapsed
+  + expanded, the Evidence panel (dock + bottom-sheet), and no horizontal scroll at phone
+  width. If the browser cannot be driven, the tester reports that plainly — not a silent PASS.
 - **Module end-to-end smoke** (one real run, per `.claude/rules/testing.md`): backend
   `PROVIDER_MODE=free` (`uvicorn app.main:app`) + `npm run dev`; as support, marketing,
   and executive, ask one real question each and confirm a grounded, cited answer in
