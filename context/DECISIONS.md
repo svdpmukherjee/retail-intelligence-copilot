@@ -442,3 +442,23 @@ Durable design decisions (newest at the bottom). Decision → why.
   mismatch. Also carried as design-build conditions (separate specs): PII-redact the proposed
   `citations[].snippet` at the boundary, and keep the mockup's hard-coded category chips out of
   the build until an `audit.scope` field exists.
+- **M8 v2 (2026-10-28): DONE with a known visual-fidelity gap — behaviour shipped, visual design did
+  not.** The rebuild is functionally correct against the approved handoff (`03_handoff.md`): all 8
+  states, 3 role shapes, trust strip, docked Evidence panel, the two backend edges (redacted
+  `citations[].snippet`, `audit.scope`), full a11y contract, live e2e at $0 — all verified. **But the
+  built UI does NOT match the D2-approved mockup's visual design.** `frontend/src/App.css` is ~109
+  lines vs the mockup (`docs/design/mockups/m8-chat.html`, ~1157 lines) with its full design-token
+  set, typography scale, spacing system, and card/chat/evidence/chart styling — none of which were
+  ported. **Root cause:** `03_handoff.md` carried *behaviour, states, and data bindings* but not the
+  *visual spec* (it names the mockup as "the visual reference" rather than enumerating tokens/type/
+  spacing), so the developers built to the behavioural contract and produced functional-but-plain
+  styling; **no browser visual-QA ran** (the module gate was build + grep + live-JSON e2e, all
+  non-visual), so the gap wasn't caught at test time. **Decision:** accept M8 v2 as done for the
+  behavioural/governance milestone and log the visual gap as an explicit open item; **the fix is a
+  scoped `/change`** that ports the mockup's design tokens + component styling into `App.css` (and
+  adds a browser visual-QA step + the per-persona screenshots already open from v1), not a reopen of
+  this module. Why: the behavioural rebuild — the risky, governance-critical part — is complete and
+  proven; visual fidelity is a contained, lower-risk styling pass best run as its own reviewed change
+  with real browser QA. **Process lesson:** a design-track handoff should enumerate the visual spec
+  (tokens/type/spacing), not just point at the mockup, and a UI module's gate should include a browser
+  visual check, not only build + API-JSON assertions.

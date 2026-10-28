@@ -100,6 +100,8 @@ async def answer(
         cost_usd=ledger.usd,
         latency_ms=round((time.perf_counter() - started) * 1000, 1),
     )
+    categories = list(decision.scope.get("category", []))
+    result.audit["scope"] = {"restricted": bool(categories), "categories": categories}
     if sql_error:
         result.audit["sql_error"] = sql_error
     if memory is not None:

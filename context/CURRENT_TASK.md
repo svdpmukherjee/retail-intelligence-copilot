@@ -2,37 +2,28 @@
 
 No module in progress.
 
-M6.1 marketing scope revised via `/change` (ADR 2026-10-28): now Electronics, Beauty_and_Personal_Care, Toys_and_Games (Books dropped).
+**M8 v2 — Serving & UI (design-driven rebuild) is DONE** (closed 2026-10-28). SDLC
+iteration 2: a design-first redo of the M8 chat UI on the unchanged backend, fed by the
+Design Track package. Built in 5 sub-modules, all first-pass, zero build-backs. Two
+additive backend edges (redacted `citations[].snippet`; `audit.scope`), full state
+machine, 3 role shapes, trust strip, docked Evidence panel, a11y contract. Module gate
+PASS incl. live e2e (free mode, $0). All three `/change` ADR conditions met (marketing
+scope, snippet redaction, no hard-coded chips). Spec `.claude/specs/M8v2_serving_ui.md`;
+note `docs/modules/M8v2_serving_ui.md`. The Design Track is now DONE in `PROJECT.md`.
 
-**M8 — Serving & UI is DONE** (closed 2026-10-28). Built in 4 sub-modules: M8.1
-backend serving hardening (CORS from `Settings.cors_allow_origins`, `GET /roles`
-from `ACCESS_POLICY`, unknown-role → typed 400 via an API-boundary edge check);
-M8.2 frontend API client/types/config (`vite.config.ts`, `src/api/{types,client}`
-mirroring the backend contract, base URL from `VITE_API_BASE_URL`, typed
-`ApiError`); M8.3 chat UI (role picker, numbered citations, error banner,
-`thread_id`/`user_id` continuity); M8.4 inert deploy artifacts (backend+frontend
-Dockerfiles, inert `infra/webapp.bicep`, build-only CI `frontend` job). One
-build-back on M8.1 (monkeypatched-400 → real edge-check 400).
-
-Module gate PASS (live free mode): real `POST /query` → grounded cited answer at
-$0, follow-up reused the same `thread_id` (`history_turns_used` 0→2), CORS
-origin-scoped, unknown role → 400, `test_serving_api.py` 4 passed, frontend
-`npm run build` green, both Docker builds succeeded, CI YAML parses. New Settings:
-`cors_allow_origins`. Cloud spend $0. See `docs/modules/M8_serving_ui.md` and
-`WORKLOG.md`.
+**Known limitation (logged in `DECISIONS.md` + the M8v2 note):** the UI is functionally
+correct but does NOT match the D2-approved mockup's visual design (`App.css` ~109 lines
+vs mockup ~1157; design tokens/typography/spacing/card-chat-evidence-chart styling not
+ported; no browser visual-QA ran). The handoff carried behaviour, not the visual spec.
+**Fix = a scoped `/change`** (port the mockup's tokens/styling into `App.css` + add a
+browser visual-QA step), NOT a reopen of this module.
 
 **Open items (human):**
-- No UI screenshot captured — add one of the running chat (role selected, answer
-  with numbered citations) under `docs/img/` and link it in the M8 note.
-- CI `frontend` job (and the M7 `eval` job) not yet observed on a real GitHub
-  runner — verify on first push; optionally capture a passing-job screenshot.
-- The e2e smoke wrote memory rows for `user_id=qa-m8` and its thread
-  `27bf01c8...`; deletable if tidying the dev DB.
+- Run the scoped `/change` for visual fidelity (above).
+- Capture per-persona UI screenshots (support/marketing/executive) under `docs/img/` and
+  link them in the M8v2 note.
+- Theme contrast + phone-width no-horizontal-scroll verified by code only — confirm in a
+  browser during the visual `/change`.
 
-**Pending housekeeping (human, carried):** clear accumulated dev-DB test rows —
-`docker exec infra-pgvector-1 psql -U rag -d rag -c "TRUNCATE audit_log;" -c "DROP TABLE IF EXISTS chunks;"`
-(harmless; tidies dev state).
-
-Next step: open a **new session** and run `/module M9` (Documentation —
-consolidated architecture diagrams + design record), the last remaining TODO in
-`PROJECT.md`.
+**Remaining module:** M9 (Documentation — consolidated architecture diagrams + design
+record), the last TODO in `PROJECT.md`. Open a new session to run `/module M9`.

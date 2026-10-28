@@ -187,3 +187,27 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   captured (TODO `docs/img/`); CI `frontend` job not yet observed on a GitHub runner;
   e2e left memory rows for `user_id=qa-m8` (deletable). Spec:
   `.claude/specs/M8_serving_ui.md`; note: `docs/modules/M8_serving_ui.md`.
+- 2026-10-28: **M8 v2 — Serving & UI (design-driven rebuild) DONE.** SDLC iteration 2:
+  a design-first redo of the M8 chat UI on the unchanged backend, fed by the Design
+  Track package (`docs/design/03_handoff.md` authoritative). Built in 5 sub-modules,
+  all first-pass, zero build-backs: M8v2.1 two additive backend edges (`citations[].snippet`
+  redacted+trimmed at `build_sources()`; `audit.scope={restricted,categories}` from the real
+  `decision.scope`), pipeline otherwise unchanged + `test_contract_edges_m8v2.py`; M8v2.2 TS
+  contract (`snippet` + typed `Audit`/`Grounding`/`Memory`/`Scope`); M8v2.3 3-col responsive
+  shell + 8-state machine + role rail (picker from `/roles`, read-only ScopeCard, live
+  SessionCard, theme toggle); M8v2.4 conversation panel + 3 role-adaptive shapes (charts gated
+  on `audit.sources`) + inline `[n]`/chips + trust strip (v1 MessageList/Citations removed);
+  M8v2.5 docked Evidence panel/bottom-sheet (redacted snippet; null→no fabricated quote) + all
+  error/empty/loading screens + full a11y contract. The three `/change` ADR conditions all met
+  (test+live): marketing-scope regression guard `{Electronics, Beauty_and_Personal_Care,
+  Toys_and_Games}`, snippet PII-redacted at boundary, no hard-coded category chips (grep empty;
+  chips only from `audit.scope`). Module gate PASS: contract test 5 passed, `npm run build` green
+  (57 modules), category grep empty, **live e2e (pgvector up, free mode, $0)** — `GET /roles` ok,
+  executive `scope{restricted:false}` vs marketing `{restricted:true, 3 cats}`, no PII in snippets,
+  `cost_usd` 0.0, nonsense query degrades gracefully to extractive at 200. **Known limitation
+  (logged):** UI is functionally correct but does **not** match the D2 mockup's visual design
+  (`App.css` ~109 lines vs mockup ~1157; tokens/typography/spacing/card-chat-evidence-chart styling
+  not ported; no browser visual-QA ran) — handoff carried behaviour not the visual spec; **fix is a
+  scoped `/change`**, not a reopen. 13 sub-agent calls, ~11 min, $0. Spec:
+  `.claude/specs/M8v2_serving_ui.md`; note: `docs/modules/M8v2_serving_ui.md`. Open items (human):
+  visual-design `/change` + browser visual-QA + per-persona screenshots under `docs/img/`.

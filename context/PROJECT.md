@@ -19,4 +19,9 @@ Status values: TODO → IN PROGRESS → DONE.
 
 **Design Track (v2, design-first iteration):** apart from the module loop. Run via
 `/design`; produces a design package in `docs/design/`, then feeds an M8 rebuild.
-Status: TODO. Framed honestly as iteration 2 (v1 = engineering spike).
+Status: **DONE** (2026-10-28). Framed honestly as iteration 2 (v1 = engineering spike).
+The design package (`00_brief`→`03_handoff` + `mockups/m8-chat.html`, approved D2) fed
+the **M8 v2 rebuild** — behaviourally complete and verified live at $0 (spec
+`.claude/specs/M8v2_serving_ui.md`, note `docs/modules/M8v2_serving_ui.md`).
+**Open follow-up:** the built UI does not yet match the mockup's visual design — a scoped
+`/change` (port design tokens/styling + browser visual-QA) is logged in `DECISIONS.md`.

@@ -24,6 +24,7 @@ class Citation(BaseModel):
     n: int
     source_id: str  # chunk id, or "sql" for the SQL result
     label: str
+    snippet: str | None = None  # redacted excerpt of the source text, for the UI
 
 
 class AnswerResult(BaseModel):
@@ -48,15 +49,24 @@ def _sql_text(sql_result: dict) -> str:
     return shown or "no rows"
 
 
+def _snippet(text: str) -> str | None:
+    return redact(" ".join(text.split())[:MAX_QUOTE_CHARS]) if text else None
+
+
 def build_sources(sql_result: dict | None, hits: list[SearchHit]) -> list[tuple[Citation, str]]:
     """Numbered evidence from the tools; the only things an answer is allowed to cite."""
     sources: list[tuple[Citation, str]] = []
     if sql_result is not None:
-        sources.append(
-            (Citation(n=1, source_id=SQL_SOURCE, label="SQL result"), _sql_text(sql_result))
-        )
+        text = _sql_text(sql_result)
+        cite = Citation(n=1, source_id=SQL_SOURCE, label="SQL result", snippet=_snippet(text))
+        sources.append((cite, text))
     for hit in hits:
-        cite = Citation(n=len(sources) + 1, source_id=hit.chunk.id, label=_label(hit))
+        cite = Citation(
+            n=len(sources) + 1,
+            source_id=hit.chunk.id,
+            label=_label(hit),
+            snippet=_snippet(hit.chunk.text),
+        )
         sources.append((cite, hit.chunk.text))
     return sources
 

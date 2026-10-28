@@ -677,6 +677,109 @@ flowchart TB
 
 ---
 
+## Snapshot 9 — After M8 v2 (Serving & UI, design-driven rebuild)
+
+Design Track iteration 2: rebuilds the React UI surface on the **unchanged** backend
+pipeline, driven by the `docs/design/` package. Backend gains two small, additive,
+backward-compatible contract edges only — `backend/agents/composer.py` adds a redacted
+`citations[].snippet` (trimmed at the `build_sources()` boundary) and `backend/agents/
+pipeline.py` adds `audit.scope={restricted,categories}` from the real retrieval scope;
+`tests/test_contract_edges_m8v2.py` added. Frontend is rebuilt from the minimal v1 chat
+into a design-system shell: `src/` gains `panelState.ts` (8-state machine), `answer.ts`
+(`[n]` parsing), `copy.ts` (authored copy/starters); `src/api/types.ts` gains `snippet` +
+a typed `Audit`; `src/App.tsx`/`App.css` rewritten; `src/components/` expands into the
+role rail (RoleRail/BrandCard/ScopeCard/SessionCard/ThemeToggle), the conversation panel
+(ConversationPanel/UserTurn/AssistantTurn/ClaimLine/ScopeRibbon/CitationChips/TrustStrip),
+`shapes/` (Support/Marketing/Executive/Default + Bars/Trend), and the state screens
+(EvidencePanel/ErrorBanner/EmptyState/LoadingState); v1 `MessageList`/`Citations` removed.
+No retrieval/agents/governance/memory logic changed; deployment stays inert ($0). **Known
+gap:** functionally complete but the mockup's visual design is not yet ported (scoped
+`/change` follow-up).
+
+```mermaid
+flowchart TB
+    ROOT["retail-intelligence-copilot/<br/>PRD.md · CLAUDE.md · README.md · .gitignore · .claudeignore"]
+    CLA[".claude/<br/>settings.json"]
+    AG[".claude/agents/<br/>planner · developer · tester · documenter · designer · solution-architect"]
+    CM[".claude/commands/<br/>module.md"]
+    RU[".claude/rules/<br/>code_style · security · testing"]
+    CX["context/<br/>PROJECT · CURRENT_TASK · WORKLOG · DECISIONS"]
+    DC["docs/<br/>architecture/ · img/ · repo-evolution.md"]
+    DM["docs/modules/<br/>README · M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui"]
+    DDES["docs/design/<br/>00_brief · 01_wireframes · 02_decisions · 03_handoff · mockups/m8-chat.html"]
+
+    SPEC[".claude/specs/<br/>M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui"]
+    COST["COST.md"]
+    GH[".github/workflows/<br/>ci.yml (backend · eval · frontend)"]
+    BE["backend/<br/>pyproject.toml · .env.example · Dockerfile · .dockerignore"]
+    BEAPP["app/<br/>config.py · cost.py · main.py"]
+    BEAGT["agents/<br/>llm · router · sql_agent · review_rag · docs_rag · _rag · composer (+snippet) · pipeline (+audit.scope)"]
+    BEGOV["governance/<br/>policy · pii · grounding · audit"]
+    BEMEM["memory/<br/>schema · store · manager"]
+    BERET["retrieval/<br/>embeddings · schema · vector_store · chunking · index_reviews · index_docs · hybrid · rerank"]
+    BEEVAL["eval/<br/>metrics · retrieval_eval · answer_eval · run_eval · thresholds.json · ground_truth/"]
+    BET["tests/<br/>+ test_contract_edges_m8v2"]
+    FE["frontend/<br/>index.html · package.json · tsconfig.json · vite.config.ts · .env.example · Dockerfile · .dockerignore"]
+    FES["src/<br/>App.tsx (rebuilt) · main.tsx · App.css (rebuilt) · vite-env.d.ts · panelState · answer · copy"]
+    FEAPI["src/api/<br/>types (+snippet +Audit) · client"]
+    FECMP["src/components/<br/>RoleRail · BrandCard · ScopeCard · SessionCard · ThemeToggle · ConversationPanel · UserTurn · AssistantTurn · ClaimLine · ScopeRibbon · CitationChips · TrustStrip · EvidencePanel · ErrorBanner · EmptyState · LoadingState"]
+    FESHP["src/components/shapes/<br/>Support · Marketing · Executive · Default · Bars · Trend · types"]
+    INF["infra/<br/>main.bicep · budget.bicep · main.bicepparam · teardown.sh · docker-compose.yml · webapp.bicep · README.md"]
+    DATA["data/<br/>pyproject.toml"]
+    DETL["data/etl/<br/>spark_session · storage · bronze · silver · gold · pipeline"]
+    DSAMP["data/sample/<br/>amazon_reviews_sample.jsonl"]
+    DDOCS["data/docs/<br/>authored/ (18 md) · manuals/ (4 pdf) · make_manual_pdfs.py"]
+    DTST["data/tests/<br/>test_storage · test_bronze · test_silver · test_gold"]
+    DT["docs/testing/<br/>unit-testing.md · sit.md"]
+
+    ROOT --> CLA
+    CLA --> AG
+    CLA --> CM
+    CLA --> RU
+    CLA --> SPEC
+    ROOT --> CX
+    ROOT --> DC
+    DC --> DM
+    DC --> DDES
+    DC --> DT
+    ROOT --> COST
+    ROOT --> GH
+    ROOT --> BE
+    BE --> BEAPP
+    BE --> BEAGT
+    BE --> BEGOV
+    BE --> BEMEM
+    BE --> BERET
+    BE --> BEEVAL
+    BE --> BET
+    ROOT --> FE
+    FE --> FES
+    FES --> FEAPI
+    FES --> FECMP
+    FECMP --> FESHP
+    ROOT --> INF
+    ROOT --> DATA
+    DATA --> DETL
+    DATA --> DSAMP
+    DATA --> DDOCS
+    DATA --> DTST
+
+    classDef new fill:#fff3bf,stroke:#f08c00,stroke-width:3px,color:#000;
+    class SPEC,DM,BEAGT,BET,FES,FEAPI,FECMP,FESHP new;
+```
+
+**Added/changed this module:**
+- `.claude/specs/M8v2_serving_ui.md` · `docs/modules/M8v2_serving_ui.md`
+- `backend/agents/composer.py` (redacted `citations[].snippet` at `build_sources()`) · `backend/agents/pipeline.py` (`audit.scope={restricted,categories}` from `decision.scope`)
+- `backend/tests/test_contract_edges_m8v2.py` (snippet PII-redaction + trim, marketing vs executive `audit.scope`)
+- `frontend/src/api/types.ts` (`snippet`, typed `Audit`/`Grounding`/`Memory`/`Scope`)
+- `frontend/src/App.tsx` + `App.css` (rebuilt) · new `panelState.ts` · `answer.ts` · `copy.ts`
+- `frontend/src/components/` — role rail (RoleRail/BrandCard/ScopeCard/SessionCard/ThemeToggle), conversation panel (ConversationPanel/UserTurn/AssistantTurn/ClaimLine/ScopeRibbon/CitationChips/TrustStrip), state screens (EvidencePanel/ErrorBanner/EmptyState/LoadingState), and `shapes/` (Support/Marketing/Executive/Default/Bars/Trend/types)
+- Removed superseded v1 `frontend/src/components/MessageList.tsx` · `Citations.tsx`
+- Known gap (not a new file): visual design not ported — scoped `/change` follow-up logged in `DECISIONS.md`
+
+---
+
 <!--
 Template for each new snapshot:
 1. Copy the previous snapshot's Mermaid block.

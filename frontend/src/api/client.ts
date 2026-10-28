@@ -33,10 +33,11 @@ export async function getRoles(): Promise<string[]> {
   return body.roles;
 }
 
-export function postQuery(req: QueryRequest): Promise<QueryResponse> {
+export function postQuery(req: QueryRequest, signal?: AbortSignal): Promise<QueryResponse> {
   return request<QueryResponse>("/query", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
+    signal,
   });
 }
