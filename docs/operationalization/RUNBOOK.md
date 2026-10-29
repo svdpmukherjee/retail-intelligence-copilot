@@ -15,6 +15,11 @@ Azure and for a fresh Claude session to execute from.
 3. Claude runs the steps, logs spend in `COST.md`, appends a line to
    `context/WORKLOG.md`, ticks the box in `COST.md`'s checklist, and tells you when
    to move to the next phase.
+4. **Close out every phase (do this before the next one):** confirm `COST.md` has the
+   actual spend + the box ticked, `context/WORKLOG.md` has a dated line, and
+   `context/CURRENT_TASK.md` reflects the new state — then **commit & push**:
+   `git add -A && git commit -m "Pn: <what happened>" && git push`.
+   `backend/.env` is gitignored, so secrets never get committed; never force-add it.
 
 **Golden rules** (from the ADR / cost gate):
 - ✅ = a paid step: nothing spends until *you* say go and the `.env` flag flips.
@@ -214,5 +219,5 @@ differ from the local slice; the harness warms up before timing. Capture the met
 
 Tick here as you go (mirror of `COST.md`):
 
-- [ ] P1 provision + wire   - [ ] P2 schema smoke   - [ ] P3 real ETL   - [ ] P4 embed
+- [x] P1 provision + wire   - [ ] P2 schema smoke   - [ ] P3 real ETL   - [ ] P4 embed
 - [ ] P5 LLM live   - [ ] P6 eval   - [ ] P7 deploy   - [ ] P8 evidence + teardown

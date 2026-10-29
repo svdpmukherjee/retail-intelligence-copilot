@@ -533,3 +533,40 @@ Durable design decisions (newest at the bottom). Decision → why.
     drawer's *behaviour* (open/close, focus-in, Escape+return, backdrop, ARIA, content) was verified
     by driving the real React component with the phone chrome force-shown. Spot-check the reflow on a
     real device. Cost $0 (free mode; nothing provisions; deploy inert).
+- **Cloud activation (ADR, 2026-10-29, via `/change`): flip the gated Azure/Databricks seams ON for a
+  one-shot "prove it live, capture evidence, tear down" operationalization on the €175 Azure free
+  credit (expires 2026-11-25).** v1–v3 shipped the whole system runnable at $0 in free mode behind
+  provider/runtime/go-ahead seams (M1–M8, every "requires human go-ahead" branch). This ADR is the
+  **decision to use those seams** — not a code change. **No code, spec, or sub-module is touched by
+  this step and nothing spends here.** **Decision:** operationalize the cloud path once, end-to-end,
+  then delete everything. The seams that will flip (each only in its own phase — see COST.md "Cloud
+  activation plan"): `PROVIDER_MODE` → `azure`; `ETL_RUNTIME` → `databricks` + `ETL_STORAGE` → `blob`;
+  `AZURE_EMBEDDING_GO_AHEAD` → `true`; `AZURE_LLM_GO_AHEAD` → `true`; plus the real
+  `DATABASE_URL`/`AZURE_BLOB_*`/Azure OpenAI/Databricks connection values. **`VECTOR_STORE` stays
+  `pgvector`** (now pointing at an Azure Postgres Flexible Server), per the standing "bulk lives in
+  pgvector, AI Search free tier is a demo slice only" decision — it is *not* flipped to `azure_search`
+  for the bulk index; an AI Search demo slice is optional and out of this plan. The third code
+  go-ahead gate, `RERANK_GO_AHEAD`, **stays `false`** (the `none`/`local` reranker is enough for the
+  demo; no hosted rerank spend). **Scope (unchanged from the standing data strategy):** 15 categories,
+  caps SQL 100k / RAG 15k per category (~225k vectors max) — already set in `Settings`/`.env.example`,
+  not widened for the cloud run. **Governing policy = "prove live → capture evidence → tear down":**
+  stand the stack up, run a live grounded+cited query and the real eval gate against Azure, screenshot
+  the evidence under `docs/img/`, then `az group delete -n rg-ric-demo` to stop all burn. **Standing
+  rule (the whole point of the seams):** every paid step stays behind its go-ahead flag until the
+  phase that needs it; a flag is flipped at the start of its phase and the spend is logged in COST.md
+  the same day. The €150 hard cap (< €175 credit) and the per-phase estimates live in COST.md; the
+  phased P1–P8 go-ahead checklist naming which flag flips in each phase lives there too. **Each
+  per-phase build runs in its own later session — this session stops after writing the ADR + COST.md
+  plan + checklist.** **Why:** both target job ads require demonstrable Azure OpenAI + Databricks +
+  Azure data-plane experience, and a $0 free-mode build, however clean, cannot *prove* the cloud path
+  actually works; a bounded one-shot run converts the gated seams into real evidence (a live Azure
+  answer, a green eval gate against Azure, a deployed URL) at a few euros of controllable, logged,
+  alarmed spend, with a one-command kill switch. **Rejected alternatives:** (A) stay free-mode only
+  and never operationalize — cheapest and safest, but leaves the headline cloud skills unproven and
+  the gated branches never exercised against real Azure (rejected: the evidence is the deliverable);
+  (B) stand up an always-on hosted demo — keeps a clickable URL live, but hosting is the dominant
+  ongoing burn and an un-torn-down stack silently drains the credit past expiry and risks blowing the
+  cap (rejected: violates the cost gate's spirit; teardown is mandatory); (C) flip all seams at once
+  in a single session — simplest to execute, but spends on embedding/LLM/Databricks before each is
+  verified and defeats the per-phase go-ahead gate (rejected: every paid step must be independently
+  gated and logged).

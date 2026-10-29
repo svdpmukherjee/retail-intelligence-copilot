@@ -274,3 +274,5 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   4 error-state banners not force-driven (carried from M8v2); §2 option (c) per-turn audit/citations
   persistence is a pending separate schema change for full-fidelity resume; a demo thread for
   `user_id=support_1` left in the dev DB by browser QA (harmless, deletable).
+
+- 2026-10-29 — **Op P1 (provision + wire data plane) DONE.** Created Azure Postgres Flexible Server `ric-pg-13396` (GeneralPurpose `Standard_D2ds_v5`, 2 vCore / 32 GB / PG16, Sweden Central) — GP fallback after burstable B1ms/B2s hit region-wide `RegionalAllocationFailed`. Firewall pinned to single IP 185.6.235.142; strong admin password generated locally, written only to `backend/.env` (percent-encoded in `DATABASE_URL`). `azure.extensions=VECTOR` allowlisted (CREATE EXTENSION deferred to P2). Connectivity smoke PASS via app `psycopg` (PG 16.15). Blob `ricstore28276`+`gold` already existed. Hosting now burning ~€4–5/day. Next: P2 (schema smoke).
