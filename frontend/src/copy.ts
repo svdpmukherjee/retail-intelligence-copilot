@@ -29,3 +29,5 @@ export function evidenceType(sourceId: string, label: string): EvidenceType {
   if (sourceId === "sql") return "sql";
   return label.toLowerCase().startsWith("review") ? "review" : "policy/doc";
 }
+
+export const HISTORICAL_NOTE = "historical turn — reasoning & evidence not stored for replay";

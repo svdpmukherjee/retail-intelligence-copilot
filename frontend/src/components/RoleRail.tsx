@@ -1,41 +1,48 @@
 import type { Audit } from "../api/types";
+import type { ThreadListItem } from "../api/types";
+import type { Identity } from "../identities";
 import BrandCard from "./BrandCard";
+import HistoryRail from "./HistoryRail";
+import IdentitySwitcher from "./IdentitySwitcher";
 import ScopeCard from "./ScopeCard";
 import SessionCard from "./SessionCard";
 import ThemeToggle from "./ThemeToggle";
 
 interface Props {
-  roles: string[];
-  role: string;
-  onRole: (role: string) => void;
+  identity: Identity;
+  onIdentity: (identity: Identity) => void;
   audit: Audit | null;
   threadId: string | null;
-  userId: string;
-  roleSelectRef: React.Ref<HTMLSelectElement>;
+  threads: ThreadListItem[];
+  threadsError: string | null;
+  onSelectThread: (id: string) => void;
+  onNewChat: () => void;
+  identitySelectRef: React.Ref<HTMLSelectElement>;
 }
 
-export default function RoleRail({ roles, role, onRole, audit, threadId, userId, roleSelectRef }: Props) {
+export default function RoleRail({
+  identity,
+  onIdentity,
+  audit,
+  threadId,
+  threads,
+  threadsError,
+  onSelectThread,
+  onNewChat,
+  identitySelectRef,
+}: Props) {
   return (
     <aside className="rail">
       <section className="card brandcard" aria-label="Product">
         <BrandCard />
         <ThemeToggle />
       </section>
-      <section className="card" aria-label="Role">
-        <label htmlFor="role-select">
-          <h2>Signed in as</h2>
-        </label>
-        <select id="role-select" className="role" ref={roleSelectRef} value={role} onChange={(e) => onRole(e.target.value)}>
-          <option value="">Select a role...</option>
-          {roles.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        <ScopeCard role={role} audit={audit} />
+      <section className="card ident" aria-label="Demo identity">
+        <IdentitySwitcher identity={identity} onIdentity={onIdentity} selectRef={identitySelectRef} />
+        <ScopeCard role={identity.role} audit={audit} />
       </section>
-      <SessionCard audit={audit} threadId={threadId} userId={userId} />
+      <HistoryRail threads={threads} error={threadsError} activeId={threadId} onSelect={onSelectThread} onNewChat={onNewChat} />
+      <SessionCard audit={audit} threadId={threadId} userId={identity.userId} />
     </aside>
   );
 }

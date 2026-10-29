@@ -14,3 +14,4 @@ provisioned or run without explicit human go-ahead. Runtime cap lives in
 | 2026-10-27 | M6     | none (local policy/audit)| 0.00            | 0.00         |
 | 2026-10-27 | M7     | none (free eval + CI gate)| 0.00           | 0.00         |
 | 2026-10-28 | M8     | none (inert deploy, free) | 0.00            | 0.00         |
+| 2026-10-29 | M8v3   | none (inert deploy, free) | 0.00            | 0.00         |

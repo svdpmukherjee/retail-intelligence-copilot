@@ -1,31 +1,22 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { ApiError, getRoles, postQuery } from "./api/client";
-import type { QueryResponse } from "./api/types";
-import AssistantTurn from "./components/AssistantTurn";
+import { ApiError, getThread, getThreads, postQuery } from "./api/client";
+import type { ThreadListItem } from "./api/types";
+import type { Turn } from "./turns";
 import ConversationPanel from "./components/ConversationPanel";
 import EmptyState from "./components/EmptyState";
 import ErrorBanner from "./components/ErrorBanner";
 import EvidencePanel from "./components/EvidencePanel";
+import HistoryDrawer from "./components/HistoryDrawer";
 import LoadingState from "./components/LoadingState";
+import StackedTurns from "./components/StackedTurns";
 import UserTurn from "./components/UserTurn";
 import RoleRail from "./components/RoleRail";
+import { DEFAULT_IDENTITY, Identity } from "./identities";
 import { PanelState, derivePanelState, errorMessage } from "./panelState";
 import "./App.css";
 
-const USER_ID_KEY = "ric_user_id";
-const DEFAULT_ROLE = "support";
-
-function initialUserId(): string {
-  let id = localStorage.getItem(USER_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(USER_ID_KEY, id);
-  }
-  return id;
-}
-
 interface CenterActions {
-  onCiteClick: (n: number) => void;
+  onCiteClick: (turnId: string, n: number) => void;
   onStarter: (q: string) => void;
   onCancel: () => void;
   onRetry: () => void;
@@ -33,89 +24,173 @@ interface CenterActions {
 }
 
 function renderCenter(
-  state: PanelState,
-  res: QueryResponse | null,
+  turns: Turn[],
+  inFlight: boolean,
   err: unknown,
   query: string,
   role: string,
   a: CenterActions,
-  activeN: number | null,
+  active: { turnId: string | null; n: number | null },
 ): ReactNode {
-  switch (state) {
-    case "empty":
-      return <EmptyState role={role} onStarter={a.onStarter} />;
-    case "loading":
-      return <LoadingState query={query} onCancel={a.onCancel} />;
-    case "error-400":
-    case "error-502":
-      return (
+  if (turns.length === 0 && !inFlight && !err) return <EmptyState role={role} onStarter={a.onStarter} />;
+  return (
+    <>
+      <StackedTurns turns={turns} activeTurnId={active.turnId} activeN={active.n} onCiteClick={a.onCiteClick} />
+      {inFlight && <LoadingState query={query} onCancel={a.onCancel} />}
+      {!inFlight && !!err && (
         <>
           {query && <UserTurn query={query} />}
           <ErrorBanner error={err} onReselectRole={a.onReselectRole} onRetry={a.onRetry} />
         </>
-      );
-    default:
-      if (!res) return null;
-      return (
-        <>
-          <UserTurn query={query} />
-          <AssistantTurn res={res} state={state} activeN={activeN} onCiteClick={a.onCiteClick} />
-        </>
-      );
-  }
+      )}
+    </>
+  );
 }
 
 export default function App() {
-  const [roles, setRoles] = useState<string[]>([]);
-  const [role, setRole] = useState("");
+  const [identity, setIdentity] = useState<Identity>(DEFAULT_IDENTITY);
+  const { role, userId } = identity;
   const [question, setQuestion] = useState("");
-  const [currentResponse, setCurrentResponse] = useState<QueryResponse | null>(null);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
   const [currentError, setCurrentError] = useState<unknown>(null);
   const [lastQuery, setLastQuery] = useState("");
   const [activeCiteN, setActiveCiteN] = useState<number | null>(null);
   const [inFlight, setInFlight] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string>(initialUserId);
+  const [threads, setThreads] = useState<ThreadListItem[]>([]);
+  const [threadsError, setThreadsError] = useState<string | null>(null);
+  const railSeq = useRef(0);
+  const turnSeq = useRef(0);
+  const resumeSeq = useRef(0);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const roleSelectRef = useRef<HTMLSelectElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [failedResumeId, setFailedResumeId] = useState<string | null>(null);
+  const identitySelectRef = useRef<HTMLSelectElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    getRoles()
-      .then((rs) => {
-        setRoles(rs);
-        setRole((cur) => cur || (rs.includes(DEFAULT_ROLE) ? DEFAULT_ROLE : ""));
-      })
-      .catch((e) => setCurrentError(e));
-  }, []);
+  async function refreshThreads(id: Identity) {
+    const seq = ++railSeq.current;
+    try {
+      const list = await getThreads(id.userId, id.role);
+      if (seq !== railSeq.current) return;
+      setThreads(list);
+      setThreadsError(null);
+    } catch (err) {
+      if (seq !== railSeq.current) return;
+      setThreads([]);
+      setThreadsError(errorMessage(err));
+    }
+  }
 
-  const state = derivePanelState({ inFlight, response: currentResponse, error: currentError });
+  useEffect(() => {
+    void refreshThreads(identity);
+  }, [identity]);
+
+  function resetCenter() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setInFlight(false);
+    resumeSeq.current++;
+    setTurns([]);
+    setActiveTurnId(null);
+    setCurrentError(null);
+    setLastQuery("");
+    setQuestion("");
+    setActiveCiteN(null);
+    setSheetOpen(false);
+    setThreadId(null);
+    setFailedResumeId(null);
+  }
+
+  function onIdentity(next: Identity) {
+    if (next.userId === identity.userId) return;
+    resetCenter();
+    setThreads([]);
+    setIdentity(next);
+  }
+
+  // Restored turns are stored redacted text only; audit/citations are never rebuilt.
+  async function onSelectThread(id: string) {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setInFlight(false);
+    const seq = ++resumeSeq.current;
+    setCurrentError(null);
+    setLastQuery("");
+    setActiveCiteN(null);
+    setActiveTurnId(null);
+    setSheetOpen(false);
+    setFailedResumeId(null);
+    try {
+      const detail = await getThread(id, userId);
+      if (seq !== resumeSeq.current) return;
+      setTurns(
+        [...detail.turns]
+          .sort((x, y) => x.turn - y.turn)
+          .map((t) => ({
+            kind: "restored" as const,
+            id: `${id}:${t.turn}`,
+            roleKind: t.role_kind,
+            content: t.content,
+            threadRole: detail.role,
+          })),
+      );
+      setThreadId(id);
+    } catch (err) {
+      if (seq !== resumeSeq.current) return;
+      // The user left the open thread, so showing its turns under a resume error
+      // would mislead; clear the stack and offer Retry on the resume itself.
+      setTurns([]);
+      setThreadId(null);
+      setFailedResumeId(id);
+      setCurrentError(err instanceof ApiError ? err : new Error(errorMessage(err)));
+    }
+  }
+
+  const latestLive = [...turns].reverse().find((t) => t.kind === "live");
+  const latestRes = latestLive?.kind === "live" ? latestLive.res : null;
+  const activeTurn = turns.find((t) => t.id === activeTurnId);
+  const evidenceRes = activeTurn?.kind === "live" ? activeTurn.res : null;
+  const state = inFlight
+    ? "loading"
+    : currentError
+      ? derivePanelState({ inFlight, response: null, error: currentError })
+      : turns.length === 0
+        ? "empty"
+        : latestRes && turns[turns.length - 1].kind === "live"
+          ? derivePanelState({ inFlight, response: latestRes, error: null })
+          : "restored";
   const canSend = role !== "" && question.trim() !== "" && !inFlight;
-  const meta = currentResponse ? `${currentResponse.audit.role} · ${currentResponse.audit.intent}` : role || "no role selected";
+  const meta = latestRes ? `${latestRes.audit.role} · ${latestRes.audit.intent}` : role || "no role selected";
 
   async function send(q: string) {
     setLastQuery(q);
+    setFailedResumeId(null);
     setActiveCiteN(null);
     setSheetOpen(false);
     setCurrentError(null);
     setInFlight(true);
+    resumeSeq.current++;
     const ctl = new AbortController();
     abortRef.current = ctl;
     try {
       const res = await postQuery({ query: q, role, thread_id: threadId, user_id: userId }, ctl.signal);
-      setCurrentResponse(res);
+      const id = `live:${++turnSeq.current}`;
+      setTurns((prev) => [...prev, { kind: "live", id, query: q, res }]);
+      setActiveTurnId(null);
       setThreadId(res.thread_id);
-      if (res.user_id) setUserId(res.user_id);
+      void refreshThreads(identity);
     } catch (err) {
-      setCurrentResponse(null);
+      if (abortRef.current !== ctl) return;
       if (ctl.signal.aborted) {
         setQuestion(q);
       } else {
         setCurrentError(err instanceof ApiError ? err : new Error(errorMessage(err)));
       }
     } finally {
-      setInFlight(false);
+      if (abortRef.current === ctl) setInFlight(false);
     }
   }
 
@@ -127,8 +202,9 @@ export default function App() {
     void send(q);
   }
 
-  function onCiteClick(n: number) {
+  function onCiteClick(turnId: string, n: number) {
     triggerRef.current = document.activeElement as HTMLElement | null;
+    setActiveTurnId(turnId);
     setActiveCiteN(n);
     setSheetOpen(true);
   }
@@ -142,21 +218,33 @@ export default function App() {
     onCiteClick,
     onStarter: setQuestion,
     onCancel: () => abortRef.current?.abort(),
-    onRetry: () => void send(lastQuery),
-    onReselectRole: () => roleSelectRef.current?.focus(),
+    onRetry: () => (failedResumeId ? void onSelectThread(failedResumeId) : lastQuery && void send(lastQuery)),
+    onReselectRole: () => identitySelectRef.current?.focus(),
   };
 
   return (
     <div className="wrap">
       <div className="shell">
         <RoleRail
-          roles={roles}
-          role={role}
-          onRole={setRole}
-          audit={currentResponse?.audit ?? null}
+          identity={identity}
+          onIdentity={onIdentity}
+          audit={latestRes?.audit ?? null}
           threadId={threadId}
-          userId={userId}
-          roleSelectRef={roleSelectRef}
+          threads={threads}
+          threadsError={threadsError}
+          onSelectThread={onSelectThread}
+          onNewChat={resetCenter}
+          identitySelectRef={identitySelectRef}
+        />
+        <HistoryDrawer
+          threads={threads}
+          error={threadsError}
+          activeId={threadId}
+          open={drawerOpen}
+          onOpen={() => setDrawerOpen(true)}
+          onClose={() => setDrawerOpen(false)}
+          onSelect={onSelectThread}
+          onNewChat={resetCenter}
         />
         <ConversationPanel
           title="Retail Intelligence Copilot"
@@ -167,11 +255,12 @@ export default function App() {
           onQuestion={setQuestion}
           onSubmit={onSubmit}
           panelState={state}
+          scrollKey={turns.length + (inFlight ? 1 : 0)}
         >
-          {renderCenter(state, currentResponse, currentError, lastQuery, role, actions, activeCiteN)}
+          {renderCenter(turns, inFlight, currentError, lastQuery, role, actions, { turnId: activeTurnId, n: activeCiteN })}
         </ConversationPanel>
         <EvidencePanel
-          citations={currentResponse?.citations ?? []}
+          citations={evidenceRes?.citations ?? []}
           activeN={activeCiteN}
           open={sheetOpen}
           onClose={closeSheet}

@@ -496,3 +496,40 @@ Durable design decisions (newest at the bottom). Decision → why.
   overflowed the session card onto the chat (`.session .r .v` → `min-width:0` + `overflow-wrap:
   anywhere`, right-aligned). 4 edge states (400/502/no-evidence/degraded-SQL) not driven live
   (user accepted coverage). $0.
+- **M8 v3 — conversation/memory layer (design-track iteration 3, 2026-10-29).** Built the
+  conversation shell the v1/v2 engineering spikes deferred, from `design/iteration-3/03_handoff.md`
+  (a delta on the still-in-force iteration-2 handoff). Decisions worth recording:
+  - **One read-only backend edge, no DDL change.** The history list is derivable from the existing
+    M5 `messages` table, so `MemoryStore.list_threads` derives the row `label` *in-query*
+    (`LEFT(content,48)` of the first `role_kind='user'` message — already `_redact`-ed at write
+    time, so no raw PII reaches the rail) and `turn_count` as a `COUNT`; **no `label` column, no new
+    table.** Rejected: a stored thread title (drift + a write-path change) and a new `threads`
+    extension. `GET /threads` and `GET /threads/{id}` are owner- **and** role-scoped **in SQL**
+    (`WHERE user_id=%s AND role=%s`), the same guard shape as `recent_messages`; a non-owner gets
+    **404, not 403**, so the endpoint never reveals another user's thread exists.
+  - **Identity switcher is a demo owner selector, explicitly NOT auth (D-16).** It gives a real
+    `user_id` owner key to *prove* isolation live without building authentication; scope stays
+    enforced server-side at retrieval, never widened client-side. Replaces the v2 anonymous
+    localStorage id.
+  - **`HAVING COUNT>0`** (developer judgment beyond the spec text): empty threads never surface,
+    matching the flow where a thread appears only once its first answer persists. Accepted.
+  - **Honest resume degrade (D-21) over fabrication.** `messages` stores redacted text only — per-turn
+    `audit`/`citations` are **not persisted** — so a restored assistant turn renders stored text +
+    a muted "historical turn — reasoning & evidence not stored for replay" note with `[n]` stripped
+    and **no** trust strip / chips / evidence, and **never** a fabricated audit/citations object.
+    Rejected (b) re-running `POST /query` per restored turn (recomputes, costs tokens, can yield a
+    *different* answer — misrepresents what happened). **Deferred as a named future schema change
+    (§2 option c):** persist per-turn `audit`+`citations` (e.g. an `assistant_meta` JSONB on
+    `messages`) to make restored turns fully inspectable — a separate DDL change to spec before
+    building; the UI degrades honestly until it lands.
+  - **`audit.scope` + redacted `citations[].snippet` are now REAL fields** bound directly (resolves
+    iteration-2 Pending #1/#2) — scope chips enumerate from `audit.scope.categories`, never a
+    client-side list; snippets shown verbatim, `null`→"snippet unavailable".
+  - **New gate exercised: browser visual-QA, driven live.** Verdict PASS (desktop 1440 light+dark;
+    live turn, one-at-a-time Evidence + replace-in-place, follow-up stacking, new-chat reset, resume
+    degrade, identity switch with owner-scoping, dark mode, phone drawer behaviour). **Honest
+    limitation (process note):** the QA environment could not drive the browser viewport below
+    ~1353px, so the phone layout *reflow* at true phone width was not visually confirmed; the phone
+    drawer's *behaviour* (open/close, focus-in, Escape+return, backdrop, ARIA, content) was verified
+    by driving the real React component with the phone chrome force-shown. Spot-check the reflow on a
+    real device. Cost $0 (free mode; nothing provisions; deploy inert).

@@ -780,6 +780,97 @@ flowchart TB
 
 ---
 
+## Snapshot 10 — After M8 v3 (Serving & UI, conversation/memory layer)
+
+Iteration 3 wraps a conversation shell around the v2 chat on the **unchanged
+pipeline**: one read-only backend edge (`GET /threads` + `GET /threads/{id}` +
+`MemoryStore.list_threads`/`get_thread`, no schema DDL change) and the frontend
+conversation layer (identity switcher, owner-scoped history rail + phone drawer,
+stacked multi-turn with honest-degrade resume, one-at-a-time Evidence).
+
+```mermaid
+flowchart TB
+    ROOT["retail-intelligence-copilot/<br/>PRD.md · CLAUDE.md · README.md · .gitignore · .claudeignore"]
+    CLA[".claude/<br/>settings.json"]
+    AG[".claude/agents/<br/>planner · developer · tester · documenter · designer · solution-architect"]
+    CM[".claude/commands/<br/>module.md"]
+    RU[".claude/rules/<br/>code_style · security · testing"]
+    CX["context/<br/>PROJECT · CURRENT_TASK · WORKLOG · DECISIONS"]
+    DC["docs/<br/>architecture/ · img/ · repo-evolution.md"]
+    DM["docs/modules/<br/>README · M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui · M8v3_serving_ui"]
+    DDES["design/<br/>README · iteration-2/ · iteration-3/ (brief · wireframes · decisions · handoff · mockups/m8-chat-v3.html)"]
+
+    SPEC[".claude/specs/<br/>M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui · M8v3_serving_ui"]
+    COST["COST.md"]
+    GH[".github/workflows/<br/>ci.yml (backend · eval · frontend)"]
+    BE["backend/<br/>pyproject.toml · .env.example · Dockerfile · .dockerignore"]
+    BEAPP["app/<br/>config.py · cost.py · main.py (+GET /threads · /threads/{id})"]
+    BEAGT["agents/<br/>llm · router · sql_agent · review_rag · docs_rag · _rag · composer (+snippet) · pipeline (+audit.scope)"]
+    BEGOV["governance/<br/>policy · pii · grounding · audit"]
+    BEMEM["memory/<br/>schema (+ThreadListRow) · store (+list_threads/get_thread) · manager"]
+    BERET["retrieval/<br/>embeddings · schema · vector_store · chunking · index_reviews · index_docs · hybrid · rerank"]
+    BEEVAL["eval/<br/>metrics · retrieval_eval · answer_eval · run_eval · thresholds.json · ground_truth/"]
+    BET["tests/<br/>+ test_threads_endpoint_m8v3"]
+    FE["frontend/<br/>index.html · package.json · tsconfig.json · vite.config.ts · .env.example · Dockerfile · .dockerignore"]
+    FES["src/<br/>App.tsx · main.tsx · App.css · vite-env.d.ts · panelState · answer · copy · identities · turns"]
+    FEAPI["src/api/<br/>types (+ThreadListItem/ThreadDetail) · client (+getThreads/getThread)"]
+    FECMP["src/components/<br/>RoleRail · BrandCard · ScopeCard · SessionCard · ThemeToggle · IdentitySwitcher · HistoryRail · HistoryDrawer · ConversationPanel · StackedTurns · UserTurn · AssistantTurn (+HistoricalTurn) · ClaimLine · ScopeRibbon · CitationChips · TrustStrip · EvidencePanel (one-at-a-time) · ErrorBanner · EmptyState · LoadingState"]
+    FESHP["src/components/shapes/<br/>Support · Marketing · Executive · Default · Bars · Trend · types"]
+    INF["infra/<br/>main.bicep · budget.bicep · main.bicepparam · teardown.sh · docker-compose.yml · webapp.bicep · README.md"]
+    DATA["data/<br/>pyproject.toml"]
+    DETL["data/etl/<br/>spark_session · storage · bronze · silver · gold · pipeline"]
+    DSAMP["data/sample/<br/>amazon_reviews_sample.jsonl"]
+    DDOCS["data/docs/<br/>authored/ (18 md) · manuals/ (4 pdf) · make_manual_pdfs.py"]
+    DTST["data/tests/<br/>test_storage · test_bronze · test_silver · test_gold"]
+    DT["docs/testing/<br/>unit-testing.md · sit.md"]
+
+    ROOT --> CLA
+    CLA --> AG
+    CLA --> CM
+    CLA --> RU
+    CLA --> SPEC
+    ROOT --> CX
+    ROOT --> DC
+    DC --> DM
+    DC --> DDES
+    DC --> DT
+    ROOT --> COST
+    ROOT --> GH
+    ROOT --> BE
+    BE --> BEAPP
+    BE --> BEAGT
+    BE --> BEGOV
+    BE --> BEMEM
+    BE --> BERET
+    BE --> BEEVAL
+    BE --> BET
+    ROOT --> FE
+    FE --> FES
+    FES --> FEAPI
+    FES --> FECMP
+    FECMP --> FESHP
+    ROOT --> INF
+    ROOT --> DATA
+    DATA --> DETL
+    DATA --> DSAMP
+    DATA --> DDOCS
+    DATA --> DTST
+
+    classDef new fill:#fff3bf,stroke:#f08c00,stroke-width:3px,color:#000;
+    class SPEC,DM,DDES,BEAPP,BEMEM,BET,FES,FEAPI,FECMP new;
+```
+
+**Added/changed this module:**
+- `.claude/specs/M8v3_serving_ui.md` · `docs/modules/M8v3_serving_ui.md`
+- `backend/memory/store.py` (`list_threads(user_id, role)` label-in-query + `get_thread(id, user_id)` owner check) · `backend/memory/schema.py` (`ThreadListRow` model only — no DDL) · `backend/app/main.py` (read-only `GET /threads?user_id=&role=` + `GET /threads/{id}?user_id=`)
+- `backend/tests/test_threads_endpoint_m8v3.py` (owner isolation, role filtering, label/turn_count shape, non-owner detail)
+- `frontend/src/api/types.ts` (`ThreadListItem`/`ThreadDetail`) · `client.ts` (`getThreads`/`getThread`)
+- new `frontend/src/identities.ts` · `turns.ts` (live|restored union) · `copy.ts` (`HISTORICAL_NOTE`)
+- new `frontend/src/components/` — `IdentitySwitcher` · `HistoryRail` · `HistoryDrawer` · `StackedTurns`; `AssistantTurn` (+`HistoricalTurn` honest-degrade) · `EvidencePanel` (one-at-a-time replace-in-place) · `RoleRail`/`App.tsx`/`App.css` wired to the conversation shell
+- Pipeline, `POST /query`, and `schema.py` DDL **unchanged** — one read-only backend edge only
+
+---
+
 <!--
 Template for each new snapshot:
 1. Copy the previous snapshot's Mermaid block.

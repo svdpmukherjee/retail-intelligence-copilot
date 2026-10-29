@@ -163,7 +163,7 @@ select.role {
 }
 .panel .phead .pt { font-weight: 700; font-size: 14px; }
 .panel .phead .pm { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
-.stream { padding: 18px 16px; display: flex; flex-direction: column; gap: 18px; flex: 1 1 auto; }
+.stream { padding: 18px 16px; display: flex; flex-direction: column; gap: 18px; flex: 1 1 auto; min-height: 0; max-height: 72vh; overflow-y: auto; }
 
 .turn { display: flex; gap: 11px; }
 .turn .av {
@@ -176,6 +176,13 @@ select.role {
 .turn.user .body {
   align-self: flex-start; background: var(--user-bubble); border-radius: 12px; padding: 9px 13px; font-size: 14px;
 }
+
+.exchange { display: flex; flex-direction: column; gap: 18px; }
+.hist-note {
+  margin-top: 9px; font-size: 11.5px; color: var(--muted); font-style: italic;
+  border-top: 1px dashed var(--border-2); padding-top: 7px;
+}
+.turn.historical .answer { opacity: .85; }
 
 /* scope ribbon on an answer */
 .ribbon {
@@ -415,3 +422,70 @@ select.role {
 .stream .banner { margin: 0; }
 ol.ebody { list-style: none; margin: 0; }
 @media (max-width: 760px) { .rail { position: static; } }
+
+/* ---- v3 rail: demo identity + owner-scoped history ---- */
+.ident .demolabel {
+  display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
+  font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; font-weight: 700;
+  color: var(--warn); background: var(--warn-weak);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--border));
+  border-radius: 999px; padding: 2px 8px; margin: 2px 0 10px;
+}
+.ident .idrow { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12px; margin-bottom: 4px; }
+.ident .idrow .k { color: var(--muted); font-size: 11px; flex: none; }
+.ident .idrow .v { font-family: var(--mono); font-weight: 700; font-size: 12px; color: var(--fg); min-width: 0; text-align: right; overflow-wrap: anywhere; }
+.ident .idnote { margin-top: 8px; font-size: 10.5px; color: var(--muted); line-height: 1.4; }
+.history h2 { display: flex; align-items: center; gap: 6px; }
+.history h2 .yours { color: var(--accent-ink); }
+.newchat {
+  appearance: none; cursor: pointer; width: 100%; font: inherit; font-size: 13.5px; font-weight: 700;
+  color: var(--accent-ink); background: var(--accent-weak);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); border-radius: 10px;
+  padding: 9px 11px; margin-bottom: 11px; display: inline-flex; align-items: center; gap: 7px; justify-content: center;
+}
+.newchat:hover { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+.histlist { display: flex; flex-direction: column; gap: 7px; }
+.histrow {
+  appearance: none; cursor: pointer; text-align: left; font: inherit; width: 100%;
+  display: flex; gap: 9px; align-items: flex-start;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px;
+}
+.histrow:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); }
+.histrow.active {
+  background: var(--accent-weak); border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.histrow .mk { flex: none; width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; border: 1.5px solid var(--muted); }
+.histrow.active .mk { border-color: var(--accent-ink); background: var(--accent-ink); }
+.histrow .hb { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.histrow .hl { display: block; max-width: 100%; font-size: 12.5px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.histrow.active .hl { font-weight: 700; }
+.histrow .ht { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; }
+.histempty {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+  background: var(--surface-2); border: 1px dashed var(--border); border-radius: 10px; padding: 11px 12px;
+}
+.histempty b { color: var(--fg-2); }
+.histerr { font-size: 11.5px; color: var(--warn); font-family: var(--mono); margin-bottom: 8px; overflow-wrap: anywhere; }
+
+/* ---- v3.5 phone history drawer (<=760px only) ---- */
+.phonebar { display: none; }
+@media (max-width: 760px) {
+  .rail .history { display: none; }
+  .phonebar { display: block; }
+  .hist-toggle {
+    appearance: none; cursor: pointer; width: 100%; text-align: left; font: inherit; font-size: 13px; font-weight: 600;
+    background: var(--surface); color: var(--fg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px;
+  }
+  .drawer-backdrop.on { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 49; }
+  .history-drawer {
+    position: fixed; inset: 0 auto 0 0; width: min(320px, 86vw); z-index: 50; overflow: auto;
+    background: var(--bg, var(--surface)); padding: 16px; box-shadow: 12px 0 40px rgba(0,0,0,.3);
+  }
+  .history-drawer .close {
+    appearance: none; cursor: pointer; float: right; margin-bottom: 8px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 999px; width: 28px; height: 28px; color: var(--fg-2);
+  }
+  .history-drawer .history { display: block; clear: both; }
+}
+@media (prefers-reduced-motion: reduce) { .history-drawer { transition: none; } }

@@ -236,3 +236,41 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   otherwise carry a muted "historical turn" note. 4 designer calls + 1 artifact publish, $0.
   Next (human's call): optional `/value-review`, then `/module M8` rebuild with
   `design/iteration-3/03_handoff.md` as primary planner input.
+- 2026-10-29: **M8 v3 — Serving & UI (conversation/memory layer) DONE.** SDLC iteration 3:
+  wrapped a conversation shell around the shipped v2 chat on the **unchanged pipeline**, fed by
+  `design/iteration-3/03_handoff.md` (a delta on iteration-2 §0–§6, still in force). Built in 5
+  sub-modules, all first-pass, one one-line tester-caught build-back (M8v3.5). M8v3.1 the one
+  backend edge — `MemoryStore.list_threads(user_id, role)` (label derived in-query from the first
+  redacted user message, `turn_count` COUNT, `HAVING COUNT>0`, `ORDER BY created_at DESC`) +
+  `get_thread(id, user_id)` owner check + read-only `GET /threads?user_id=&role=` and
+  `GET /threads/{id}?user_id=` (owner+role scoped in SQL; 400/422/404/503 typed errors); `ThreadListRow`
+  model only — **no schema DDL change, pipeline/`POST /query` untouched**; scoped test 5/5 on live
+  Postgres. M8v3.2 TS contract (`ThreadListItem`/`ThreadDetail` + `getThreads`/`getThread`). M8v3.3
+  demo identity switcher (support_1/2→support, marketing_1→marketing, executive_1→executive; owner
+  selector, NOT auth — replaces v2 anon localStorage id) + owner-scoped history rail (populated/empty/
+  active-row + "+ new chat"; switch resets center + reloads rail; new row on first-answer landing).
+  M8v3.4 stacked multi-turn (`turns.ts` live|restored union; follow-ups append + post the active
+  thread_id; newest-only skeleton) + resume via `getThread` with the **honest degrade (D-21)** —
+  restored assistant turns show stored redacted text + muted "historical turn — reasoning & evidence
+  not stored for replay" note, `[n]` stripped, NO strip/chips/evidence, NO fabricated audit|citations;
+  follow-up-after-resume is a live turn. M8v3.5 one-at-a-time Evidence (`citations.find(n===activeN)`,
+  replace-in-place, focus stays on marker, `null`→"snippet unavailable") + phone history drawer
+  (`☰`, role=dialog, focus-in, Escape+return, backdrop, aria-expanded/controls; reuses HistoryRail;
+  identity stays in top control) + a11y deltas + two resume-error fixes. Module gate PASS: scoped
+  backend 5/5 live Postgres; **real e2e (free mode, $0)** — grounded+cited `POST /query`, follow-up
+  continuity `history_turns_used` 0→4, `GET /threads` derived label/no snippets, ordered
+  `GET /threads/{id}`, **live owner+role isolation** (other user→`[]`/404; wrong role→`[]`), exec
+  `restricted:false` vs marketing `restricted:true {Electronics, Beauty_and_Personal_Care,
+  Toys_and_Games}`; `npm run build` green; category grep clean; backend diff only main.py/store.py/
+  schema.py. **Browser visual-QA gate driven live** (desktop 1440 light+dark): empty state, live turn
+  (trust strip + support shape + scope chips from `audit.scope` + `[n]` citations), one-at-a-time
+  Evidence + replace-in-place, follow-up stacking, "+ new chat" reset, resume honest-degrade, identity
+  switch (rail reload + center reset + marketing scope + support thread hidden from marketing), dark
+  mode, phone drawer behaviour. **Honest limitation:** env couldn't drive the viewport below ~1353px,
+  so phone layout *reflow* at true phone width unconfirmed; drawer *behaviour* verified by driving the
+  real component. 14 sub-agent calls (1 planner + 5 dev + 5 tester + 1 build-back + 1 module tester +
+  1 documenter), ~45 min, $0. Spec `.claude/specs/M8v3_serving_ui.md`; note
+  `docs/modules/M8v3_serving_ui.md`. Open items (human): phone reflow spot-check on a real device;
+  4 error-state banners not force-driven (carried from M8v2); §2 option (c) per-turn audit/citations
+  persistence is a pending separate schema change for full-fidelity resume; a demo thread for
+  `user_id=support_1` left in the dev DB by browser QA (harmless, deletable).

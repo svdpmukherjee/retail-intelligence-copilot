@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -8,6 +8,8 @@ from agents.composer import AnswerResult
 from agents.pipeline import PipelineError, answer, new_thread
 from app.config import get_settings
 from governance.policy import ACCESS_POLICY, AccessDenied
+from memory.schema import RoleKind, ThreadListRow
+from memory.store import get_memory_store
 
 app = FastAPI(title="Retail Customer Intelligence Copilot")
 app.add_middleware(
@@ -63,3 +65,58 @@ async def query(req: QueryRequest) -> QueryResponse:
         raise HTTPException(status_code=502, detail=f"Upstream failure: {exc}") from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Query failed") from exc
+
+
+class ThreadListResponse(BaseModel):
+    threads: list[ThreadListRow]
+
+
+class TurnOut(BaseModel):
+    turn: int
+    role_kind: RoleKind
+    content: str
+
+
+class ThreadDetailResponse(BaseModel):
+    thread_id: str
+    role: str
+    turns: list[TurnOut]
+
+
+_MAX_RESUME_TURNS = 200
+
+
+@app.get("/threads")
+async def list_threads(
+    user_id: str = Query(min_length=1), role: str = Query(min_length=1)
+) -> ThreadListResponse:
+    if role not in ACCESS_POLICY:
+        raise HTTPException(status_code=400, detail=f"Unknown role: {role!r}")
+    try:
+        threads = await asyncio.to_thread(get_memory_store().list_threads, user_id, role)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
+    return ThreadListResponse(threads=threads)
+
+
+@app.get("/threads/{thread_id}")
+async def thread_detail(thread_id: str, user_id: str = Query(min_length=1)) -> ThreadDetailResponse:
+    def load() -> ThreadDetailResponse | None:
+        store = get_memory_store()
+        thread = store.get_thread(thread_id, user_id)
+        if thread is None:
+            return None
+        rows = store.recent_messages(thread_id, _MAX_RESUME_TURNS, user_id=user_id)
+        return ThreadDetailResponse(
+            thread_id=thread.id,
+            role=thread.role,
+            turns=[TurnOut(turn=r.turn, role_kind=r.role_kind, content=r.content) for r in rows],
+        )
+
+    try:
+        detail = await asyncio.to_thread(load)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return detail

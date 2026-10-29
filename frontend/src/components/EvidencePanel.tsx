@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Citation } from "../api/types";
 import { evidenceType } from "../copy";
 
@@ -25,35 +25,32 @@ function useIsSheet(): boolean {
 // Right dock on desktop, bottom sheet at <=1080px (CSS keys off the .sheet class).
 export default function EvidencePanel({ citations, activeN, open, onClose }: Props) {
   const isSheet = useIsSheet();
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const activeRef = useRef<HTMLLIElement>(null);
   const asSheet = open && isSheet;
+  // Exactly one citation at a time; a new [n] replaces it in place.
+  const shown = citations.find((c) => c.n === activeN) ?? null;
 
+  // No focus trap and no focus move: focus stays on the clicked [n] marker, so
+  // Escape is listened for on the document while the sheet is open.
   useEffect(() => {
-    if (asSheet) closeRef.current?.focus();
-  }, [asSheet]);
-
-  useEffect(() => {
-    activeRef.current?.scrollIntoView?.({ block: "nearest" });
-  }, [activeN, open]);
+    if (!asSheet) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [asSheet, onClose]);
 
   return (
     <>
       <div className={`sheet-backdrop${asSheet ? " on" : ""}`} onClick={onClose} aria-hidden="true" />
-      <aside
-        className={`card evidence-dock${asSheet ? " sheet" : ""}`}
-        aria-label="Evidence"
-        onKeyDown={(e) => {
-          if (e.key === "Escape" && isSheet) onClose();
-        }}
-      >
+      <aside className={`card evidence-dock${asSheet ? " sheet" : ""}`} aria-label="Evidence">
         <div className="ehead">
           <span className="et">Evidence</span>
-          <button ref={closeRef} type="button" className="close" onClick={onClose} aria-label="Close evidence">
+          <button type="button" className="close" onClick={onClose} aria-label="Close evidence">
             &times;
           </button>
         </div>
-        {citations.length === 0 ? (
+        {shown === null ? (
           <div className="ebody">
             <div className="eempty">
               Click a citation chip or a <code style={{ fontFamily: "var(--mono)" }}>[n]</code> marker in an answer &mdash; the
@@ -61,23 +58,19 @@ export default function EvidencePanel({ citations, activeN, open, onClose }: Pro
             </div>
           </div>
         ) : (
-          <ol className="ebody">
-            {citations.map((c) => (
-              <li
-                key={c.n}
-                ref={c.n === activeN ? activeRef : undefined}
-                className={`ev-item${c.n === activeN ? " active" : ""}`}
-              >
-                <div className="eh">
-                  <span className="n">[{c.n}]</span>
-                  <span className="el">{c.label}</span>
-                  <span className="etag">{evidenceType(c.source_id, c.label)}</span>
-                </div>
-                <div className="eid">source_id: {c.source_id}</div>
-                {c.snippet && <div className="esnip">&ldquo;{c.snippet}&rdquo;</div>}
-              </li>
-            ))}
-          </ol>
+          <div className="ebody" aria-live="polite">
+            <div className="ev-item active">
+              <div className="eh">
+                <span className="n">[{shown.n}]</span>
+                <span className="el">{shown.label}</span>
+                <span className="etag">{evidenceType(shown.source_id, shown.label)}</span>
+              </div>
+              <div className="eid">source_id: {shown.source_id}</div>
+              <div className="esnip">
+                {shown.snippet ? <>&ldquo;{shown.snippet}&rdquo;</> : <em>snippet unavailable</em>}
+              </div>
+            </div>
+          </div>
         )}
       </aside>
     </>

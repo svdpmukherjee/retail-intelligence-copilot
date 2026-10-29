@@ -23,5 +23,16 @@ Status: **DONE** (2026-10-28). Framed honestly as iteration 2 (v1 = engineering 
 The design package (`00_brief`→`03_handoff` + `mockups/m8-chat.html`, approved D2) fed
 the **M8 v2 rebuild** — behaviourally complete and verified live at $0 (spec
 `.claude/specs/M8v2_serving_ui.md`, note `docs/modules/M8v2_serving_ui.md`).
-**Open follow-up:** the built UI does not yet match the mockup's visual design — a scoped
-`/change` (port design tokens/styling + browser visual-QA) is logged in `DECISIONS.md`.
+The visual-fidelity follow-up (port design tokens/styling + browser visual-QA) was then closed
+via a scoped `/change` (2026-10-29), logged in `DECISIONS.md`.
+
+**Design Track iteration 3 (M8 v3) — DONE (2026-10-29).** The conversation/memory layer the
+v1/v2 spikes deferred: demo identity switcher (owner selector, not auth), owner-scoped history
+rail + phone drawer, stacked multi-turn with honest-degrade resume (D-21), one-at-a-time
+Evidence. One read-only backend edge (`GET /threads` + `GET /threads/{id}` +
+`MemoryStore.list_threads`/`get_thread`, no schema DDL change) on the **unchanged pipeline**.
+Built from `design/iteration-3/03_handoff.md` in 5 sub-modules; module gate PASS incl. live e2e
+and a live browser visual-QA gate (free mode, $0). Spec `.claude/specs/M8v3_serving_ui.md`; note
+`docs/modules/M8v3_serving_ui.md`. Open items (human): phone layout reflow spot-check on a real
+device (env viewport floor ~1353px), 4 error-state banners not force-driven, and the pending
+per-turn audit/citations persistence (§2 option c) for full-fidelity resume.

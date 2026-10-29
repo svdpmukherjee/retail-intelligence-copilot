@@ -1,4 +1,4 @@
-import type { QueryRequest, QueryResponse } from "./types";
+import type { QueryRequest, QueryResponse, ThreadDetail, ThreadListItem } from "./types";
 
 const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -40,4 +40,17 @@ export function postQuery(req: QueryRequest, signal?: AbortSignal): Promise<Quer
     body: JSON.stringify(req),
     signal,
   });
+}
+
+export async function getThreads(userId: string, role: string): Promise<ThreadListItem[]> {
+  const body = await request<{ threads: ThreadListItem[] }>(
+    `/threads?user_id=${encodeURIComponent(userId)}&role=${encodeURIComponent(role)}`,
+  );
+  return body.threads;
+}
+
+export function getThread(id: string, userId: string): Promise<ThreadDetail> {
+  return request<ThreadDetail>(
+    `/threads/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId)}`,
+  );
 }

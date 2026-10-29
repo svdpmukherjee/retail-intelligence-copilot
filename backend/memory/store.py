@@ -16,6 +16,7 @@ from memory.schema import (
     MemoryRow,
     MessageRow,
     RoleKind,
+    ThreadListRow,
     ThreadRow,
     memory_ddl,
 )
@@ -24,6 +25,7 @@ from retrieval.vector_store import Filters
 _THREAD_COLS = ", ".join(THREAD_COLUMNS)
 _MESSAGE_COLS = ", ".join(f"m.{c}" for c in MESSAGE_COLUMNS)
 _MEMORY_COLS = ", ".join(MEMORY_COLUMNS)
+_LABEL_CHARS = 48
 
 
 class MemoryStore:
@@ -49,6 +51,29 @@ class MemoryStore:
         with self._connect() as conn:
             row = conn.execute(sql, [uuid.uuid4().hex, user_id, role]).fetchone()
         return ThreadRow(**row)
+
+    def get_thread(self, thread_id: str, user_id: str) -> ThreadRow | None:
+        """The thread only if `user_id` owns it; unknown or foreign threads give None."""
+        sql = f"SELECT {_THREAD_COLS} FROM {THREADS_TABLE} WHERE id = %s AND user_id = %s"
+        with self._connect() as conn:
+            row = conn.execute(sql, [thread_id, user_id]).fetchone()
+        return ThreadRow(**row) if row else None
+
+    def list_threads(self, user_id: str, role: str) -> list[ThreadListRow]:
+        """The user's threads under one role, newest first. The label is the first user
+        message (already PII-redacted at write time), cut to _LABEL_CHARS. Threads with no
+        persisted turn yet are skipped."""
+        sql = (
+            "SELECT t.id, t.created_at, COALESCE((SELECT LEFT(f.content, %s) "
+            f"FROM {MESSAGES_TABLE} f WHERE f.thread_id = t.id AND f.role_kind = 'user' "
+            "ORDER BY f.turn LIMIT 1), '') AS label, COUNT(m.id) AS turn_count "
+            f"FROM {THREADS_TABLE} t LEFT JOIN {MESSAGES_TABLE} m ON m.thread_id = t.id "
+            "WHERE t.user_id = %s AND t.role = %s GROUP BY t.id "
+            "HAVING COUNT(m.id) > 0 ORDER BY t.created_at DESC"
+        )
+        with self._connect() as conn:
+            rows = conn.execute(sql, [_LABEL_CHARS, user_id, role]).fetchall()
+        return [ThreadListRow(**r) for r in rows]
 
     def append_message(
         self, thread_id: str, role_kind: RoleKind, content: str, *, user_id: str

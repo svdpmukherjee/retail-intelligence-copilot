@@ -55,3 +55,17 @@ export interface QueryResponse extends AnswerResult {
   thread_id: string | null;
   user_id: string | null;
 }
+
+// Mirrors GET /threads (items) and GET /threads/{id}.
+export interface ThreadListItem {
+  id: string;
+  label: string;
+  created_at: string;
+  turn_count: number;
+}
+
+export interface ThreadDetail {
+  thread_id: string;
+  role: string;
+  turns: { turn: number; role_kind: "user" | "assistant"; content: string }[];
+}

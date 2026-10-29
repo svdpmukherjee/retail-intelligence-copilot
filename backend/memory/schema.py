@@ -22,6 +22,13 @@ class ThreadRow(BaseModel):
     created_at: datetime
 
 
+class ThreadListRow(BaseModel):
+    id: str
+    label: str
+    created_at: datetime
+    turn_count: int
+
+
 class MessageRow(BaseModel):
     id: int
     thread_id: str

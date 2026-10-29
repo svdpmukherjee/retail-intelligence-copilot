@@ -1,4 +1,4 @@
-import { FormEvent, ReactNode } from "react";
+import { FormEvent, ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   title: string;
@@ -10,9 +10,15 @@ interface Props {
   onSubmit: (e: FormEvent) => void;
   children: ReactNode;
   panelState: string;
+  scrollKey: number;
 }
 
-export default function ConversationPanel({ title, meta, role, question, inFlight, onQuestion, onSubmit, children, panelState }: Props) {
+export default function ConversationPanel({ title, meta, role, question, inFlight, onQuestion, onSubmit, children, panelState, scrollKey }: Props) {
+  const streamRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = streamRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [scrollKey]);
   const canSend = role !== "" && question.trim() !== "" && !inFlight;
   return (
     <main className="card panel" data-panel-state={panelState}>
@@ -20,7 +26,7 @@ export default function ConversationPanel({ title, meta, role, question, inFligh
         <h1 className="pt">{title}</h1>
         <span className="pm">{meta}</span>
       </header>
-      <div className="stream" aria-live="polite">
+      <div ref={streamRef} className="stream" aria-live="polite">
         {children}
       </div>
       <form onSubmit={onSubmit} className="composer">
