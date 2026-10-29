@@ -4,7 +4,7 @@ from pathlib import Path
 
 from app.config import Settings, get_settings
 from data.etl.spark_session import get_spark
-from data.etl.storage import resolve_layer_path
+from data.etl.storage import blob_enabled, publish_gold_to_blob, resolve_layer_path
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
@@ -92,6 +92,11 @@ def run_gold(spark: SparkSession, settings: Settings | None = None) -> dict:
     }
     gold_root.mkdir(parents=True, exist_ok=True)
     (gold_root / MANIFEST_FILE).write_text(json.dumps(manifest, indent=2))
+    # ETL_STORAGE=blob: publish the local Gold tree (tables + manifest) to Blob. The
+    # returned/on-disk manifest is left untouched so `manifest == returned` holds.
+    if blob_enabled(settings):
+        published = publish_gold_to_blob(gold_root, settings)
+        print(f"[gold] published to blob: {published}")
     return manifest
 
 

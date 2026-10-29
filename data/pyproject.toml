@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pyspark>=3.5,<4",
     "delta-spark>=3.2,<4",
+    "azure-storage-blob",
     "pydantic-settings",
     "pytest",
     "ruff",

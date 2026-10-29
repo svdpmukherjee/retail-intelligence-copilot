@@ -6,7 +6,7 @@ No module in progress.
 
 Taking the app from the $0 local build to a one-shot live Azure + Databricks run,
 then tearing down. **Phase 0 DONE** (activation ADR in `DECISIONS.md` + budget plan +
-checklist in `COST.md`). **P1 (provision) DONE 2026-10-29. P2 (connectivity + schema smoke) DONE 2026-10-29.** **Next = P3 (real ETL on Databricks serverless).**
+checklist in `COST.md`). **P1 (provision) DONE 2026-10-29. P2 (connectivity + schema smoke) DONE 2026-10-29. P3 (real ETL, local Spark → Blob) DONE 2026-10-29.** **Next = P4 (embed the corpus for real).**
 
 **P1 result:** Azure Postgres `ric-pg-13396` (GP `Standard_D2ds_v5`, 2 vCore/32 GB/PG16, Sweden
 Central — GP fallback after burstable RegionalAllocationFailed). Firewall = single IP
@@ -24,6 +24,23 @@ upsert. Connectivity confirmed live: 11 DB tests passed against Azure Postgres (
 log, `GET /threads`); torch-pulling suites skipped per the known hang. Those tests drop tables in
 teardown, so schemas were re-created + re-verified afterward (all 5 present, chunks dim 512). €0
 incremental. **Hosting still burning ~€4–5/day.**
+
+**P3 result:** "Databricks serverless" was never implemented in code (three `NotImplementedError`
+gates: `get_spark`/`run_bronze` on `etl_runtime=databricks`, `resolve_layer_path` on
+`etl_storage=blob`; no Databricks SDK/job/notebook; Bronze read only the 15 KB sample). Human chose
+**local Spark → Blob**. Minimal build (spec `docs/operationalization/P3_etl_spec.md`): Bronze now
+reads `data/raw/*.jsonl` with category-from-filename; Silver tolerates the real feed's missing
+`price`; `storage.resolve_layer_path` always computes local + new `publish_gold_to_blob` uploads the
+Gold tree to Blob when `ETL_STORAGE=blob`; Gold calls it; `config.py` category defaults fixed
+Patio→Video_Games (`.env` already correct). All 17 ETL unit tests pass. Ran real pipeline in local
+Spark (`ETL_STORAGE=blob`, `ETL_RUNTIME=local`) in **61.5s**: bronze 1,500,000 → silver 911,308 →
+gold_structured 911,308 / gold_reviews 225,000 (15k × 15 cats), window 2019–2023. Blob container
+`gold`: 35 objects under `gold/` (structured + reviews Delta + `_manifest.json`, ~93 MB). Local
+`data/gold/reviews` verified readable via P4's `read_gold_reviews`. **€0 ETL compute.** Databricks
+serverless remains a documented, still-gated stretch.
+**Env to re-run (not committed):** JDK via brew `openjdk@17`; `pyspark==3.5.3`, `delta-spark==3.2.0`,
+`azure-storage-blob` installed into `backend/.venv`; run from `backend/` with absolute
+`DATA_LAKE_PATH` so `backend/.env` (PII salt + blob conn str) loads. **Hosting still ~€4–5/day — P4 next, move promptly.**
 
 - **Step-by-step runbook (source of truth):** `docs/operationalization/RUNBOOK.md`
 - **Budget + per-phase cost + checklist:** `COST.md`

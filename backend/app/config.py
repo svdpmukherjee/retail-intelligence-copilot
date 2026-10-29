@@ -63,7 +63,7 @@ class Settings(BaseSettings):
         "Office_Products",
         "Tools_and_Home_Improvement",
         "Grocery_and_Gourmet_Food",
-        "Patio_Lawn_and_Garden",
+        "Video_Games",
     ]
     rag_categories: Annotated[list[str], NoDecode] = [
         "Electronics",
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
         "Office_Products",
         "Tools_and_Home_Improvement",
         "Grocery_and_Gourmet_Food",
-        "Patio_Lawn_and_Garden",
+        "Video_Games",
     ]
     # Per-category row caps keep Gold bounded and the M3 embed spend capped.
     sql_rows_per_category: int = 100000

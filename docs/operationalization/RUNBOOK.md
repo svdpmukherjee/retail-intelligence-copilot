@@ -97,27 +97,51 @@ pgvector extension + all schemas, run the suite against the cloud DB."*
 
 ---
 
-## P3 — Run the real ETL on Databricks serverless ✅
+## P3 — Run the real ETL: local Spark → Blob ✅ (DONE 2026-10-29)
 
-**Goal:** medallion pipeline over `data/raw/` (15 categories) → Gold Delta in Blob.
+**Goal:** medallion pipeline over `data/raw/` (15 categories) → Gold Delta, published to Blob.
 
-**Entrypoint:** `data/etl/pipeline.py` (bronze→silver→gold; `bronze.py`/`silver.py`/
-`gold.py`). The next session **reads `data/etl/pipeline.py`** for the exact run command +
-args and how the `databricks` runtime branch submits to serverless.
+> **Reality check (done this phase):** the runbook originally said "Databricks serverless,"
+> but the code never implemented it — `get_spark()`/`run_bronze()` raise for
+> `ETL_RUNTIME=databricks`, `resolve_layer_path()` raised for `ETL_STORAGE=blob`, there is no
+> Databricks SDK/job/notebook, and Bronze read only the 15 KB sample. **Decision (human):**
+> run the *real* medallion ETL in **local Spark** over the full corpus and **publish Gold to
+> Blob**; keep the Databricks-serverless runtime as a documented, still-gated seam (optional
+> later stretch). €0 ETL compute. Spec: `docs/operationalization/P3_etl_spec.md`.
 
-**Do:**
-1. Flip `.env`: `ETL_RUNTIME=databricks`, `ETL_STORAGE=blob`.
-2. **Check `ETL_SAMPLE_SIZE`** — it was `50` for the committed synthetic sample. Confirm in
-   `pipeline.py` it does NOT cap the real run; the real caps are `SQL_ROWS_PER_CATEGORY`
-   (100k) / `RAG_ROWS_PER_CATEGORY` (15k). Raise/clear it if it would limit ingestion.
-3. Upload `data/raw/*.jsonl` to Blob (or DBFS) where the Databricks job reads them.
-4. Run the pipeline on the serverless workspace; let it auto-terminate.
-5. Verify `_manifest.json` in Gold (per-layer counts, window, categories).
+**Entrypoint:** `data/etl/pipeline.py` (bronze→silver→gold). Bronze now reads the real
+`<lake>/raw/*.jsonl` glob (category from file name); `storage.publish_gold_to_blob()` uploads
+the local Gold tree to Blob when `ETL_STORAGE=blob`. The `databricks` runtime branch still
+raises — that seam is not wired.
 
-**Flags:** `ETL_RUNTIME`, `ETL_STORAGE`. **Cost:** ~€3–8 one-off (serverless DBUs; auto-stops).
-**Verify:** Gold `structured` + `reviews` Delta tables exist in Blob; manifest counts look right.
-**Open line:** *"Operationalization P3 — RUNBOOK. Read data/etl/pipeline.py, confirm ETL_SAMPLE_SIZE
-won't cap the real run, upload data/raw to Blob, run the medallion ETL on Databricks serverless, verify the manifest. Stop at the cost gate first."*
+**Do (what was done):**
+1. Flip `.env`: `ETL_STORAGE=blob` (**`ETL_RUNTIME` stays `local`**).
+2. `ETL_SAMPLE_SIZE` is **dead config** (defined, referenced nowhere) — it caps nothing. The
+   real caps are `SQL_ROWS_PER_CATEGORY` (100k) / `RAG_ROWS_PER_CATEGORY` (15k), applied in Gold.
+3. No upload needed — local Spark reads `data/raw/*.jsonl` directly; the SDK publishes **Gold**
+   to Blob afterward.
+4. Run from `backend/` so `.env` loads, with an absolute `DATA_LAKE_PATH`, a JDK on `PATH`
+   (brew `openjdk@17`), and `pyspark`/`delta-spark`/`azure-storage-blob` installed:
+   ```bash
+   cd backend
+   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+   export PATH="$JAVA_HOME/bin:$PATH" PYTHONPATH="..:." \
+          DATA_LAKE_PATH="$(cd .. && pwd)/data" PYSPARK_SUBMIT_ARGS="--driver-memory 6g pyspark-shell"
+   .venv/bin/python -m data.etl.pipeline      # run_pipeline(): bronze→silver→gold→blob publish
+   ```
+5. Verify `_manifest.json` (local `data/gold/` **and** Blob `gold/` prefix).
+
+**Flags:** `ETL_STORAGE=blob` (runtime stays local). **Cost:** €0 ETL compute (local Spark);
+Blob holds ~93 MB of Gold (negligible LRS storage). **Result (61.5s):** bronze 1,500,000 →
+silver 911,308 → gold_structured 911,308 / gold_reviews 225,000 (15k × 15 cats), 15 categories,
+window 2019–2023. Blob container `gold`: 35 objects under `gold/` (structured + reviews Delta +
+manifest). Local `data/gold/reviews` reads via the P4 path (`read_gold_reviews`).
+
+**Optional later stretch (not done):** wire a real Databricks serverless job (SDK + notebook,
+Spark→Blob via abfss) behind the still-gated `ETL_RUNTIME=databricks` seam.
+
+**Open line:** *"Operationalization P3 — RUNBOOK. Run the real medallion ETL in local Spark over
+data/raw (ETL_STORAGE=blob, ETL_RUNTIME=local), publish Gold to Blob, verify the manifest. €0 compute."*
 
 ---
 
@@ -219,5 +243,5 @@ differ from the local slice; the harness warms up before timing. Capture the met
 
 Tick here as you go (mirror of `COST.md`):
 
-- [x] P1 provision + wire   - [x] P2 schema smoke   - [ ] P3 real ETL   - [ ] P4 embed
+- [x] P1 provision + wire   - [x] P2 schema smoke   - [x] P3 real ETL (local Spark → Blob)   - [ ] P4 embed
 - [ ] P5 LLM live   - [ ] P6 eval   - [ ] P7 deploy   - [ ] P8 evidence + teardown

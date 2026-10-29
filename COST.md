@@ -18,6 +18,7 @@ provisioned or run without explicit human go-ahead. Runtime cap lives in
 | 2026-10-29 | P1     | Azure Postgres Flexible Server `ric-pg-13396` (GeneralPurpose `Standard_D2ds_v5`, 2 vCore, 32 GB, v16, Sweden Central) — GP fallback after burstable B1ms/B2s hit RegionalAllocationFailed | ~€4–5/day up | (hosting, running) |
 | 2026-10-29 | P1     | Blob storage `ricstore28276` + `gold` container (created earlier this phase) | ~€0 (LRS, tiny) | ~0.00 |
 | 2026-10-29 | P2     | Connectivity + schema smoke (CREATE EXTENSION vector + 5 schemas, live DB tests) — no new paid service | €0 incremental (rides P1 hosting) | 0.00 |
+| 2026-10-29 | P3     | Real medallion ETL in **local Spark** over `data/raw/` (1.5M rows, 15 cats) → Gold Delta published to Blob `gold/` (~93 MB). No Databricks serverless (unimplemented seam) → €0 compute | ~€3–8 (orig. Databricks est.) → **€0 compute** | ~0.00 (Blob storage only, negligible) |
 
 **P1 hosting now burning** (~€4–5/day). Dominant cost = time the stack is left up — move P1→P8 promptly, then `az group delete -n rg-ric-demo`.
 
@@ -73,9 +74,10 @@ flips / the spend starts (cost gate). Flags are the `.env` keys from `.env.examp
       memory/audit schemas; run the suite against the cloud DB. *No new flag, no new
       paid service — rides P1 hosting.* (DONE 2026-10-29: vector ext + 5 schemas created,
       `chunks` at dim 512; 11 live DB tests passed.)
-- [ ] **P3 — Run the real ETL.** ✅ `ETL_RUNTIME=databricks`, `ETL_STORAGE=blob`. Run the
-      medallion pipeline on Databricks serverless → Delta/Gold in Blob (auto-terminate
-      after).
+- [x] **P3 — Run the real ETL.** `ETL_STORAGE=blob`, `ETL_RUNTIME=local`. Databricks-serverless
+      was never implemented in code (gated seam); ran the real medallion pipeline in **local
+      Spark** over `data/raw/` (1.5M→911,308 silver; Gold 911,308 structured / 225,000 reviews,
+      15 cats) → Gold Delta published to Blob `gold/`. **€0 ETL compute.** (DONE 2026-10-29.)
 - [ ] **P4 — Embed the corpus for real.** ✅ `AZURE_EMBEDDING_GO_AHEAD=true`. One-time bulk
       embed (~225k chunks) into Azure-Postgres pgvector, under the `MAX_EMBEDDING_USD` cap.
 - [ ] **P5 — Turn the Azure LLM path on.** ✅ `PROVIDER_MODE=azure`, `AZURE_LLM_GO_AHEAD=true`.
