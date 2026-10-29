@@ -2,6 +2,22 @@
 
 No module in progress.
 
+## ▶ ACTIVE NEXT: Cloud operationalization (P1–P8)
+
+Taking the app from the $0 local build to a one-shot live Azure + Databricks run,
+then tearing down. **Phase 0 DONE** (activation ADR in `DECISIONS.md` + budget plan +
+checklist in `COST.md`). **Next = P1 (provision).**
+
+- **Step-by-step runbook (source of truth):** `docs/operationalization/RUNBOOK.md`
+- **Budget + per-phase cost + checklist:** `COST.md`
+- **Decision + rationale:** the "Cloud activation" ADR in `context/DECISIONS.md`
+- To run a phase: fresh session → paste that phase's opening line from the runbook.
+
+(The separate remaining *module* is M9 — Documentation — noted at the bottom.)
+
+---
+
+
 **M8 v3 — Serving & UI (conversation/memory layer) is DONE** (closed 2026-10-29). Design Track
 iteration 3: a conversation shell around the shipped v2 chat on the **unchanged pipeline**, fed by
 `design/iteration-3/03_handoff.md`. Built in 5 sub-modules, all first-pass, one one-line
