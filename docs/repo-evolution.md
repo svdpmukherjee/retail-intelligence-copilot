@@ -680,7 +680,7 @@ flowchart TB
 ## Snapshot 9 — After M8 v2 (Serving & UI, design-driven rebuild)
 
 Design Track iteration 2: rebuilds the React UI surface on the **unchanged** backend
-pipeline, driven by the `docs/design/` package. Backend gains two small, additive,
+pipeline, driven by the `design/` package. Backend gains two small, additive,
 backward-compatible contract edges only — `backend/agents/composer.py` adds a redacted
 `citations[].snippet` (trimmed at the `build_sources()` boundary) and `backend/agents/
 pipeline.py` adds `audit.scope={restricted,categories}` from the real retrieval scope;
@@ -706,7 +706,7 @@ flowchart TB
     CX["context/<br/>PROJECT · CURRENT_TASK · WORKLOG · DECISIONS"]
     DC["docs/<br/>architecture/ · img/ · repo-evolution.md"]
     DM["docs/modules/<br/>README · M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui"]
-    DDES["docs/design/<br/>00_brief · 01_wireframes · 02_decisions · 03_handoff · mockups/m8-chat.html"]
+    DDES["design/<br/>00_brief · 01_wireframes · 02_decisions · 03_handoff · mockups/m8-chat.html"]
 
     SPEC[".claude/specs/<br/>M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui"]
     COST["COST.md"]

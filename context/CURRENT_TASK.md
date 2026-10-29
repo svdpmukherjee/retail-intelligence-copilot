@@ -1,5 +1,26 @@
 # CURRENT_TASK.md
 
+**Design Track iteration 3 (M8 v3) — design package COMPLETE (2026-10-29), awaiting human
+go on the build.** A delta on the shipped M8 v2 surface that adds the conversation/memory
+layer iteration 2 deferred (D-15). Package in `design/iteration-3/`: `00_brief.md` (D1 approved),
+`01_wireframes.md`, `mockups/m8-chat-v3.html` (D2 approved; published artifact
+https://claude.ai/artifact/GDYawxKp2ehweWcPGBuGMX), `02_decisions.md` (D-16…D-21),
+`03_handoff.md`. Four additions: demo identity switcher (role + user-within-role, NOT auth),
+owner-scoped left-rail history (list+resume+"new chat"), center stacks all turns, Evidence
+panel = one citation at a time. Binds to real `audit.scope` + redacted `citations[].snippet`.
+Backend edges specced in handoff §1–§2: read-only `GET /threads` (owner+role filtered; new
+`MemoryStore.list_threads`) + `GET /threads/{id}` resume. **Honest gap:** per-turn
+audit/citations are NOT persisted today (`messages` stores redacted text only) → full-fidelity
+resume is a pending backend schema change; restored turns otherwise show a muted "historical
+turn" note.
+
+**Next — human's call (Design Track steps 5–6):**
+- Optional: `/value-review` (solution-architect on the design).
+- Build: `/module M8` as a v3 rebuild with `design/iteration-3/03_handoff.md` as primary planner
+  input (open a NEW session for the build).
+
+---
+
 No module in progress.
 
 **M8 v2 — Serving & UI (design-driven rebuild) is DONE** (closed 2026-10-28). SDLC

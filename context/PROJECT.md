@@ -18,7 +18,7 @@ updates it at session end. One row per module (see `PRD.md §10`).
 Status values: TODO → IN PROGRESS → DONE.
 
 **Design Track (v2, design-first iteration):** apart from the module loop. Run via
-`/design`; produces a design package in `docs/design/`, then feeds an M8 rebuild.
+`/design`; produces a design package in `design/`, then feeds an M8 rebuild.
 Status: **DONE** (2026-10-28). Framed honestly as iteration 2 (v1 = engineering spike).
 The design package (`00_brief`→`03_handoff` + `mockups/m8-chat.html`, approved D2) fed
 the **M8 v2 rebuild** — behaviourally complete and verified live at $0 (spec

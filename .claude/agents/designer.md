@@ -24,12 +24,14 @@ system; this iteration designs the experience on top of it."
 - `docs/modules/M8_serving_ui.md` and the current `frontend/` (what v1 shipped).
 - The backend answer contract: `backend/app/main.py` (`POST /query`) and the
   `audit` record in `backend/agents/pipeline.py` — the real data the UI can show.
-- Any existing design artifacts under `docs/design/`.
+- Any existing design artifacts under `design/` (earlier iterations:
+  `design/iteration-2/`, `design/iteration-3/`, …).
 
 ## What you produce (progressively, one stage per call)
 
-Write into `docs/design/`. Keep text spare; let wireframes and the mockup carry
-the design.
+Write into **this iteration's folder `design/iteration-<N>/`** (the orchestrator
+tells you which `<N>`; it is the next unused one). Keep text spare; let wireframes
+and the mockup carry the design.
 
 1. **`00_brief.md`** — Objective. The personas and their jobs-to-be-done (per
    PRD §2). What v1's UI fails to show (be specific: e.g. the rich `audit` the

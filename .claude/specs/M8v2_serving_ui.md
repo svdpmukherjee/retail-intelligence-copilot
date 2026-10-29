@@ -3,7 +3,7 @@
 > **Iteration 2, not a fresh build.** M8 is DONE as v1 (engineering spike: minimal
 > React/Vite chat in `frontend/src/{App.tsx, components/*, api/*}`). This spec
 > rebuilds the **UI surface** on top of the unchanged backend pipeline, driven by
-> the approved Design Track package (`docs/design/03_handoff.md` is authoritative;
+> the approved Design Track package (`design/iteration-2/03_handoff.md` is authoritative;
 > `02_decisions.md` is the rationale; `mockups/m8-chat.html` is the visual
 > reference). Backend changes are limited to two small, additive, backward-
 > compatible contract edges (§M8v2.1). The v1 spec `.claude/specs/M8_serving_ui.md`
@@ -47,7 +47,7 @@ widen my scope.
 - [ ] `npm run build` (typecheck + vite build) passes; backend contract test file
       passes; one real end-to-end smoke renders a grounded, cited answer. Cost $0.
 - [ ] **Visual fidelity (ADR 2026-10-28, via `/change`):** the SPA realizes the D2
-      mockup (`docs/design/mockups/m8-chat.html`) as its **visual contract** — its full
+      mockup (`design/iteration-2/mockups/m8-chat.html`) as its **visual contract** — its full
       design-token set, type scale, spacing, shadows/radius, and the card/chat/
       evidence/chart/trust/state styling — in both light and dark, at desktop and phone
       widths. The mockup's stylesheet is ported as `App.css` and each affected component's

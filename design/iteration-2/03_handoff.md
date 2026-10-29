@@ -271,6 +271,6 @@ Rules the build must honor:
 ---
 
 *Sources of truth: `backend/app/main.py`, `backend/agents/pipeline.py`,
-`backend/agents/composer.py` (verified fields), `docs/design/00_brief.md`,
+`backend/agents/composer.py` (verified fields), `design/iteration-2/00_brief.md`,
 `01_wireframes.md`, `02_decisions.md`, `mockups/m8-chat.html` (approved D2). v1
 surface being replaced: `frontend/src/{App.tsx, components/*, api/*}`.*

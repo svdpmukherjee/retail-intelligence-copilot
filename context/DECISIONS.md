@@ -447,7 +447,7 @@ Durable design decisions (newest at the bottom). Decision → why.
   states, 3 role shapes, trust strip, docked Evidence panel, the two backend edges (redacted
   `citations[].snippet`, `audit.scope`), full a11y contract, live e2e at $0 — all verified. **But the
   built UI does NOT match the D2-approved mockup's visual design.** `frontend/src/App.css` is ~109
-  lines vs the mockup (`docs/design/mockups/m8-chat.html`, ~1157 lines) with its full design-token
+  lines vs the mockup (`design/iteration-2/mockups/m8-chat.html`, ~1157 lines) with its full design-token
   set, typography scale, spacing system, and card/chat/evidence/chart styling — none of which were
   ported. **Root cause:** `03_handoff.md` carried *behaviour, states, and data bindings* but not the
   *visual spec* (it names the mockup as "the visual reference" rather than enumerating tokens/type/
@@ -464,7 +464,7 @@ Durable design decisions (newest at the bottom). Decision → why.
   visual check, not only build + API-JSON assertions.
 - **M8 v2 visual fidelity (ADR, 2026-10-28, via `/change`): Approach A — lift the mockup
   stylesheet as the visual contract and conform component markup to its DOM.** The built UI
-  diverges from the D2 mockup (`docs/design/mockups/m8-chat.html`) both in CSS (App.css ~109
+  diverges from the D2 mockup (`design/iteration-2/mockups/m8-chat.html`) both in CSS (App.css ~109
   lines / ~8 flat tokens / no shadows-radius-type-scale, vs the mockup's ~440-line sheet with
   ~30 tokens, `--shadow`/`--radius`, `color-mix`, a real type scale) AND in component DOM —
   e.g. the trust strip renders `.trust-head`/`.pill pill-llm`/`<dl class="kv">` where the

@@ -102,26 +102,29 @@ Tell the user: "Module <ID> done. Open a new session for the next."
 Apart from the per-module loop. v1 (M1–M8) was an **engineering spike** that
 proved the pipeline; this track adds the design process that should precede a
 frontend build, then feeds a rebuild. Frame it honestly as **iteration 2**, never
-as design-first — git history and `WORKLOG.md` are dated. Given a surface (default
-the M8 chat UI):
+as design-first — git history and `WORKLOG.md` are dated. **Each `/design` run
+writes its package into its own iteration folder `design/iteration-<N>/`** (v1 =
+the engineering spike; iteration-2 = the first design pass; iteration-3 = the
+conversation-UI pass; the next is iteration-4, and so on). The cross-iteration
+index lives at `design/README.md`. Given a surface (default the M8 chat UI):
 
-1. **Brief.** Call `designer` → `docs/design/00_brief.md` (personas +
+1. **Brief.** Call `designer` → `design/iteration-<N>/00_brief.md` (personas +
    jobs-to-be-done, v1 UI gaps, UX success criteria). Stop at **CHECKPOINT D1**.
-2. **Wireframe.** After approval, `designer` → `docs/design/01_wireframes.md`
+2. **Wireframe.** After approval, `designer` → `design/iteration-<N>/01_wireframes.md`
    (lo-fi, every state).
-3. **Hi-fi mockup.** `designer` → `docs/design/mockups/<surface>.html`; publish it
+3. **Hi-fi mockup.** `designer` → `design/iteration-<N>/mockups/<surface>.html`; publish it
    as an artifact for the human to click. Stop at **CHECKPOINT D2**.
-4. **Decisions + handoff.** After approval, `designer` → `docs/design/02_decisions.md`
-   (incl. "deferred / where we stopped and why") and `docs/design/03_handoff.md`
+4. **Decisions + handoff.** After approval, `designer` → `design/iteration-<N>/02_decisions.md`
+   (incl. "deferred / where we stopped and why") and `design/iteration-<N>/03_handoff.md`
    (components, states, data bindings to `POST /query` + `audit`, role→render
    rules, a11y).
 5. **Value/fit (optional).** If asked, call `solution-architect` on the design.
 6. **Hand off to build.** When the human says so, run `/module M8` as a **rebuild**
-   with `03_handoff.md` as a primary planner input.
+   with that iteration's `03_handoff.md` as a primary planner input.
 
 The human is the client; D1/D2 approvals are the real sign-off. No simulated
 PM/client personas. Any analytics view is fed by the same M6-scoped retrieval —
-design must not outrun governance. See `docs/design/README.md`.
+design must not outrun governance. See `design/README.md`.
 
 ## Session protocol
 

@@ -189,7 +189,7 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   `.claude/specs/M8_serving_ui.md`; note: `docs/modules/M8_serving_ui.md`.
 - 2026-10-28: **M8 v2 — Serving & UI (design-driven rebuild) DONE.** SDLC iteration 2:
   a design-first redo of the M8 chat UI on the unchanged backend, fed by the Design
-  Track package (`docs/design/03_handoff.md` authoritative). Built in 5 sub-modules,
+  Track package (`design/iteration-2/03_handoff.md` authoritative). Built in 5 sub-modules,
   all first-pass, zero build-backs: M8v2.1 two additive backend edges (`citations[].snippet`
   redacted+trimmed at `build_sources()`; `audit.scope={restricted,categories}` from the real
   `decision.scope`), pipeline otherwise unchanged + `test_contract_edges_m8v2.py`; M8v2.2 TS
@@ -220,3 +220,19 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   surfaces match; governance verified live (scope chips only from `audit.scope`, snippets redacted,
   scope read-only). `npm run build` green, category grep clean, $0. ADR + resolution in
   `DECISIONS.md`; details in `docs/modules/M8v2_serving_ui.md`.
+- 2026-10-29: **Design Track iteration 3 (M8 v3) — design package COMPLETE, awaiting
+  human go on build.** A delta on the shipped M8 v2 surface (not a rewrite): adds the
+  conversation/memory layer iteration 2 consciously deferred (D-15). Package in new
+  `design/iteration-3/`: `00_brief.md` (D1 ✓), `01_wireframes.md`, `mockups/m8-chat-v3.html`
+  (D2 ✓, published artifact; two human-requested fixes applied — rail-overflow + history
+  timestamp on its own line), `02_decisions.md` (D-16…D-21), `03_handoff.md`. Four additions:
+  demo identity switcher (role + user-within-role, NOT auth), owner-scoped left-rail history
+  (list+resume+"new chat", no rename/search/delete), center stacks all turns, Evidence panel =
+  one citation at a time. Binds to REAL fields `audit.scope` + redacted `citations[].snippet`
+  (resolves iteration-2 Pending #1/#2). One backend edge specced: read-only `GET /threads`
+  (owner+role filtered; new `MemoryStore.list_threads`) + `GET /threads/{id}` for resume.
+  **Honest gap flagged:** `messages` stores redacted text only — per-turn audit/citations are
+  NOT persisted, so full-fidelity resume needs a pending backend schema change; restored turns
+  otherwise carry a muted "historical turn" note. 4 designer calls + 1 artifact publish, $0.
+  Next (human's call): optional `/value-review`, then `/module M8` rebuild with
+  `design/iteration-3/03_handoff.md` as primary planner input.

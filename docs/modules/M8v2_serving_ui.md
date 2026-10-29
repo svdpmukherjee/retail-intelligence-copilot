@@ -1,7 +1,7 @@
 # M8 v2 — Serving & UI (design-driven rebuild)
 
 Date: 2026-10-28. Spec: `.claude/specs/M8v2_serving_ui.md`. Cloud spend: $0.
-Design inputs: `docs/design/03_handoff.md` (build spec), `docs/design/02_decisions.md` (D-01..D-15 + deferred list), `docs/design/mockups/m8-chat.html` (approved D2 visual).
+Design inputs: `design/iteration-2/03_handoff.md` (build spec), `design/iteration-2/02_decisions.md` (D-01..D-15 + deferred list), `design/iteration-2/mockups/m8-chat.html` (approved D2 visual).
 
 > **Framing.** This is SDLC **iteration 2**, not design-first from the start. M8 v1 (`docs/modules/M8_serving_ui.md`) was an engineering spike that proved the serving path with a minimal chat. v2 redoes the UI surface after a Design Track (brief, wireframes, mockup, decisions, handoff). The git history and `context/WORKLOG.md` are dated and show v1 first. The v1 note and spec are left intact.
 
@@ -126,7 +126,7 @@ App  (user_id/thread_id, panel state, theme, activeCiteN)
 └─ EvidencePanel  (dock / bottom sheet)
 ```
 
-Mockup reference: `docs/design/mockups/m8-chat.html`.
+Mockup reference: `design/iteration-2/mockups/m8-chat.html`.
 
 **TODO for the human:** no screenshot of the running v2 UI was captured. Add one per persona (support, marketing, executive) to `docs/img/` and link them here, consistent with the same open item in the v1 note.
 
@@ -134,7 +134,7 @@ Mockup reference: `docs/design/mockups/m8-chat.html`.
 > M8 v2 is **functionally** correct against the handoff — all states, shapes, trust
 > strip, Evidence panel, backend edges, a11y, and the live $0 e2e pass — **but the
 > built UI does not match the D2-approved mockup's visual design.** `frontend/src/App.css`
-> is **~109 lines** against the mockup (`docs/design/mockups/m8-chat.html`, **~1157 lines**):
+> is **~109 lines** against the mockup (`design/iteration-2/mockups/m8-chat.html`, **~1157 lines**):
 > the mockup's design tokens, typography scale, spacing system, and card/chat/evidence/
 > chart styling were **not** carried across. **Why it happened:** `03_handoff.md` carried
 > *behaviour, states, and data bindings* but treated the mockup only as a "visual
@@ -180,7 +180,7 @@ Mockup reference: `docs/design/mockups/m8-chat.html`.
 
 A scoped `/change` (ADR 2026-10-29 in `context/DECISIONS.md`, **Approach A**) closed the known
 visual-fidelity gap: the v2 build was functionally correct but did not match the D2 mockup
-(`docs/design/mockups/m8-chat.html`) — `App.css` was ~109 lines / ~8 flat tokens with no shadows,
+(`design/iteration-2/mockups/m8-chat.html`) — `App.css` was ~109 lines / ~8 flat tokens with no shadows,
 radius, or type scale, and the component DOM diverged from the DOM the mockup's stylesheet targets.
 
 **What changed (restyle only — no behaviour, data-binding, state-machine, or governance change):**
