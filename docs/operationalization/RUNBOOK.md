@@ -219,5 +219,5 @@ differ from the local slice; the harness warms up before timing. Capture the met
 
 Tick here as you go (mirror of `COST.md`):
 
-- [x] P1 provision + wire   - [ ] P2 schema smoke   - [ ] P3 real ETL   - [ ] P4 embed
+- [x] P1 provision + wire   - [x] P2 schema smoke   - [ ] P3 real ETL   - [ ] P4 embed
 - [ ] P5 LLM live   - [ ] P6 eval   - [ ] P7 deploy   - [ ] P8 evidence + teardown

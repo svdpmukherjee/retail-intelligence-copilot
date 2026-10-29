@@ -17,6 +17,7 @@ provisioned or run without explicit human go-ahead. Runtime cap lives in
 | 2026-10-29 | M8v3   | none (inert deploy, free) | 0.00            | 0.00         |
 | 2026-10-29 | P1     | Azure Postgres Flexible Server `ric-pg-13396` (GeneralPurpose `Standard_D2ds_v5`, 2 vCore, 32 GB, v16, Sweden Central) — GP fallback after burstable B1ms/B2s hit RegionalAllocationFailed | ~€4–5/day up | (hosting, running) |
 | 2026-10-29 | P1     | Blob storage `ricstore28276` + `gold` container (created earlier this phase) | ~€0 (LRS, tiny) | ~0.00 |
+| 2026-10-29 | P2     | Connectivity + schema smoke (CREATE EXTENSION vector + 5 schemas, live DB tests) — no new paid service | €0 incremental (rides P1 hosting) | 0.00 |
 
 **P1 hosting now burning** (~€4–5/day). Dominant cost = time the stack is left up — move P1→P8 promptly, then `az group delete -n rg-ric-demo`.
 
@@ -68,9 +69,10 @@ flips / the spend starts (cost gate). Flags are the `.env` keys from `.env.examp
       budget alert. Set `DATABASE_URL` → Azure Postgres, `AZURE_BLOB_CONNECTION_STRING` /
       `AZURE_BLOB_CONTAINER` → the storage account. *No provider/LLM/embed flag yet.*
       (`VECTOR_STORE` stays `pgvector`.)
-- [ ] **P2 — Connectivity + schema smoke.** Point the app at Azure Postgres; create the
+- [x] **P2 — Connectivity + schema smoke.** Point the app at Azure Postgres; create the
       memory/audit schemas; run the suite against the cloud DB. *No new flag, no new
-      paid service — rides P1 hosting.*
+      paid service — rides P1 hosting.* (DONE 2026-10-29: vector ext + 5 schemas created,
+      `chunks` at dim 512; 11 live DB tests passed.)
 - [ ] **P3 — Run the real ETL.** ✅ `ETL_RUNTIME=databricks`, `ETL_STORAGE=blob`. Run the
       medallion pipeline on Databricks serverless → Delta/Gold in Blob (auto-terminate
       after).
