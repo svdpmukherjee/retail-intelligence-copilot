@@ -66,6 +66,17 @@ into pgvector.
 
 ---
 
+## The interface
+
+A three-pane chat: a demo **identity switcher** and owner-scoped **history** on the
+left, the grounded, cited conversation in the middle, and a **click-to-inspect
+evidence** panel on the right. Per-turn **cost, tokens and latency** stay in view.
+*(UI is a work in progress — actively being refined.)*
+
+![Chat interface showing the role switcher, suggested queries, evidence panel and live session metrics](docs/img/chat-interface.png)
+
+---
+
 ## Run it from the beginning (Claude Code)
 
 The whole system runs locally at **$0** — no cloud account required.
