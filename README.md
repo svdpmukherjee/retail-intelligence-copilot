@@ -1,13 +1,12 @@
 # Retail Customer Intelligence Copilot
 
-> An enterprise **agentic-RAG** assistant over a retailer's own review, product and
-> policy data — returning answers that are **grounded, cited, and access-controlled**.
+**The problem.** Retail teams sit on millions of customer reviews and sales records
+they can't actually query; the insight is trapped, and getting an answer today means
+waiting on a data analyst.
 
-Ask a question in plain language; a **router** picks the right tool (structured
-analytics, semantic review search, or policy lookup), retrieval runs **inside the
-caller's access scope**, and a **composer** returns one answer where every claim is
-cited. Every turn is audited. It runs **fully local at $0**, and the same code
-switches to Azure behind one flag.
+**The idea.** Let anyone, be it support or marketing or an executive — just ask in plain English and get an answer in seconds. Under the hood it's **agentic RAG**: a **router** reads each question and picks the right tool: text-to-SQL for numbers, semantic review search for themes, policy docs for how-to — so you never get a hallucinated statistic. Retrieval is **hybrid** (vector + keyword, fused and reranked), and a **composer** returns one answer where **every claim is cited**.
+
+**What we aim to get.** Enterprise-grade from day one: **access-controlled** (you only see your scope), fully **auditable**, with **groundedness enforced before the model ever speaks**. It currently runs **fully local at $0**, and the same code can switch to Azure behind one flag — reliable, governable, and scalable from the start.
 
 `Python · FastAPI · React · pgvector · Spark/Delta · Ollama ↔ Azure OpenAI`
  · full spec in **[`PRD.md`](./PRD.md)**
