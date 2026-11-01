@@ -101,10 +101,13 @@ class PgVectorStore:
     ) -> list[SearchHit]:
         cols = ", ".join(_META_COLUMNS)
         where, params = build_where(filters)
-        sql = (
+        # Distance-only ORDER BY lets the planner use the HNSW index; an `, id` tiebreaker
+        # there forces a Sort over a seq scan (B-11). Ties are broken in the outer query.
+        inner = (
             f"SELECT {cols}, 1 - (embedding <=> %s) AS score FROM {CHUNKS_TABLE} {where}"
-            "ORDER BY embedding <=> %s, id LIMIT %s"
+            "ORDER BY embedding <=> %s LIMIT %s"
         )
+        sql = f"SELECT * FROM ({inner}) ann ORDER BY score DESC, id"
         with self._connect() as conn:
             rows = conn.execute(sql, [Vector(vector), *params, Vector(vector), k]).fetchall()
         return _to_hits(rows)

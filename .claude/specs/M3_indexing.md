@@ -68,6 +68,14 @@ Azure AI Search paths behind the provider seam, gated on explicit go-ahead.
         search, which is linear-cost at the 225k gold corpus. Recall/latency stays tunable at
         query time via `hnsw.ef_search`. (HNSW over IVFFlat: IVFFlat trains `lists` centroids on
         rows present at creation, but `ensure_schema()` runs the DDL before data is loaded.)
+  - [ ] **The vector `query()` must actually use the HNSW index (B-11).** pgvector only uses
+        HNSW when the `ORDER BY` is **distance-only** + `LIMIT k`; a secondary key (e.g. `, id`)
+        forces a Sort → `Seq Scan`. So `PgVectorStore.query()` is written as an **inner** ANN
+        subquery (`ORDER BY embedding <=> %s LIMIT k`, caller filters in the inner `WHERE`)
+        wrapped in an **outer** re-sort by `score DESC, id` — keeping both the index and
+        deterministic tie-breaking. `keyword_query` keeps its plain `score DESC, id` (no ANN
+        index). Verify with `EXPLAIN` (expect `Index Scan using chunks_embedding_hnsw_idx`) and a
+        B-5-style benchmark on the production query form (~0.5 ms p50 vs ~61 ms seq-scan).
   - [ ] `get_vector_store()` returns `PgVectorStore` (default) or `AzureSearchStore`;
         `PgVectorStore.ensure_schema()`/`upsert(chunks)`/`query(vector, k)` work against a
         local Postgres+pgvector at $0; `AzureSearchStore` is inert and raises

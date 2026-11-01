@@ -1,5 +1,7 @@
 # CURRENT_TASK.md
 
+**B-11 (HNSW-friendly query) built 2026-11-01:** `PgVectorStore.query` now inner `ORDER BY embedding <=> %s LIMIT %s` (filters in inner WHERE) + outer `ORDER BY score DESC, id`; `keyword_query` untouched. 3 tests added in `tests/test_vector_store.py` (SQL shape, tie/filter/k, EXPLAIN uses `chunks_embedding_hnsw_idx`); 8 pass. **WARNING:** the `store` test fixture does `DROP TABLE chunks` on the DATABASE_URL DB; running it dropped the P4 corpus from local pgvector (DB now ~8 MB, no `chunks`). Corpus must be re-embedded (local, $0) before the benchmark (scratchpad `bench_b5.py`) can run. Awaiting tester/close.
+
 **B-5 (HNSW index) built 2026-11-01:** added `chunks_embedding_hnsw_idx` (`USING hnsw (embedding vector_cosine_ops)`, pgvector defaults) to `chunks_ddl()` in `backend/retrieval/schema.py`; `vector_store.query()` unchanged (already orders by `<=>`). ruff/black clean; `tests/test_vector_store.py` 5 passed against local pgvector. Awaiting tester/close.
 
 No module in progress.
