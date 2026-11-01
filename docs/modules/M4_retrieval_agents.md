@@ -311,3 +311,25 @@ Scoped `/change` enhancement (not a defect). Module history above is unchanged. 
 - Not run: a live OpenRouter call + `COST.md` entry — that spends money and needs explicit human go-ahead (`OPENROUTER_GO_AHEAD=true` + key). The adapter is ready for the B-8 study to drive it.
 
 **Acceptance impact:** unblocks **B-8** (the controlled model-comparison study), which can now construct a client per open-weight slug through the seam. No change to existing free/azure behaviour.
+
+---
+
+## Change note — B-10 structured SQL passthrough (2026-11-01)
+
+The composer flattened the SQL agent's exact `{sql, columns, rows}` into a prose string
+(`_sql_text`) and dropped the structured data before the API, forcing the UI to regex-scrape a
+number back out of prose (years plotted as values, raw-float precision, no real table). **Fix
+(ADR "Pass structured SQL results through… B-10"):** `AnswerResult` gains a **top-level `sql`
+field** — `SqlBlock{sql, columns, rows}` — **tied to citation [1]** (`source_id="sql"`). The
+block is populated **only if** the SQL citation survives into the returned `citations` (same
+evidence [1] points at; no second, un-audited number path); it is `None` when there is no SQL
+result or when the LLM drops [1]. At the composer boundary floats round to 2 dp
+(`SQL_FLOAT_DECIMALS`), `Decimal` normalizes to float (so DuckDB DECIMALs serialize), rows cap at
+`MAX_SQL_ROWS_SHOWN` (10), and string cells pass through `governance.pii.redact`. The prose
+`answer` and citation logic are unchanged. `QueryResponse` inherits the field (no `main.py` edit).
+
+**Tests:** `backend/tests/test_composer.py` — 6 pass (2 new: block matches [1] with rounding/cap/
+redaction; `sql` is `None` with no SQL result and when only [2] is cited). Serialization verified
+offline through FastAPI's `jsonable_encoder` (Decimal → number, no raise). **Not run:** a live
+`/query` SQL path (needs a free-mode LLM endpoint + Gold Delta data, unconfirmed this session) —
+flagged honestly, not a silent pass. Files: `composer.py`, `test_composer.py`.

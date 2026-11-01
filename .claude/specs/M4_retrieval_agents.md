@@ -226,9 +226,18 @@ the free/local path; Azure LLM + any hosted reranker sit behind the provider sea
         failures become a typed `HTTPException` with JSON `detail` (never an unhandled 500).
   - [ ] Every citation in the answer resolves to a source actually returned by a tool
         (no dangling/uncited references).
+  - [ ] **Structured SQL passthrough (B-10).** When a SQL source is cited, `AnswerResult`
+        carries the exact result as a **top-level typed `sql` field** — a block
+        `{sql: str, columns: list[str], rows: list[list]}` (rows capped at `MAX_SQL_ROWS_SHOWN`,
+        floats rounded at the composer boundary) — **tied to citation [1]** (`source_id="sql"`):
+        the field is present **iff** the SQL source survives into `citations` (same evidence [1]
+        points at, so there is no second, un-audited number path), and `None` otherwise. The prose
+        `answer` is unchanged (still the cited narrative); the block is the display truth for the UI.
+        Any text column is redacted at the boundary like a snippet. The composer no longer flattens
+        SQL into a prose metric string for the UI to re-parse.
 - Build steps:
-  1. Write `backend/agents/composer.py` (`AnswerResult` model, LLM + extractive paths,
-     citation-resolution check).
+  1. Write `backend/agents/composer.py` (`AnswerResult` model with the top-level `sql` block,
+     LLM + extractive paths, citation-resolution check; drop the SQL source iff [1] is not cited).
   2. Write `backend/agents/pipeline.py` (`answer(...)` orchestration + audit record).
   3. Add `POST /query` to `backend/app/main.py` (async route, try/catch → `HTTPException`).
 - Files to touch: `backend/agents/composer.py`, `backend/agents/pipeline.py`,
@@ -251,6 +260,9 @@ the free/local path; Azure LLM + any hosted reranker sit behind the provider sea
   attached and passes through to filters.
 - M4.6: unit — extractive composer yields inline [n] citations all resolving to returned sources;
   an uncited claim is flagged/blocked; `POST /query` returns an `AnswerResult` with an audit dict.
+  **B-10:** when a SQL source is cited, `AnswerResult.sql` carries the exact `{sql, columns, rows}`
+  (rounded/row-capped) matching citation [1]; when no SQL source is cited (or [1] is dropped),
+  `AnswerResult.sql` is `None`; a text column in rows is redacted.
 - Module end-to-end smoke (the one real check): `provider_mode=free`, local pgvector, **no hosted
   model** — index the tiny committed slice (M3 CLIs), then `answer("what are common complaints
   about <seeded product/category>?", role="support")` returns a grounded answer whose citations

@@ -1,10 +1,11 @@
 import ClaimLine from "../ClaimLine";
-import { sqlMetrics } from "../../answer";
+import { sqlBlockMetrics } from "../../answer";
 import Bars from "./Bars";
+import SqlTable from "./SqlTable";
 import type { ShapeProps } from "./types";
 
 export default function ExecutiveShape({ res, lines, suppressCharts, onCiteClick }: ShapeProps) {
-  const metrics = suppressCharts ? [] : sqlMetrics(lines, res.citations);
+  const metrics = suppressCharts ? [] : sqlBlockMetrics(res.sql);
   const [headline, ...rest] = lines;
   const cause = rest.length > 0 ? rest[rest.length - 1] : null;
   const body = rest.slice(0, -1);
@@ -20,6 +21,7 @@ export default function ExecutiveShape({ res, lines, suppressCharts, onCiteClick
           <Bars metrics={metrics} caption="Ranked metric from SQL" />
         </div>
       )}
+      {!suppressCharts && res.sql && metrics.length === 0 && <SqlTable block={res.sql} />}
       {body.map((l, i) => (
         <ClaimLine key={i} line={l} onCiteClick={onCiteClick} />
       ))}
