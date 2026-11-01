@@ -100,3 +100,29 @@ Screenshots: none captured. TODO (human, optional): a terminal capture of `pytho
 - Cloud spend: **$0.00** (local sentence-transformers embedder + local pgvector in Docker; no Azure/cloud call). See `COST.md`.
 - Cloud spend this module: $0.00 (from COST.md).
 - Claude session usage: run `/cost` for this session's token usage.
+
+---
+
+## Change note — B-6 streaming indexer (2026-11-01)
+
+**Why:** the original `read_gold_reviews()` did `DeltaTable(...).to_pyarrow_table().to_pylist()`
+and `index_reviews` then built the full chunk list — so peak RAM scaled with corpus size and the
+full 225k embed stalled. B-6 makes the review index memory-safe ahead of data-op P4.
+
+**What changed (`backend/retrieval/index_reviews.py` only):**
+- New generator `iter_gold_review_batches(batch_size)` streams the Gold Delta via
+  `to_pyarrow_dataset().to_batches(batch_size=...)`, yielding row-dict batches.
+- `index_reviews()` now streams: one embedder, one store (`ensure_schema()` once), and **one
+  shared `CostLedger`**, iterating batches → `chunk_review` → a factored
+  `_embed_upsert_batch(...)`. Peak memory is flat at one batch regardless of corpus size; the
+  `max_embedding_usd` cap stays **global** across batches (cap-check still runs before the paid
+  embed call).
+- `read_gold_reviews(limit)` kept as a thin list wrapper (tests + `--limit` unchanged);
+  `embed_and_upsert(list)` keeps its list signature for the small `index_docs` corpus. No new
+  settings knob — read grain reuses `embedding_batch_size`.
+
+**Verification (scoped):** `pytest tests/test_index_reviews.py` → **3 passed** (none skipped) against
+a real local pgvector (`infra-pgvector-1`, pg16), free embedder, $0. A 14-row sample with
+`EMBEDDING_BATCH_SIZE=3` exercised the multi-batch path end-to-end (batches `[3,3,3,3,2]`): streamed
+`indexed == len(read_gold_reviews())`, two-run idempotency (no duplicate rows), `source_type`/metadata
+populated, ledger usd == 0.0. ruff + black clean. Spec §M3.3 + ADR updated the same day.

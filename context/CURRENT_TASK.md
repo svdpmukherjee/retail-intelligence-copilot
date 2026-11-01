@@ -2,13 +2,17 @@
 
 No module in progress.
 
-## B-7 / M4.1b OpenRouter generation provider (built, awaiting tester)
+## Wave 1 (2026-11-01) — B-5, B-6, B-7 all built & merged
 
-Built: `openrouter_*` Settings + `provider_mode="openrouter"`, `.env.example` block,
-`OpenRouterLLM` (gated like Azure, worst-case ledger reservation), keyword-only
-`get_llm(model=...)` override (per-client, no settings mutation), tests in
-`backend/tests/test_llm.py`. `get_embedder()` untouched (openrouter -> free embedder).
-Left: tester pass; real-spend logging in `COST.md` happens when B-8 runs.
+- **B-7 / M4.1b OpenRouter generation provider:** `openrouter_*` Settings +
+  `provider_mode="openrouter"`, `.env.example` block, `OpenRouterLLM` (gated like Azure,
+  worst-case ledger reservation), keyword-only `get_llm(model=...)` override (per-client, no
+  settings mutation), tests in `backend/tests/test_llm.py`. `get_embedder()` untouched
+  (openrouter -> free embedder). Left: real-spend logging in `COST.md` happens when B-8 runs.
+- **B-6 streaming review indexer (spec M3.3):** `index_reviews.py` now streams Gold in
+  batches with one shared cost ledger; tests added.
+- **B-5 HNSW ANN index:** `chunks_embedding_hnsw_idx` on `chunks.embedding`
+  (`vector_cosine_ops`) in `schema.py`. Before/after latency+recall numbers land when P4 runs.
 
 ## ▶ ACTIVE NEXT: Cloud operationalization (P1–P8)
 

@@ -83,15 +83,28 @@ Azure AI Search paths behind the provider seam, gated on explicit go-ahead.
   - [ ] `index_reviews(limit=None)` reads `gold/reviews` (M2 boundary), builds one chunk
         per review (title+text), carries `category`/`asin`/`year` metadata and
         `source_type="review"`, embeds in batches, and upserts.
+  - [ ] **Memory-safe streaming (B-6):** `index_reviews` does **not** materialise the whole
+        corpus. It reads Gold in fixed-size batches via a generator
+        `iter_gold_review_batches(batch_size)` built on
+        `DeltaTable(...).to_pyarrow_dataset().to_batches(batch_size=...)`, and chunks →
+        embeds → upserts **one batch at a time**, so peak memory is flat regardless of corpus
+        size (225k full-corpus embed must not OOM). Read grain reuses `embedding_batch_size`
+        (one knob).
   - [ ] Wrapped in `CostLedger`; the free embedder records $0. A re-run upserts the same
-        ids with no duplicate rows.
+        ids with no duplicate rows. The `max_embedding_usd` cap is enforced **globally across
+        all batches** — a single shared ledger, embedder, and store are threaded through the
+        streaming loop, never re-created per batch.
   - [ ] Default run embeds only the tiny committed Gold sample (CI, $0); a full run is a
-        separate, gated invocation.
+        separate, gated invocation. `read_gold_reviews(limit)` remains a thin list wrapper over
+        the generator (unchanged behaviour for tests and `--limit`). `embed_and_upsert(list)`
+        keeps its list signature for the small `index_docs` corpus.
 - Build steps:
   1. Write `backend/retrieval/chunking.py` (review chunker; deterministic id from
      `asin`+hash of text).
-  2. Write `backend/retrieval/index_reviews.py`: read Gold reviews (parquet/Delta path
-     via `data_lake_path`), chunk → embed → upsert; CLI `python -m retrieval.index_reviews`.
+  2. Write `backend/retrieval/index_reviews.py`: stream Gold reviews in batches (Delta
+     `to_pyarrow_dataset().to_batches`), chunk → embed → upsert per batch via a shared
+     `_embed_upsert_batch(...)` core + one shared `CostLedger`; CLI
+     `python -m retrieval.index_reviews`.
   3. Estimate + ledger-record token/USD per batch; free path = $0.
 - Files to touch: `backend/retrieval/chunking.py`,
   `backend/retrieval/index_reviews.py`, `backend/tests/test_index_reviews.py`.
@@ -126,6 +139,10 @@ Azure AI Search paths behind the provider seam, gated on explicit go-ahead.
   raises gated. If Postgres/pgvector is unavailable, the Tester reports plainly (not PASS).
 - M3.3: run `index_reviews()` on the committed Gold sample; assert row count, metadata
   columns populated, `source_type="review"`, and idempotency across two runs ($0 via ledger).
+  B-6 streaming: assert `iter_gold_review_batches(batch_size)` yields batches of the right size
+  covering every row exactly once (sum of batch lens == full count), that indexing a corpus
+  larger than one batch still produces the full row count (streaming path exercised, >1 batch),
+  and that `read_gold_reviews(limit)` still returns a list honouring `limit`.
 - M3.4: run `index_docs()` on a 2–3 doc fixture (1 md + 1 pdf); assert chunks indexed with
   section metadata and `source_type="doc"`.
 - Module end-to-end smoke (the one real check): `provider_mode=free`, local pgvector —
