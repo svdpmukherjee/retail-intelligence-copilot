@@ -135,7 +135,7 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
 - **Where:** provider/LLM factory in `backend/` (where `get_llm()` / the free/azure adapters
   live), `app/config.py`, `.env.example`.
 
-## B-8 — Controlled model-comparison evaluation study — HIGH
+## B-8 — Controlled model-comparison evaluation study — HIGH — ✅ DONE 2026-11-01 (merged `f12af36`; live 6-model run $0.0054)
 
 - **Symptom:** model choice is currently by assertion, not evidence — not a defensible story
   for recruiters.
@@ -160,7 +160,7 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
 - **Where:** `backend/retrieval/embeddings.py`, `app/config.py` (`EMBEDDING_MODEL_FREE`),
   `backend/retrieval/schema.py` (dim), `backend/eval/`.
 
-## B-10 — Composer flattens structured SQL into prose; UI re-scrapes it — MEDIUM
+## B-10 — Composer flattens structured SQL into prose; UI re-scrapes it — MEDIUM — ✅ DONE 2026-11-01 (merged `5f78349`; row cap raised to query bound + "X of Y")
 
 - **Symptom:** SQL answers show wrong "metrics" (a year plotted as a value), full float
   precision, mid-value truncation, and no real chart — reads developer-first, not user-first.
@@ -173,7 +173,7 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
 - **Where:** `backend/agents/composer.py`, `backend/app/main.py`, `frontend/src/api/types.ts`,
   `frontend/src/answer.ts`, `frontend/src/components/shapes/`.
 
-## B-11 — Production vector query defeats the HNSW index (`, id` tiebreaker) — HIGH (B-5 follow-up)
+## B-11 — Production vector query defeats the HNSW index (`, id` tiebreaker) — HIGH (B-5 follow-up) — ✅ DONE 2026-11-01 (merged PR #1 `7c525af`; serving path hits HNSW, ≈39× p50)
 
 - **Symptom:** the B-5 HNSW index is built and healthy, but every live `review_rag`/vector
   query still does a **sequential scan** over all 225k vectors — the index is never used, so
@@ -197,7 +197,7 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
 - **Where:** `backend/retrieval/vector_store.py` (`PgVectorStore.query`); the `keyword_query`
   path is unaffected. Benchmark harness: adapt `scratchpad/bench_b5.py`.
 
-## B-12 — Test fixture drops the real `chunks` table (destroyed the P4 corpus) — HIGH (safety)
+## B-12 — Test fixture drops the real `chunks` table (destroyed the P4 corpus) — HIGH (safety) — ✅ DONE 2026-11-01 (`6497a3f`; `conftest.py` redirects to `rag_test`, fails closed)
 
 - **Symptom:** running `backend/tests/test_vector_store.py` destroyed the live local P4 corpus
   (225k reviews + 79 docs + HNSW index, ~949 MB). Verified 2026-11-01: `rag` DB fell to 8.2 MB,
