@@ -19,6 +19,7 @@ provisioned or run without explicit human go-ahead. Runtime cap lives in
 | 2026-10-29 | P1     | Blob storage `ricstore28276` + `gold` container (created earlier this phase) | ~€0 (LRS, tiny) | ~0.00 |
 | 2026-10-29 | P2     | Connectivity + schema smoke (CREATE EXTENSION vector + 5 schemas, live DB tests) — no new paid service | €0 incremental (rides P1 hosting) | 0.00 |
 | 2026-10-29 | P3     | Real medallion ETL in **local Spark** over `data/raw/` (1.5M rows, 15 cats) → Gold Delta published to Blob `gold/` (~93 MB). No Databricks serverless (unimplemented seam) → €0 compute | ~€3–8 (orig. Databricks est.) → **€0 compute** | ~0.00 (Blob storage only, negligible) |
+| 2026-11-01 | B-8 | OpenRouter: B-8 model-comparison study run (6 models; answer-path actual) | 0.0266 | 0.0054 |
 
 **P1 hosting now burning** (~€4–5/day). Dominant cost = time the stack is left up — move P1→P8 promptly, then `az group delete -n rg-ric-demo`.
 
