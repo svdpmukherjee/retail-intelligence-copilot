@@ -1,7 +1,11 @@
 import pytest
 
 from app.config import Settings
-from retrieval.index_reviews import index_reviews, read_gold_reviews
+from retrieval.index_reviews import (
+    index_reviews,
+    iter_gold_review_batches,
+    read_gold_reviews,
+)
 from retrieval.vector_store import get_vector_store
 
 
@@ -37,3 +41,21 @@ def test_index_reviews_on_gold_sample_is_populated_and_idempotent(store) -> None
         ).fetchone()
     assert count == expected
     assert bad == 0
+
+
+def test_iter_gold_review_batches_covers_every_row_in_bounded_batches() -> None:
+    total = len(read_gold_reviews())
+    size = max(1, total // 3)
+
+    batches = list(iter_gold_review_batches(size))
+
+    assert len(batches) > 1
+    assert all(0 < len(b) <= size for b in batches)
+    assert sum(len(b) for b in batches) == total
+
+
+def test_read_gold_reviews_honours_limit() -> None:
+    rows = read_gold_reviews(2)
+
+    assert isinstance(rows, list)
+    assert len(rows) <= 2

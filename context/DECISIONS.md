@@ -579,3 +579,23 @@ Durable design decisions (newest at the bottom). Decision → why.
   picked up in dependency-safe, file-disjoint order (and parallelised only where safe)
   instead of re-deriving priority each session. The plan is advice; the human still
   approves each item, executed as its own `/change`.
+- **B-6 streaming review indexer (2026-11-01).** Made `index_reviews` stream `gold/reviews`
+  in fixed-size batches (`DeltaTable(...).to_pyarrow_dataset().to_batches(batch_size=...)`)
+  and embed+upsert each batch, instead of `read_gold_reviews()` materialising every row via
+  `to_pyarrow_table().to_pylist()` and then building the full chunk list. Peak memory is now
+  flat at one batch regardless of corpus size, so the imminent full-corpus (225k) embed is
+  memory-safe. Design: a new `iter_gold_review_batches(batch_size)` generator feeds row-dict
+  batches; the embed/cap/upsert body of `embed_and_upsert` is factored into a private
+  `_embed_upsert_batch(...)` that a single, shared `CostLedger` + embedder + store thread
+  through, so the `max_embedding_usd` cap stays **global** across batches (not reset per
+  batch). Read grain reuses the existing `embedding_batch_size` setting (one knob). Idempotency
+  (stable ids, re-run = no duplicate rows) is preserved. `read_gold_reviews(limit)` is kept as a
+  thin list wrapper over the generator so tests and `--limit` are unchanged; `embed_and_upsert(list)`
+  keeps its list signature for the small `index_docs` corpus (no memory concern there). Touches
+  only `backend/retrieval/index_reviews.py`; spec `.claude/specs/M3_indexing.md` §M3.3. **Why:**
+  without streaming the full-gold read is the heavy call that OOMs/stalls (B-6); it directly
+  unblocks data-op P4 and pairs with B-5's ANN index. **Rejected alternatives:** (A) thread an
+  optional ledger into `embed_and_upsert` but still call `read_gold_reviews()` first — rejected,
+  it still materialises the whole corpus, the exact heavy call B-6 names; (C) push an iterator
+  down into the `VectorStore`/`Embedder` Protocol — rejected as over-engineered for a reference
+  build and it churns the seam M4/M8 depend on.

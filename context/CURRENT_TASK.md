@@ -2,6 +2,8 @@
 
 No module in progress.
 
+B-6 (streaming review indexer, spec M3.3): `index_reviews.py` now streams Gold in batches with one shared cost ledger; tests added, one test file run.
+
 ## ▶ ACTIVE NEXT: Cloud operationalization (P1–P8)
 
 Taking the app from the $0 local build to a one-shot live Azure + Databricks run,

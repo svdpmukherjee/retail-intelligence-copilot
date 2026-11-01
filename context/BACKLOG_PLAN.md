@@ -18,7 +18,7 @@ are older UX-correctness items from M8 v3 live verification.
 | Rank | Item | Severity | Value | Effort | Risk | Depends on | Wave | Track | File domain | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | B-5 ANN index on `embedding` | HIGH | HIGH | S | L-M | — (pairs w/ P4) | 1 | A | `backend/retrieval/schema.py`, `vector_store.py` | Ready |
-| 2 | B-6 streaming indexer (no full RAM load) | MED | MED-HIGH | M | L | — (pairs w/ P4) | 1 | B | `backend/retrieval/index_reviews.py` | Ready |
+| 2 | B-6 streaming indexer (no full RAM load) | MED | MED-HIGH | M | L | — (pairs w/ P4) | 1 | B | `backend/retrieval/index_reviews.py` | **DONE 2026-11-01** |
 | 3 | B-7 OpenRouter generation provider | HIGH | HIGH | M | L-M | — | 1 | C | `backend/agents/llm.py`, `app/config.py`, `.env.example` | Ready |
 | 4 | B-8 controlled model-comparison study | HIGH | HIGH | L | MED | **B-7** | 2 | A | `backend/eval/`, golden-set fixtures, `docs/` | Blocked on B-7 |
 | 5 | B-10 structured SQL result passthrough | MED | MED-HIGH | M | L-M | — | 2 | B | `backend/agents/composer.py`, `app/main.py`, `frontend/src/api/types.ts`, `answer.ts`, `components/shapes/` | Ready |
