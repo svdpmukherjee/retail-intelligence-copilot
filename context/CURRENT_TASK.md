@@ -40,3 +40,5 @@ Phone reflow spot-check on a real device; 4 error-state banners not force-driven
   the augmented query, composes + audits the original; `audit.memory.followup_augmented` added.
 - Tests added in `backend/tests/test_pipeline_memory.py` (2 unit + 1 live free-path smoke).
 - Left: tester run of the live smoke; then orchestrator close-out.
+
+- 2026-11-01 test-infra: DB fixtures bounded + split (session-scoped read-only `indexed_chunks`, function-scoped memory reset `live_db`); test_pipeline_memory ~40 min -> ~13 s; test_index_reviews/test_pipeline index a 50-row slice. No product code changed.

@@ -11,7 +11,7 @@
 - If a live check cannot run (missing key/quota), the Tester reports that
   plainly — it is not a silent PASS.
 - Keep fixtures tiny; the authored policy/manual docs provide ground-truth
-  question→answer pairs for evaluation.
+  question→answer pairs for evaluation. See **Fixture performance & isolation**.
 
 ## Testing levels (who owns what)
 
@@ -25,3 +25,23 @@
 SIT is deliberately **lightweight** here — a glimpse of enterprise practice that
 proves the module's components interact correctly, enough to call the module
 complete. It is not a multi-environment test campaign.
+
+## Fixture performance & isolation
+
+DB-backed tests must stay fast and isolated. A test suite that re-embeds the real
+corpus per test is neither (it cost ~40 min once — 2026-11-01). Rules:
+
+- **Index a small bounded slice, never the full corpus.** Build-time indexing
+  (`index_reviews()`) in a test always passes an explicit bound — prefer the
+  **gold sample** (the curated ground-truth rows the retrieval assertions use),
+  or an explicit `limit=` — so the fixture embeds tens of rows, not the whole DB.
+  Full-corpus indexing belongs to the build/ETL step, not the test suite.
+- **Build the expensive, read-only corpus once per session.** A fixture that
+  creates+indexes `chunks` is `scope="session"` and must not be mutated by tests.
+- **Reset mutable per-test state per test.** Tables tests *write* to (`messages`,
+  `threads`, `user_memory`) are truncated by a **function-scoped** fixture so no
+  state leaks between tests. Never fold these into the session-scoped index
+  fixture — a shared index is fine, shared conversation memory is cross-test
+  contamination.
+- Isolation still routes through `conftest.py` to the `<db>_test` database
+  (fails closed); these rules change *speed and scope*, never the DB target.

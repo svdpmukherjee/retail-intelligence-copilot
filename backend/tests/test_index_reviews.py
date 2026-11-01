@@ -26,13 +26,18 @@ def store():
         conn.execute("DROP TABLE chunks")
 
 
+# Bounded slice: the test checks idempotency/shape, not corpus scale.
+INDEX_LIMIT = 50
+
+
 def test_index_reviews_on_gold_sample_is_populated_and_idempotent(store) -> None:
-    expected = len({(r["asin"], r["title"], r["text"]) for r in read_gold_reviews()})
+    sample = read_gold_reviews(INDEX_LIMIT)
+    expected = len({(r["asin"], r["title"], r["text"]) for r in sample})
 
-    first = index_reviews()
-    second = index_reviews()
+    first = index_reviews(INDEX_LIMIT)
+    second = index_reviews(INDEX_LIMIT)
 
-    assert first["indexed"] == second["indexed"] == len(read_gold_reviews())
+    assert first["indexed"] == second["indexed"] == len(sample)
     assert first["usd"] == 0.0
     with store._connect() as conn:
         count, bad = conn.execute(

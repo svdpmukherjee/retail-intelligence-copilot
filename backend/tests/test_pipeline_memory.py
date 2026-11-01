@@ -7,10 +7,16 @@ from fastapi.testclient import TestClient
 from agents import pipeline
 from app.config import Settings
 from app.main import app
+from governance.policy import ACCESS_POLICY
 from memory.manager import MemoryContext, Turn, effective_query
 from memory.store import MemoryStore
 from retrieval.index_docs import index_docs
-from retrieval.index_reviews import index_reviews, read_gold_reviews
+from retrieval.index_reviews import (
+    chunk_review,
+    embed_and_upsert,
+    iter_gold_review_batches,
+    read_gold_reviews,
+)
 from retrieval.schema import Chunk, SearchHit
 from retrieval.vector_store import get_vector_store
 
@@ -37,29 +43,71 @@ def no_llm(monkeypatch):
     monkeypatch.setattr("memory.manager.get_llm", lambda: NoLLM())
 
 
-@pytest.fixture
-def live_db():
+# `support` is category-scoped and gold is category-sorted, so the first-N rows (which hold
+# read_gold_reviews(1)[0], the category the tests query) are out of its scope. Add a few
+# in-scope rows per allowed category so the support-role assertions retrieve real evidence.
+HEAD_ROWS = 50
+PER_SCOPED_CATEGORY = 10
+
+
+def _gold_sample() -> list[dict]:
+    scoped = set(ACCESS_POLICY["support"]["category"])
+    quota = {c: PER_SCOPED_CATEGORY for c in scoped}
+    rows = read_gold_reviews(HEAD_ROWS)
+    for batch in iter_gold_review_batches(Settings().embedding_batch_size):
+        for row in batch:
+            if quota.get(row["category"], 0) > 0:
+                quota[row["category"]] -= 1
+                rows.append(row)
+        if not any(quota.values()):
+            break
+    return rows
+
+
+@pytest.fixture(scope="session")
+def indexed_chunks():
+    """Read-only `chunks`, embedded once per session from a bounded gold slice."""
     url = Settings().database_url
     if url is None:
         pytest.skip("DATABASE_URL not set; start infra/docker-compose.yml for the live smoke")
     vectors = get_vector_store()
-    memory = MemoryStore(url.get_secret_value())
     try:
         with vectors._connect(vectors=False) as conn:
             conn.execute("DROP TABLE IF EXISTS chunks")
         vectors.ensure_schema()
-        with memory._connect() as conn:
-            conn.execute("DROP TABLE IF EXISTS messages, threads, user_memory")
     except Exception as exc:
         pytest.skip(f"pgvector Postgres not reachable: {type(exc).__name__}")
-    pipeline._schema_ready = False
-    index_reviews()
+    embed_and_upsert([chunk_review(r) for r in _gold_sample()])
+    yield vectors
+    with vectors._connect(vectors=False) as conn:
+        conn.execute("DROP TABLE IF EXISTS chunks")
+
+
+def _ensure_indexed(vectors) -> None:
+    """Other suites DROP `chunks` for their own clean slate; rebuild the sample if it is gone."""
+    vectors.ensure_schema()
+    with vectors._connect(vectors=False) as conn:
+        present = conn.execute("SELECT count(*) FROM chunks").fetchone()[0]
+    if not present:
+        embed_and_upsert([chunk_review(r) for r in _gold_sample()])
+
+
+@pytest.fixture
+def live_db(indexed_chunks):
+    """Fresh conversation memory per test; shared chunks stay untouched."""
+    _ensure_indexed(indexed_chunks)
+    memory = MemoryStore(Settings().database_url.get_secret_value())
+    memory.ensure_schema()
+    with memory._connect() as conn:
+        conn.execute("TRUNCATE messages, threads, user_memory")
+    pipeline._schema_ready = True
     yield memory
     pipeline._schema_ready = False
-    with vectors._connect(vectors=False) as conn:
-        conn.execute("DROP TABLE chunks")
+    # chunks is session-shared: drop any docs a test indexed so it stays review-only.
+    with indexed_chunks._connect(vectors=False) as conn:
+        conn.execute("DELETE FROM chunks WHERE source_type <> 'review'")
     with memory._connect() as conn:
-        conn.execute("DROP TABLE messages, threads, user_memory")
+        conn.execute("DROP TABLE IF EXISTS messages, threads, user_memory")
 
 
 def test_two_turn_thread_loads_turn_one_and_persists_at_zero_cost(live_db) -> None:

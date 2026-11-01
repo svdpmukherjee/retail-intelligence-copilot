@@ -80,7 +80,7 @@ def seeded_store():
 
 def test_end_to_end_free_mode_grounded_cited_answer(seeded_store, monkeypatch) -> None:
     monkeypatch.setattr("agents.router.get_llm", lambda: NoLLM())
-    index_reviews()
+    index_reviews(50)  # first-N includes read_gold_reviews(1), the category queried below
     category = read_gold_reviews(1)[0]["category"]
 
     result = asyncio.run(
