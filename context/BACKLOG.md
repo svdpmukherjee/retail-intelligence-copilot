@@ -46,7 +46,7 @@ conversation: "What is the return policy?" → "why?"), 2026-10-29.
 - **Where:** `backend/agents/router.py`, `backend/agents/composer.py`, memory
   context wiring (M5 `context` kwarg).
 
-## B-3 — Support-shape per-line tag ("FIX"/"ISSUE") mislabels content — MEDIUM
+## B-3 — Support-shape per-line tag ("FIX"/"ISSUE") mislabels content — MEDIUM — ✅ DONE 2026-11-02 (`d6c80d4`; dropped the per-line tag, kept Governing-policy callout; live visual check carried open)
 
 - **Symptom:** every return-policy extract was tagged `FIX`; the review line in
   turn 2 was tagged `ISSUE`. Policy statements are not "fixes" — the tag is
