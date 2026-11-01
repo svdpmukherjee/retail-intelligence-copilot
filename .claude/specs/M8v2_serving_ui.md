@@ -144,6 +144,15 @@ widen my scope.
         trend; executive = headline + ranked-metric bars + one-line cause; unknown
         role/intent → default plain-claim shape (never errors). Charts render **only
         if** `"sql" ∈ audit.sources` (suppressed otherwise, never fabricated).
+  - [ ] **Structured SQL rendering from the typed block (B-10).** The SQL data comes from
+        `R.sql` (`{sql, columns, rows}`, the top-level block tied to citation [1]) — **never**
+        regex-scraped from the prose answer. `answer.ts::sqlMetrics` (prose-scraper) is removed;
+        `types.ts` gains the `SqlBlock` type. Shapes render a **real table** of `columns`/`rows`
+        as the honest default (`source: SQL`); a chart (`Bars`/`Trend`/`Themes`) renders **only**
+        when the block has an unambiguous single numeric measure column (else table only), reading
+        values straight from `rows` — so a year column is shown as a column, never plotted as a
+        value. Charts still gate on `"sql" ∈ audit.sources` and `suppressCharts`; `aria-label`s
+        state the data in words. Values display at the block's rounded precision, not raw floats.
   - [ ] Citation chips (one per `citations[]`: `[n] label`) open Evidence; scope
         ribbon restates in-scope-vs-all-categories from the role.
   - [ ] Trust strip: collapsed header (`intent · grounding.path · latency_ms · $0`)

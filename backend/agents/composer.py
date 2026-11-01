@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import httpx
 from pydantic import BaseModel
 
@@ -12,6 +14,7 @@ from retrieval.schema import SearchHit
 SQL_SOURCE = "sql"
 MAX_QUOTE_CHARS = 240
 MAX_SQL_ROWS_SHOWN = 10
+SQL_FLOAT_DECIMALS = 2
 
 SYSTEM_PROMPT = (
     "Answer the question using ONLY the numbered sources. Write one claim per line; every line "
@@ -27,10 +30,19 @@ class Citation(BaseModel):
     snippet: str | None = None  # redacted excerpt of the source text, for the UI
 
 
+class SqlBlock(BaseModel):
+    """The exact SQL result behind citation [1]; the UI renders it, never re-parses prose."""
+
+    sql: str
+    columns: list[str]
+    rows: list[list]
+
+
 class AnswerResult(BaseModel):
     answer: str
     citations: list[Citation]
     audit: dict
+    sql: SqlBlock | None = None  # set only when the SQL citation survives into `citations`
 
 
 def _label(hit: SearchHit) -> str:
@@ -47,6 +59,19 @@ def _sql_text(sql_result: dict) -> str:
         for row in rows[:MAX_SQL_ROWS_SHOWN]
     )
     return shown or "no rows"
+
+
+def _cell(value):
+    if isinstance(value, Decimal):
+        value = float(value)  # JSON-safe number; DuckDB aggregates can return DECIMAL
+    if isinstance(value, float):
+        return round(value, SQL_FLOAT_DECIMALS)
+    return redact(value) if isinstance(value, str) else value
+
+
+def _sql_block(sql_result: dict) -> SqlBlock:
+    rows = [[_cell(v) for v in row] for row in sql_result["rows"][:MAX_SQL_ROWS_SHOWN]]
+    return SqlBlock(sql=sql_result.get("sql", ""), columns=sql_result["columns"], rows=rows)
 
 
 def _snippet(text: str) -> str | None:
@@ -117,8 +142,11 @@ async def compose(
     # Generation-time scrub: whatever the LLM echoed, PII never reaches the user.
     answer = redact(answer)
     used = {int(m) for m in CITE.findall(answer)}
+    kept = [c for c in citations if c.n in used]
+    sql_cited = sql_result is not None and any(c.source_id == SQL_SOURCE for c in kept)
     return AnswerResult(
         answer=answer,
-        citations=[c for c in citations if c.n in used],
+        citations=kept,
         audit={"grounding": grounding},
+        sql=_sql_block(sql_result) if sql_cited else None,
     )

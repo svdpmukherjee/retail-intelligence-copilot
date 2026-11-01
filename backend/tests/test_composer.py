@@ -58,3 +58,30 @@ def test_uncited_llm_draft_is_blocked_and_falls_back(monkeypatch) -> None:
     assert result.audit["grounding"]["path"] == "extractive"
     assert "dangling citation [9]" in result.audit["grounding"]["issues"]
     assert [c.source_id for c in result.citations] == ["c1"]
+
+
+def test_sql_block_matches_cited_citation_rounded_capped_and_redacted() -> None:
+    rows = [[f"user{i}@example.com", i + 0.123456] for i in range(15)]
+    sql = {"sql": "select 1", "columns": ["who", "score"], "rows": rows}
+    result = asyncio.run(compose("q", sql, [], CostLedger()))
+
+    assert result.citations[0].source_id == "sql"
+    assert result.sql is not None and result.sql.sql == "select 1"
+    assert len(result.sql.rows) == 10
+    assert result.sql.rows[0] == ["[EMAIL]", 0.12]
+
+
+def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) -> None:
+    assert asyncio.run(compose("q", None, [_hit("c1", "loud")], CostLedger())).sql is None
+
+    class Llm:
+        available = True
+
+        async def complete(self, system, user, *, ledger):
+            return "Only the review says it is loud [2]"
+
+    monkeypatch.setattr("agents.composer.get_llm", lambda: Llm())
+    sql = {"sql": "select 1", "columns": ["n"], "rows": [[3]]}
+    result = asyncio.run(compose("q", sql, [_hit("c1", "loud")], CostLedger()))
+    assert [c.n for c in result.citations] == [2]
+    assert result.sql is None

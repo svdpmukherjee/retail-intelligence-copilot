@@ -226,3 +226,28 @@ to `docs_rag` shows no ranked bars (the marketing run proved the SQL chart path 
 
 **Gates:** `npm run build` green; category-name grep over `frontend/src` empty; snippets still bound
 to `citations[].snippet` (redacted server-side); scope read-only. Cloud spend **$0**.
+
+---
+
+## Change note — B-10 structured SQL passthrough (frontend, 2026-11-01)
+
+The UI previously re-scraped SQL metrics out of the prose answer (`answer.ts::sqlMetrics`),
+which mislabelled years as values and could render no real table. **Fix:** SQL data now comes
+from the typed `res.sql` block (`SqlBlock{sql, columns, rows}`, tied to citation [1]) added by
+B-10 on the backend — never from prose. `sqlMetrics` and all prose-scraping are **deleted**;
+`types.ts` gains `SqlBlock`; `answer.ts::sqlBlockMetrics(block)` derives chart `Metric[]` by
+reading values straight from `rows` by column index (no regex). Executive/Marketing shapes render
+a new `SqlTable` (real `columns`/`rows` table, `source: SQL`) as the honest default and draw a
+chart (`Bars`/`Themes`/`Trend`) **only** when the measure heuristic yields metrics; the
+`suppressCharts`/`"sql" ∈ audit.sources` gate and chart `aria-label`s are kept.
+
+**Measure-column heuristic:** a column is a numeric candidate if every cell is a number; it is
+treated as a *label* (not a measure) if its name matches `year|yr|month|date|period` or all cells
+are integers in 1900–2100. A chart is drawn only when exactly one non-year-like numeric column
+remains and the block has ≥2 columns; otherwise table-only. So `(category, avg_rating)` charts,
+`(year, avg_rating, n)` is table-only, `(year, n)` charts with year as the label.
+
+**Gates:** `npm run build` green (63 modules); `grep sqlMetrics` over `src` empty. **Not
+eyeballed in a browser** this session — a live Marketing/Executive visual check is the carried
+open item. Files: `types.ts`, `answer.ts`, `shapes/{SqlTable,ExecutiveShape,MarketingShape}.tsx`,
+`App.css`.

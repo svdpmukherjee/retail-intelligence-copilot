@@ -654,3 +654,29 @@ Durable design decisions (newest at the bottom). Decision → why.
   order on distance ties, risking flaky eval/ordering assertions (rejected). (C) inner distance-only
   SQL + re-sort `(score DESC, id)` in Python — also correct, but splits the ordering contract across
   SQL and Python; keeping it in one SQL statement is clearer (rejected).
+- **Pass structured SQL results through to the UI as a typed block (B-10, 2026-11-01).** The SQL
+  agent already returns exact `{sql, columns, rows}`, but the composer flattened it to a prose
+  string (`_sql_text`), the API dropped the structured data, and the frontend (`answer.ts::sqlMetrics`)
+  regex-scraped a number back out of the prose — plotting years as values, showing full float
+  precision, and never rendering a real table. **Decision:** carry the structured result as a
+  **top-level `sql` field on `AnswerResult`** (a typed block `{sql, columns, rows}`, rounded/truncated
+  at the composer boundary via the existing `MAX_SQL_ROWS_SHOWN` cap), **tied to citation [1]**
+  (`source_id="sql"`): the block is present iff the SQL source is cited, so it is the same evidence
+  [1] points at — no second, un-audited number path. The prose `answer` stays the cited narrative;
+  the block is the display truth. Frontend renders a **real table** as the honest default and derives
+  charts from the actual rows (a chart only when there is an unambiguous single measure column;
+  otherwise table only); `sqlMetrics` prose-scraping is deleted. Grounding/redaction invariants hold
+  (any text column is redacted at the boundary like snippets; charts still gate on `"sql" ∈
+  audit.sources`). **Why top-level, not nested on the Citation:** the block is answer-level display
+  data, not per-citation metadata — keeping `Citation` a pure {n, source_id, label, snippet} record
+  avoids overloading it, and `QueryResponse` inherits the field for free. Touches M4 (`composer.py`,
+  `main.py` via inheritance) and M8 (`types.ts`, `answer.ts`, `shapes/`); specs
+  `.claude/specs/M4_retrieval_agents.md` (§M4.6) + `.claude/specs/M8v2_serving_ui.md` (§M8v2.4).
+  **Rejected alternatives:** (B) keep flattening but emit machine-parseable delimited prose the
+  frontend parses deterministically — smaller, but still prose-scraping at heart, still fragile,
+  no real table (rejected: doesn't fix the root cause). (C) A + column-role metadata (tag
+  measure/dimension/temporal) for smarter chart-axis selection — faithful charts, but heavier logic
+  for a reference build; the always-correct table already fixes the year-as-value symptom, so C is
+  deferred as a clean follow-up if charts need to be smarter (rejected for now). (nested) hang the
+  block off the `sql` Citation object — rejected to keep `Citation` a uniform record across source
+  types.
