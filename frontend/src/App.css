@@ -201,13 +201,8 @@ select.role {
   font-size: 17px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 12px; line-height: 1.35;
   padding-left: 12px; border-left: 3px solid var(--accent);
 }
-/* support issue/fix rows */
-.kv { display: flex; gap: 10px; margin: 0 0 6px; align-items: baseline; }
-.kv .k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .06em; font-weight: 700; color: #fff;
-  background: var(--accent); border-radius: 5px; padding: 2px 7px; flex: none; min-width: 42px; text-align: center;
-}
-.kv .k.fix { background: var(--good); }
+/* support answer lines */
+.kv { margin: 0 0 6px; }
 .kv .t { font-size: 14px; }
 
 /* inline citation marker */

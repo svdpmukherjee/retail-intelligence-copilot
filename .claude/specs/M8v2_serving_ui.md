@@ -139,11 +139,17 @@ widen my scope.
   D-02/03/04/05):
   - [ ] Answer body parses `R.answer` by line; `[n]` tokens become real `<button>`
         inline markers (`aria-label="Show evidence n"`) that open the Evidence panel.
-  - [ ] Template selected by `role` + `audit.intent`: support = issue/fix rows +
+  - [ ] Template selected by `role` + `audit.intent`: support = claim lines +
         governing-policy card (doc citation); marketing = theme bars + "from SQL"
         trend; executive = headline + ranked-metric bars + one-line cause; unknown
         role/intent → default plain-claim shape (never errors). Charts render **only
         if** `"sql" ∈ audit.sources` (suppressed otherwise, never fabricated).
+  - [ ] **Support shape: no per-line FIX/ISSUE tag (B-3, 2026-11-02).** The support shape renders
+        plain claim lines (with inline `[n]` markers) plus the governing-policy card — it does **not**
+        label each line FIX/ISSUE. The original keyword-regex tag mislabelled extractive/doc content
+        (policy extracts saying "refund"/"replace" were tagged FIX), so it is removed rather than
+        made confident-only (real per-line classification is out of scope for this UI). The
+        governing-policy callout is unchanged.
   - [ ] **Structured SQL rendering from the typed block (B-10).** The SQL data comes from
         `R.sql` (`{sql, columns, rows}`, the top-level block tied to citation [1]) — **never**
         regex-scraped from the prose answer. `answer.ts::sqlMetrics` (prose-scraper) is removed;

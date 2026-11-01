@@ -251,3 +251,23 @@ remains and the block has ≥2 columns; otherwise table-only. So `(category, avg
 eyeballed in a browser** this session — a live Marketing/Executive visual check is the carried
 open item. Files: `types.ts`, `answer.ts`, `shapes/{SqlTable,ExecutiveShape,MarketingShape}.tsx`,
 `App.css`.
+
+## Change note — B-3 drop support shape's per-line FIX/ISSUE tag (frontend, 2026-11-02)
+
+The support shape labelled every answer line FIX or ISSUE from a keyword regex
+(`fix|resolve|resolution|replace|refund|reset|repair`). On extractive/doc content this
+mislabelled: return-policy extracts (which say "refund"/"replace") came out tagged **FIX**, plain
+review lines **ISSUE** — a keyword guess presented as a confident classification, confusing in the
+demo. **Fix (ADR "B-3 … drop the support shape's per-line FIX/ISSUE tag", Approach A):** the
+per-line tag is **removed**, not made confident-only — a reliable per-line ISSUE/FIX label needs
+real classification, out of scope for a UI bug fix. `SupportShape.tsx` now renders each line as a
+plain `ClaimLine` (inline `[n]` markers intact) inside `div.kv`, followed by the unchanged
+"Governing policy" `aside` (the `POLICY` regex stays for it). In `App.css` the `.kv .k` label pill
+and `.kv .k.fix` rules and the `.kv` flex layout are deleted; `.kv` is now a simple
+`margin: 0 0 6px` line wrapper. Other shapes' `.k` rules (`.session .r .k`, `.trust .f .k`,
+`.ident .idrow .k`) are untouched.
+
+**Gates:** `npm run typecheck` (`tsc --noEmit`) clean; `npm run build` green (~248ms). No frontend
+unit-test runner exists, so typecheck + build is the automated gate; the **live visual check is a
+carried open item** (not eyeballed in a browser this session). Files: `shapes/SupportShape.tsx`,
+`App.css`.

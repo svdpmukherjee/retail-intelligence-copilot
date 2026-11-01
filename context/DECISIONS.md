@@ -751,3 +751,17 @@ Durable design decisions (newest at the bottom). Decision → why.
   **Why the ellipsis:** it signals to the reader that the quote continues. Localized to
   `.claude/specs/M4_retrieval_agents.md`; touches `backend/agents/composer.py` only (no signature
   changes, no audit/grounding change — snippets are display text, never a citation key).
+
+- **B-3 (2026-11-02): drop the support shape's per-line FIX/ISSUE tag; keep the Governing-policy
+  callout.** `SupportShape.tsx` tagged every answer line FIX or ISSUE from a keyword regex
+  (`fix|resolve|…|refund|replace`), so return-policy extracts (which say "refund"/"replace") were
+  labelled FIX and plain review lines ISSUE — a keyword guess dressed as a confident classification,
+  misleading on extractive/doc content. **Decision:** remove the per-line tag entirely (the `.kv`
+  label column goes with it) and keep the claim lines plus the "Governing policy" callout, which
+  already reads correctly. **Why not make the tag confident-only (the alternative shape):** a
+  reliable per-line ISSUE/FIX label needs real classification, not a regex — out of scope for a
+  bug fix, and mixed tagged/untagged lines read inconsistently. **Why not re-label (POLICY/VOICE):**
+  that changes the shape's meaning — design work for a UI iteration (the design track), not a bug
+  `/change`. Localized to `.claude/specs/M8v2_serving_ui.md` (where the role shapes + SupportShape
+  were specified; M8v3 only reuses them); touches `frontend/src/components/shapes/SupportShape.tsx`
+  only (+ CSS cleanup for the dropped label column). No backend/API/governance change.
