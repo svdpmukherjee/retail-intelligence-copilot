@@ -115,8 +115,57 @@ class AzureLLM:
         return await _chat(url, {"api-key": key}, payload)
 
 
-def get_llm() -> LLM:
+class OpenRouterLLM:
+    """OpenRouter chat (OpenAI-compatible, hosted open-weight models). Gated like Azure."""
+
+    def __init__(self, settings: Settings, model: str | None = None) -> None:
+        self._settings = settings
+        self._model = model or settings.openrouter_model
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    def _require_go_ahead(self) -> tuple[str, str, str]:
+        s = self._settings
+        if not (s.openrouter_go_ahead and s.openrouter_api_key and self._model):
+            raise GoAheadRequired(
+                "OpenRouter LLM requires human go-ahead: set OPENROUTER_GO_AHEAD=true plus "
+                "OPENROUTER_API_KEY and a model (OPENROUTER_MODEL). "
+                "Use PROVIDER_MODE=free for $0 runs."
+            )
+        return (
+            f"{s.openrouter_base_url.rstrip('/')}/chat/completions",
+            s.openrouter_api_key.get_secret_value(),
+            self._model,
+        )
+
+    async def complete(
+        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+    ) -> str:
+        url, key, model = self._require_go_ahead()
+        s = self._settings
+        limit = max_tokens or s.llm_max_tokens
+        # Worst-case reservation: a cap breach raises here, before any paid call.
+        tokens = estimate_tokens(system, user) + limit
+        ledger.add(tokens, tokens * s.openrouter_usd_per_1m_tokens / 1_000_000)
+        payload = {
+            "model": model,
+            "max_tokens": limit,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        }
+        return await _chat(url, {"Authorization": f"Bearer {key}"}, payload)
+
+
+def get_llm(*, model: str | None = None) -> LLM:
+    """`model` overrides the OpenRouter slug per client (ignored in other modes) without
+    mutating the shared settings singleton."""
     settings = get_settings()
     if settings.provider_mode == "azure":
         return AzureLLM(settings)
+    if settings.provider_mode == "openrouter":
+        return OpenRouterLLM(settings, model=model)
     return FreeLLM(settings)

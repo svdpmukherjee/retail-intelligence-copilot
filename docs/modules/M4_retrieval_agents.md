@@ -287,3 +287,27 @@ Scoped `/change` fix after acceptance testing. Module history above is unchanged
 **Residual caveat (not D-2):** the answer *text* for AC-1/AC-6 still wobbles (e.g. generated SQL computed `avg(price)` instead of `avg(rating)`; an empty SQL result on AC-6). This is the separately documented weak-model text-to-SQL nondeterminism of `llama3.2:3b` (`docs/testing/acceptance/RESULTS.md`, Decision 3), not routing. Routing is now deterministic and correct.
 
 **Acceptance impact:** D-2 is resolved; AC-2 no longer flakes on routing. This also closes the AC-2 misroute noted under D-3. Cross-references: `docs/testing/acceptance/RESULTS.md` (D-2 row and resolution note), `context/DECISIONS.md` (D-2 ADR).
+
+## Change — B-7 (2026-11-01)
+
+Scoped `/change` enhancement (not a defect). Module history above is unchanged. Adds sub-module **M4.1b — OpenRouter generation provider** behind the existing M4.1 LLM seam.
+
+**Need:** generation was limited to local Ollama (small models) or gated Azure — no clean way to run open-weight *hosted* models for the B-8 model-comparison study. The study must build an LLM client **per model slug without mutating global config**, stay behind a go-ahead flag like Azure, and respect the cost ledger.
+
+**Decision (Option 1, ADR in `context/DECISIONS.md`):** extend the one existing seam rather than add a parallel one. `provider_mode` gains a third value `"openrouter"`; a new `OpenRouterLLM` adapter (OpenAI-compatible: Bearer key → `{base_url}/chat/completions`) reuses `FreeLLM`'s transport and mirrors `AzureLLM`'s gating. `get_llm()` gains an **additive, keyword-only** `model: str | None` override so the eval harness builds a per-slug client without touching the `get_settings()` singleton; all existing no-arg call sites (composer, router, memory) are untouched.
+
+**Coupling decided explicitly:** `openrouter` mode ⇒ hosted LLM + **local free embeddings** (`get_embedder` is unchanged; openrouter falls to its `else` branch). Azure embeddings are never paired with OpenRouter — which is exactly the fixed-embeddings / vary-only-generation setup B-8 needs.
+
+**Gating & cost:** `_require_go_ahead()` raises `GoAheadRequired` unless `openrouter_go_ahead=true`, `openrouter_api_key` is set, and a model resolves (configured or override); it runs **before** any transport call. `complete()` then reserves `estimate_tokens(system, user) + limit` into the `CostLedger` at a configurable blended `openrouter_usd_per_1m_tokens`, so a cap breach refuses before any paid call. Open-weight slugs only by convention (portable to on-prem later); real spend logged in `COST.md`.
+
+**Settings added** (`app/config.py`, documented in `backend/.env.example`): `openrouter_base_url` (default `https://openrouter.ai/api/v1`), `openrouter_api_key` (`SecretStr | None`), `openrouter_model`, `openrouter_go_ahead` (default `false`), `openrouter_usd_per_1m_tokens` (default `1.0`).
+
+**Spec touched:** `.claude/specs/M4_retrieval_agents.md`, new sub-module M4.1b + change-log note.
+
+**Verification:**
+
+- Scoped tester: `backend/tests/test_llm.py` → **11 passed, 1 failed**. Six new tests cover: refuses without go-ahead/key (no call made), refuses without a model, posts Bearer header + URL + slug and records cost, ledger breach refuses before any call, per-slug override does not mutate the settings singleton, and openrouter mode pairs with the free embedder. Transport is mocked — no real paid call in CI. `ruff` + `black` clean on touched files.
+- The single failure, `test_get_llm_free_mode_unconfigured_is_unavailable`, is a **pre-existing test-isolation issue, not a B-7 regression**: the local `backend/.env` sets `FREE_LLM_BASE_URL`/`FREE_LLM_MODEL` (Ollama), which `Settings(provider_mode="free")` picks up because the test doesn't override `env_file`, so `FreeLLM.available` is True. `git diff` touches neither that test nor `FreeLLM`; clearing those two env vars makes it pass. Suggested (separate) hardening: `Settings(_env_file=None, ...)` in that test.
+- Not run: a live OpenRouter call + `COST.md` entry — that spends money and needs explicit human go-ahead (`OPENROUTER_GO_AHEAD=true` + key). The adapter is ready for the B-8 study to drive it.
+
+**Acceptance impact:** unblocks **B-8** (the controlled model-comparison study), which can now construct a client per open-weight slug through the seam. No change to existing free/azure behaviour.

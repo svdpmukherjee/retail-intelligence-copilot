@@ -1,5 +1,10 @@
 # Spec M4: Retrieval & agents
 
+> **Change log — B-7 (2026-11-01):** added sub-module **M4.1b — OpenRouter generation
+> provider** behind the existing LLM seam, gated like Azure, with a per-slug `model`
+> override on `get_llm()` so the B-8 study builds a client per model without mutating
+> global config. See `context/DECISIONS.md` (B-7 ADR).
+
 ## User story
 As a retail staff member asking a natural-language question, I want the copilot to pick the
 right strategy per question — exact SQL analytics for counts/averages/trends/top-N, semantic
@@ -59,6 +64,47 @@ the free/local path; Azure LLM + any hosted reranker sit behind the provider sea
   `backend/tests/test_llm.py`.
 - Integration point: reuses M1 `Settings`/`provider_mode`, `CostLedger`, and the
   `GoAheadRequired` gate pattern from M3; consumed by M4.4/M4.5/M4.6.
+
+### M4.1b OpenRouter generation provider (B-7)
+- Goal: a third generation provider behind the same `LLM` seam — hosted open-weight models via
+  OpenRouter (OpenAI-compatible) — gated like Azure, so the B-8 study can run arbitrary model
+  slugs without a local GPU, while embeddings/retrieval stay on the fixed local free path.
+- Acceptance criteria:
+  - [ ] New Settings keys: `openrouter_base_url` (str, default `https://openrouter.ai/api/v1`),
+        `openrouter_api_key` (`SecretStr | None`), `openrouter_model` (`str | None`),
+        `openrouter_go_ahead` (bool, default `false`), `openrouter_usd_per_1m_tokens`
+        (float, est. for the ledger). Documented in `backend/.env.example`.
+  - [ ] `provider_mode` Literal gains `"openrouter"`. `get_llm()` returns `OpenRouterLLM` in that
+        mode. **Coupling:** `openrouter` mode uses the **free/local embedder** (the `else` branch
+        of `get_embedder`); Azure embeddings are never paired with OpenRouter.
+  - [ ] `OpenRouterLLM` is OpenAI-compatible: Bearer `openrouter_api_key` →
+        `{openrouter_base_url}/chat/completions`; transport mirrors `FreeLLM`, gating mirrors
+        `AzureLLM`. It raises `GoAheadRequired` unless `openrouter_go_ahead=true` **and**
+        `openrouter_api_key` is set (and a model is resolvable). The gate fires **before** any
+        paid call.
+  - [ ] `get_llm()` gains an **additive, keyword-only** `model: str | None = None` override: when
+        given, the returned client uses that slug instead of the configured `openrouter_model`
+        (for `OpenRouterLLM`; a no-op/ignored for free/azure is acceptable, or routed to their
+        model field if trivial). No existing no-arg call site changes behaviour. The B-8 harness
+        passes `model=<slug>` to build a per-slug client **without mutating `get_settings()`**.
+  - [ ] Every `complete()` reserves `estimate_tokens(system, user) + limit` into the passed
+        `CostLedger` at `openrouter_usd_per_1m_tokens` (worst-case reservation, like Azure), so a
+        cap breach refuses before the paid call. Real spend is logged in `COST.md`.
+- Build steps:
+  1. Add the five `openrouter_*` Settings keys to `backend/app/config.py` and document them in a
+     new `--- OpenRouter LLM (openrouter mode) ---` block in `backend/.env.example`; extend the
+     `provider_mode` Literal to `"azure" | "free" | "openrouter"`.
+  2. In `backend/agents/llm.py`: add `OpenRouterLLM` (mirror `AzureLLM`'s `_require_go_ahead`
+     shape, reuse `_chat` and `estimate_tokens`); extend `get_llm()` to select it for
+     `provider_mode="openrouter"` and to accept the keyword-only `model` override.
+  3. Tests in `backend/tests/test_llm.py`: gating (refuses without go-ahead/key), the `model`
+     override resolves per-slug without touching the global singleton, and ledger reservation
+     occurs before the call (mock the transport — no real paid call in CI).
+- Files to touch: `backend/app/config.py`, `backend/.env.example`, `backend/agents/llm.py`,
+  `backend/tests/test_llm.py`.
+- Integration point: reuses the M4.1 `LLM` protocol, `CostLedger`, and the `GoAheadRequired`
+  gate; consumed unchanged by the composer/router/memory via `get_llm()`, and per-slug by the
+  B-8 eval harness. **Open-weight slugs only** by convention (portability to on-prem later).
 
 ### M4.2 Hybrid retrieval (vector + keyword → RRF → rerank) with scope choke point
 - Goal: the query-time retrieval primitive M4's RAG agents share, reading the M3 `chunks` table.

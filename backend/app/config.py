@@ -8,8 +8,9 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Provider seam: "azure" (Azure OpenAI + AI Search) or "free" (free-tier LLM + pgvector).
-    provider_mode: Literal["azure", "free"] = "free"
+    # Provider seam: "azure" (Azure OpenAI + AI Search), "free" (free-tier LLM + pgvector), or
+    # "openrouter" (hosted open-weight generation; embeddings/retrieval stay on the free path).
+    provider_mode: Literal["azure", "free", "openrouter"] = "free"
 
     # Azure OpenAI
     azure_openai_endpoint: str | None = None
@@ -34,6 +35,14 @@ class Settings(BaseSettings):
     free_llm_base_url: str | None = None
     free_llm_api_key: SecretStr | None = None
     free_llm_model: str | None = None
+
+    # OpenRouter LLM (openrouter mode). Spends money, so it refuses without the go-ahead flag.
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_api_key: SecretStr | None = None
+    openrouter_model: str | None = None
+    openrouter_go_ahead: bool = False
+    # Rough blended price used only to estimate spend in the ledger.
+    openrouter_usd_per_1m_tokens: float = 1.0
 
     # pgvector / Postgres
     database_url: SecretStr | None = None

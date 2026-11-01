@@ -579,3 +579,24 @@ Durable design decisions (newest at the bottom). Decision → why.
   picked up in dependency-safe, file-disjoint order (and parallelised only where safe)
   instead of re-deriving priority each session. The plan is advice; the human still
   approves each item, executed as its own `/change`.
+- **B-7: OpenRouter generation provider behind the LLM seam (2026-11-01).** Added a third
+  `provider_mode` value `openrouter` and an `OpenRouterLLM` adapter in `backend/agents/llm.py`,
+  gated exactly like Azure (`OPENROUTER_GO_AHEAD=true` + `OPENROUTER_API_KEY`, else
+  `GoAheadRequired`). It is OpenAI-compatible (Bearer key → `{OPENROUTER_BASE_URL}/chat/completions`),
+  so the transport mirrors `FreeLLM` and the gating mirrors `AzureLLM`. `get_llm()` gains an
+  additive `model: str | None` override so the B-8 study can construct a client **per model slug
+  without mutating the global `get_settings()` singleton**; all existing no-arg call sites
+  (composer, router, memory) are unchanged. Spend is reserved into the `CostLedger` at a
+  configurable blended `OPENROUTER_USD_PER_1M_TOKENS` (same pattern as Azure); open-weight slugs
+  by convention (portable to on-prem), real spend logged in `COST.md`. **Coupling decided
+  explicitly:** `openrouter` mode ⇒ hosted LLM + **local free embeddings** (the free embedder is
+  the `else` branch of `get_embedder`); Azure embeddings are never paired with OpenRouter. This is
+  exactly the fixed-embeddings / vary-only-generation setup B-8 needs. **Why:** generation was
+  limited to local Ollama (small) or gated Azure; a hosted open-weight provider unblocks the
+  headline model-comparison study (B-8) as a self-contained adapter behind the existing seam, at
+  lowest conceptual cost. **Rejected alternatives:** (A) a new orthogonal `llm_provider` seam
+  decoupled from `provider_mode` — cleaner separation but rewrites the documented two-mode mental
+  model across PRD/specs for no benefit a reference build needs (rejected: over-engineered, larger
+  doc blast radius); (B) no new mode, reachable only via explicit construction in the eval harness —
+  under-delivers B-7's "gated like Azure, a real runnable provider" and leaves the serving app
+  unable to point at OpenRouter (rejected: harness-only is too narrow).

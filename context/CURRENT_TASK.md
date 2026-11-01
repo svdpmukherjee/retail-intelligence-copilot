@@ -2,6 +2,14 @@
 
 No module in progress.
 
+## B-7 / M4.1b OpenRouter generation provider (built, awaiting tester)
+
+Built: `openrouter_*` Settings + `provider_mode="openrouter"`, `.env.example` block,
+`OpenRouterLLM` (gated like Azure, worst-case ledger reservation), keyword-only
+`get_llm(model=...)` override (per-client, no settings mutation), tests in
+`backend/tests/test_llm.py`. `get_embedder()` untouched (openrouter -> free embedder).
+Left: tester pass; real-spend logging in `COST.md` happens when B-8 runs.
+
 ## ▶ ACTIVE NEXT: Cloud operationalization (P1–P8)
 
 Taking the app from the $0 local build to a one-shot live Azure + Databricks run,

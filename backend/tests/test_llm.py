@@ -4,7 +4,7 @@ import httpx
 import pytest
 
 from agents import llm as llm_mod
-from agents.llm import AzureLLM, FreeLLM, get_llm
+from agents.llm import AzureLLM, FreeLLM, OpenRouterLLM, get_llm
 from app import cost
 from app.config import Settings
 from app.cost import CostCeilingExceeded, CostLedger
@@ -84,3 +84,70 @@ def test_cap_breach_refuses_before_paid_call(fake_post: list[str]) -> None:
         asyncio.run(llm.complete("s", "u", ledger=ledger, max_tokens=5000))
     assert fake_post == []
     assert ledger.tokens == 0
+
+
+OPENROUTER = dict(openrouter_api_key="k", openrouter_model="vendor/model-a")
+
+
+def test_openrouter_without_go_ahead_or_key_raises_and_makes_no_call(fake_post: list[str]) -> None:
+    for settings in (Settings(**OPENROUTER), Settings(openrouter_go_ahead=True)):
+        with pytest.raises(GoAheadRequired):
+            asyncio.run(OpenRouterLLM(settings).complete("s", "u", ledger=CostLedger()))
+    assert fake_post == []
+
+
+def test_openrouter_without_model_raises(fake_post: list[str]) -> None:
+    llm = OpenRouterLLM(Settings(openrouter_go_ahead=True, openrouter_api_key="k"))
+    with pytest.raises(GoAheadRequired):
+        asyncio.run(llm.complete("s", "u", ledger=CostLedger()))
+    assert fake_post == []
+
+
+def test_openrouter_posts_bearer_and_model_with_cost(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict = {}
+
+    async def post(self, url, **kwargs):
+        seen.update(url=url, **kwargs)
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": "hi"}}]},
+            request=httpx.Request("POST", url),
+        )
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", post)
+    llm = OpenRouterLLM(
+        Settings(openrouter_go_ahead=True, openrouter_usd_per_1m_tokens=2.0, **OPENROUTER)
+    )
+    ledger = CostLedger()
+    assert asyncio.run(llm.complete("s", "u", ledger=ledger, max_tokens=100)) == "hi"
+    assert seen["url"] == "https://openrouter.ai/api/v1/chat/completions"
+    assert seen["headers"] == {"Authorization": "Bearer k"}
+    assert seen["json"]["model"] == "vendor/model-a"
+    assert ledger.usd == pytest.approx(ledger.tokens * 2.0 / 1_000_000)
+
+
+def test_openrouter_reserves_ledger_before_call(fake_post: list[str]) -> None:
+    llm = OpenRouterLLM(Settings(openrouter_go_ahead=True, **OPENROUTER))
+    ledger = CostLedger()
+    with pytest.raises(CostCeilingExceeded):
+        asyncio.run(llm.complete("s", "u", ledger=ledger, max_tokens=5000))
+    assert fake_post == []
+    assert ledger.tokens == 0
+
+
+def test_get_llm_model_override_is_per_client_and_does_not_mutate_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = Settings(provider_mode="openrouter", **OPENROUTER)
+    monkeypatch.setattr(llm_mod, "get_settings", lambda: settings)
+    default, other = get_llm(), get_llm(model="vendor/model-b")
+    assert isinstance(other, OpenRouterLLM)
+    assert (default._model, other._model) == ("vendor/model-a", "vendor/model-b")
+    assert settings.openrouter_model == "vendor/model-a"
+
+
+def test_openrouter_mode_pairs_with_free_embedder(monkeypatch: pytest.MonkeyPatch) -> None:
+    from retrieval import embeddings
+
+    monkeypatch.setattr(embeddings, "get_settings", lambda: Settings(provider_mode="openrouter"))
+    assert isinstance(embeddings.get_embedder(), embeddings.FreeEmbedder)
