@@ -635,3 +635,22 @@ Durable design decisions (newest at the bottom). Decision → why.
   bulk load is index-free — faster embed but adds a new lifecycle stage + CLI wiring, overkill for a
   reference build (rejected: HNSW `IF NOT EXISTS` in the DDL is correct whether created empty or
   populated). (C) Non-default HNSW params — deferred; tune only if the M7 gate shows a recall gap.
+- **Split vector query so the HNSW index is actually used (B-11, 2026-11-01).** Rewrote
+  `PgVectorStore.query()` in `backend/retrieval/vector_store.py` from a single
+  `... ORDER BY embedding <=> %s, id LIMIT k` into an **inner/outer** form: an inner subquery
+  does the ANN search (`ORDER BY embedding <=> %s LIMIT k`, distance-only — the only `ORDER BY`
+  pgvector's HNSW can satisfy, with the caller's filters in the inner `WHERE` so the candidate
+  set is correct), and an outer query re-sorts those k rows by `score DESC, id` for deterministic
+  ties. **Why:** the B-5 ADR asserted "no query change is needed", but the `, id` tiebreaker on the
+  single query forced a Sort node → `Parallel Seq Scan` over all 225k vectors, so the shipped HNSW
+  index (and data-op P4's embed) never delivered B-5's speedup in the serving path. `EXPLAIN`
+  confirmed: distance-only ⇒ `Index Scan using chunks_embedding_hnsw_idx`; with `, id` ⇒ `Seq Scan`.
+  The inner/outer split keeps **both** the index *and* deterministic ordering. `.query()`'s
+  signature and return (ordered `list[SearchHit]`) are unchanged, so M4/M5/M8 callers are untouched;
+  `keyword_query` is unaffected (no ANN index, `score DESC, id` is correct there). Acceptance =
+  B-5 benchmark re-run against the production query form (target ~0.5 ms p50 vs ~61 ms seq-scan).
+  Touches only `vector_store.py`; spec `.claude/specs/M3_indexing.md`. **Rejected alternatives:**
+  (B) drop the `, id` tiebreaker entirely — one line and hits the index, but loses deterministic
+  order on distance ties, risking flaky eval/ordering assertions (rejected). (C) inner distance-only
+  SQL + re-sort `(score DESC, id)` in Python — also correct, but splits the ordering contract across
+  SQL and Python; keeping it in one SQL statement is clearer (rejected).

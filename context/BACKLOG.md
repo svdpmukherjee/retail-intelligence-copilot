@@ -188,7 +188,27 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
   query does the ANN search (`ORDER BY embedding <=> %s LIMIT k`, hits the index), an **outer**
   query re-sorts those k rows by `score DESC, id`. Re-run the B-5 benchmark against the
   production query form as the acceptance evidence (target: ~0.5 ms p50, was ~61 ms).
-  Measured 2026-11-01: brute-force p50 60.6 ms / p95 63.8 ms → HNSW p50 0.48 ms / p95 0.71 ms,
-  ≈125× / ≈90×, recall@10 100% — but only on the distance-only form.
+  Measured 2026-11-01 (post-recovery, production `query()` form, 100 sampled query vectors):
+  `EXPLAIN` confirms the prod form uses `chunks_embedding_hnsw_idx` (Index Scan) while the
+  pre-B-11 `, id` form falls to a Seq Scan. brute-force p50 79.0 ms / p95 89.0 ms →
+  HNSW p50 2.04 ms / p95 2.88 ms, ≈39× / ≈31×, recall@10 mean 98.5% (min 70%) — ordinary HNSW
+  approximate recall at default `ef_search`, with near-duplicate review vectors as equidistant
+  ties. Index-usage on the serving path is the decisive acceptance signal and passes.
 - **Where:** `backend/retrieval/vector_store.py` (`PgVectorStore.query`); the `keyword_query`
   path is unaffected. Benchmark harness: adapt `scratchpad/bench_b5.py`.
+
+## B-12 — Test fixture drops the real `chunks` table (destroyed the P4 corpus) — HIGH (safety)
+
+- **Symptom:** running `backend/tests/test_vector_store.py` destroyed the live local P4 corpus
+  (225k reviews + 79 docs + HNSW index, ~949 MB). Verified 2026-11-01: `rag` DB fell to 8.2 MB,
+  `to_regclass('public.chunks')` → `None`. No cloud money and no cloud data involved — local only,
+  recoverable by re-running the P4 embed ($0, build-time).
+- **Root cause:** the test's `store` fixture runs `DROP TABLE IF EXISTS chunks` for a clean slate,
+  but connects via `DATABASE_URL`, which points at the **real local `rag` DB** — not an isolated
+  test database. Any run of that file wipes whatever corpus is loaded.
+- **Fix:** isolate the test database — point the suite at a dedicated `rag_test` DB (separate
+  `TEST_DATABASE_URL` / fixture), **and** add a safety guard so the fixture refuses to `DROP`
+  unless the target DB name ends in `_test`. Must land **before** `test_vector_store.py` is run
+  again, or a rebuilt corpus will be wiped a second time.
+- **Where:** `backend/tests/test_vector_store.py` (the `store` fixture), test config / conftest,
+  `.env.example` (document the test DB URL). Sequencing: B-12 fix → P4 recovery → B-11 benchmark.
