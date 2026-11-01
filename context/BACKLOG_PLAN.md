@@ -1,110 +1,153 @@
 # BACKLOG_PLAN.md — delivery blueprint (Product Owner)
 
-> **⚠️ SUPERSEDED 2026-11-02 — Wave 1 has shipped.** B-2 (`868e2a4`), B-4 (`484e5ce`), and
-> B-3 (`d6c80d4`) are all DONE+merged. The only open backlog item left is the optional,
-> DB-mutating **B-9** (embedder bake-off, Wave 2 — cost-gated). The ranking and waves below
-> are the pre-work snapshot; **re-run `/prioritize` before picking up new backlog work** so the
-> top wave reflects reality.
-
-Regenerated 2026-11-01 (full re-rank, no human focus). Source: `context/BACKLOG.md`.
+Regenerated 2026-11-02 (full re-rank — productionization plane added). Source: `context/BACKLOG.md`.
 Advice to the orchestrator — each item runs as its own `/change`; the human approves each.
 Severity = impact-if-it-occurs (from BACKLOG); **priority** = severity + business value +
-effort + risk + dependencies, so the rank deliberately diverges from severity.
+effort + risk + dependencies. Never copy severity as the rank.
 
-Current reality (PROJECT / CURRENT_TASK / git / DECISIONS): M1–M8 + v2/v3 DONE, **local-only**
-stack (Azure/Databricks plane parked). **The entire previous top wave has shipped** —
-`B-5`, `B-6`, `B-7` (Wave 1) and `B-8`, `B-10`, `B-11`, `B-12` (Wave 2) are all DONE+merged
-(`main`=`f12af36`), plus data-op P4 (225k full-corpus local embed). `B-1` was DROPPED (resolved).
-**Genuinely open items now: B-2, B-3, B-4, B-9** — four items, all unblocked. This is the UX-/
-quality-correctness tail plus one optional experiment; no HIGH-leverage infra work remains.
+## Current reality
+
+M1–M8 + v2/v3 DONE, **local-only** stack (Azure/Databricks plane parked; data-op P4 local embed
+of 225k reviews + 79 docs live in pgvector). The old Wave-1 UX/quality tail is shipped and B-1 is
+dropped:
+
+- **B-2** free-path history — ✅ DONE+merged (`868e2a4`).
+- **B-3** support per-line FIX/ISSUE tag dropped — ✅ DONE+merged (`d6c80d4`).
+- **B-4** citation word-boundary truncate — ✅ DONE+merged (`484e5ce`).
+- **B-5..B-8, B-10..B-12** — ✅ DONE+merged (prior waves).
+- **B-1** vague "why?" false-route — ❌ DROPPED (root cause no longer exists).
+
+**Three items are open.** Two NEW **productionization-plane** items (B-13, B-14) give the
+operator-facing internals their proper homes, per `.claude/rules/ux-surface.md` (internal
+metrics/ids/cost/routing live in the audit + observability planes, never the chat). One carried
+item remains: the optional, DB-mutating **B-9** (embedder bake-off).
+
+**Downstream dependent (NOT a backlog item, NOT ranked here):** the **chat UI persona redesign**
+runs as **Design Track `/design` iteration-4**, not a `/change`. B-13 and B-14 unblock it — they
+build the internals' new homes so the redesign can strip metrics/ids/routing out of the chat
+without losing them ("build the data's new homes before stripping the chat"). It appears below
+only as a dependent, never as a ranked row.
 
 ## Ranked table
 
 | Rank | Item | Severity | Value | Effort | Risk | Depends on | Wave | Track | File domain | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | B-3 support per-line FIX/ISSUE mislabel | MED | MED-HIGH | S | L | — (B-10 done) | 1 | B | `frontend/src/components/shapes/SupportShape.tsx` | **Ready — start first** |
-| 2 | B-2 follow-ups ignore history on free path | HIGH | MED | M | MED | B-4 (file order); B-7 enabler (done) | 1 | A | `backend/agents/router.py`, `backend/agents/composer.py`, memory `context` wiring | Flagged (design decision) |
-| 3 | B-4 citation snippet truncates mid-word | LOW | LOW-MED | S | L | — | 1 | A | `backend/agents/composer.py` (`_snippet` L91 + quote L115) | Ready — do before B-2 |
-| 4 | B-9 embedder bake-off (optional) | MED | MED | L | MED | — (keep after/ separate from model studies) | 2 | A | `backend/retrieval/embeddings.py`, `app/config.py`, `backend/retrieval/schema.py` (dim), `backend/eval/` | Deferred/optional |
-| — | B-1 vague "why?" false-routes to sql_rag | MED | — | — | — | — | — | — | `backend/agents/router.py` | **DROPPED (resolved) — closed in BACKLOG** |
-
-## Changed since the previous plan
-
-- **B-8 / B-10 / B-11 / B-12 → DONE+merged** (`f12af36` and prior). The whole previous
-  top wave (B-11 ∥ B-8 ∥ B-10) is closed; B-12 safety fix + data-op P4 recovery also done.
-- **B-3 fully unblocked.** Its old "after B-10 (shared shapes)" dependency is gone — B-10
-  merged and even added `SqlTable.tsx`; B-3 touches only `SupportShape.tsx`, file-disjoint
-  from everything, so it is now the cleanest ready win and is ranked #1 by priority.
-- **Plan shrinks from 7 open items to 4.** Only the UX/quality tail (B-2, B-3, B-4) plus the
-  optional B-9 embedder experiment remain. No remaining HIGH-value infra item.
+| 1 | B-13 Observability plane (Langfuse tracing) | HIGH | HIGH | M–L | MED | — | 1 | solo | `backend/agents/` spans (`router.py`, `_rag.py`, `sql_agent.py`, `composer.py`, `llm.py`), `backend/agents/pipeline.py` (trace lifecycle), `backend/app/main.py` (per-request trace), `backend/app/config.py` (flag + keys), `backend/.env.example` | **TODO — run first** |
+| 2 | B-14 Audit admin view (read-only over `audit_log`) | MED | MED–HIGH | M | LOW–MED | — (soft: after B-13 for `main.py`) | 2 | solo | `backend/app/main.py` (new read endpoint), `backend/governance/audit.py` (read method on `AuditStore`), new admin view under `frontend/src/` (apart from chat shapes) | **TODO — run after B-13** |
+| 3 | B-9 Embedder bake-off (optional) | MED | MED (flagged) | L | MED | — | 3 | solo | `backend/retrieval/embeddings.py`, `backend/retrieval/schema.py` (vector dim), `backend/app/config.py` (`EMBEDDING_MODEL_FREE`), `backend/eval/` | **Optional / cost-gated / DB-mutating — run alone, only on human go-ahead** |
+| — | B-2 / B-3 / B-4 | H/M/L | — | — | — | — | — | — | (shipped) | ✅ DONE+merged |
+| — | B-1 vague "why?" false-route | MED | — | — | — | — | — | — | `backend/agents/router.py` | ❌ DROPPED (resolved) |
+| — | Chat UI persona redesign | — | — | — | — | **B-13 + B-14** | — | — | `frontend/src/` chat shapes | **NOT a backlog item — Design Track `/design` iteration-4; unblocked by B-13 + B-14** |
 
 ## Dependency graph
 
 ```
-composer.py chain (serialize): B-4 ─► B-2   (B-7 hosted-model enabler already merged, feeds B-2)
-B-3  — independent (frontend SupportShape only)
-B-9  — independent, optional, DB-mutating, run alone and last
+B-13  ──(unblocks)──┐
+                    ├──> chat UI persona redesign  (Design Track /design iteration-4, NOT a /change)
+B-14  ──(unblocks)──┘
+
+B-13 ── no hard code dependency on B-14.  Human order B-13 → B-14 honored
+        (both are "homes"; B-13 is HIGH + wider blast radius, B-14 is a read-only
+        surface over the existing audit_log — natural to land the tracing plane first).
+
+B-14 ── soft ordering only: shares backend/app/main.py with B-13, so it must land
+        AFTER B-13 merges to avoid a main.py conflict. No functional dependency.
+
+B-9  ── independent, optional, DB-mutating (recreates vector dim + re-embeds the real
+        corpus). Blocks nothing, blocked by nothing.
 ```
+
+No hard dependency forces a reorder, so the human's **B-13 → B-14 → (redesign)** order stands.
 
 ## Conflict matrix (shared file → never run these concurrently)
 
 | Shared file | Items that touch it | Rule |
 |---|---|---|
-| `backend/agents/composer.py` | B-4, B-2 | serialize (B-4 → B-2); B-4 is a one-liner that de-risks the shared file |
-| `backend/agents/router.py` | B-2 only | single owner (ex-B-1 closed) |
-| `frontend/src/components/shapes/SupportShape.tsx` | B-3 only | single owner |
-| `backend/retrieval/schema.py` / `embeddings.py` / `app/config.py` / `backend/eval/` | B-9 only | single owner |
+| `backend/app/main.py` | **B-13** (per-request trace lifecycle) + **B-14** (new audit read endpoint) | **Serialize B-13 and B-14** — both edit the FastAPI app module. Decisive reason they are separate waves. |
+| `backend/app/config.py` | **B-13** (Langfuse flag + keys) + **B-9** (`EMBEDDING_MODEL_FREE` / vector dim) | **Serialize B-13 and B-9** — both add/alter `Settings`. |
+| `backend/governance/audit.py` | B-14 only | single owner — no contention. |
+| `backend/agents/*` + `pipeline.py` | B-13 only | single owner — no contention. |
+| `backend/retrieval/*`, `backend/eval/` | B-9 only | single owner — no contention. |
+| `frontend/src/` (admin view) | B-14 only (new surface, apart from chat shapes) | single owner. The iteration-4 redesign touches chat shapes later, not now. |
 
-File-disjoint pairs safe to run concurrently: **B-3 ∥ (B-4→B-2 chain)** — frontend SupportShape
-vs backend composer/router share no file. B-9 is isolated but DB-mutating (see caveat).
+**File-disjoint pair:** B-14 and B-9 share no file, so they *could* run concurrently in principle.
+They are NOT parallelized here because (a) B-9 is optional/cost-gated and ranked last, and (b) the
+runtime caveat below serializes any DB-mutating run. Flagged as the only theoretical parallel track
+if B-9 is ever greenlit alongside B-14.
 
-## Runtime caveat (shared local DB / `chunks`)
+## Runtime caveat (shared local DB)
 
-- **B-2, B-3, B-4 do no DB mutation** — safe to run in any order the file-conflict matrix allows.
-- **B-9 recreates `chunks.embedding vector(N)` and re-embeds all 225k rows** — the only
-  DB-mutating item left. Run it strictly **alone**, and the query-time embedder must match the
-  stored one. The local P4 corpus (~949 MB) was destroyed once already; the B-12 guard now
-  protects the *test* DB, but B-9 deliberately rewrites the *real* corpus, so treat it as a
-  logged, intentional rebuild, not a casual run.
+- **B-9 is the only DB-mutating item** — it recreates `chunks.embedding vector(N)` (dimension
+  changes with the embedder) and **re-embeds all ~225k reviews + 79 docs**; the query-time embedder
+  must then match the stored one. Run it **strictly alone** as a logged, intentional corpus rebuild.
+  The local P4 corpus (~949 MB) was destroyed once by a test fixture; the B-12 guard protects the
+  *test* DB, but B-9 overwrites the *real* `rag` corpus by design.
+- **B-13 and B-14 do not mutate the corpus.** B-13 reads the pipeline to emit spans (keep it
+  batch/async, off the per-query latency path); B-14 only *reads* `audit_log`. Neither collides on
+  DB writes with the other, but both still serialize via the `main.py` file conflict above.
+- **Cost-gate (`CLAUDE.md`):** B-9's local re-embed is $0 on the free embedder, but any
+  hosted/open-weight embedder candidate spends — log in `COST.md`. B-13's Langfuse is an external
+  provider: keep it **feature-flagged off by default and gated** (like Azure/OpenRouter); a hosted
+  Langfuse endpoint is only exercised on explicit go-ahead. Self-hosted/local Langfuse is $0.
 
 ## Wave plan
 
-**Wave 1 — the UX/quality-correctness tail (2 parallel tracks, file-disjoint).**
-- Track A (`composer.py`, serial): **B-4** (word-boundary truncate + "…" at `_snippet` L91 and
-  the `quote` cut at L115) → **B-2** (free-path history: prepend recent turns to router/composer
-  input; B-7's hosted open-weight model is the honest disambiguation enabler). B-4 first — it is
-  a one-liner and de-risks the file B-2 then rewrites.
-- Track B: **B-3** (SupportShape FIX/ISSUE tag — make it reliable or drop the per-line tag and
-  keep the "Governing policy" callout). Isolated frontend file; concurrent with Track A.
-- Merge order: within Track A, B-4 → B-2; B-3 merges independently.
+**Wave 1 — B-13 (solo).** Add Langfuse behind the provider seam, feature-flagged off by default,
+instrumenting router → retrieval → composer → LLM as spans (timings, tokens, cost) with a per-request
+trace lifecycle in `main.py`. Operator plane only — PII-redacted, nothing leaks to the chat UI,
+never on the latency path. Merge before Wave 2 (frees `main.py` + `config.py`).
 
-**Wave 2 — optional experiment, isolated.**
-- **B-9** embedder bake-off: alone, DB-mutating (recreates vector dim + re-embeds 225k), one axis
-  at a time. Schedule only if the human wants the retrieval-quality comparison; otherwise skip.
+**Wave 2 — B-14 (solo), after B-13 merges.** Role-gated, read-only API endpoint over the existing
+`audit_log` (no schema change, no new writes) + a small admin surface under `frontend/src/`, kept
+apart from the chat shapes. Access control enforced server-side, same posture as retrieval.
+
+**Wave 3 — B-9 (solo, conditional).** Only on explicit human go-ahead: recreate the vector dim,
+re-embed the full corpus, measure recall@k / MRR of MiniLM vs open-weight candidates via the M7 gate.
+One axis at a time (embedder only; generation model fixed — keep separate from B-8). Runs strictly
+alone (DB-mutating).
+
+**Merge order:** B-13 → B-14 → (B-9 if greenlit). After B-13 + B-14 are in, the chat UI persona
+redesign can start as `/design` iteration-4.
 
 ## Rationale (top tier)
 
-- **B-3 (#1):** priority ≠ severity. Only MEDIUM severity, but S effort, low risk, fully
-  unblocked, file-isolated, and the most recruiter-visible correctness bug (policy lines
-  mislabelled "FIX") in the live demo. Highest value-per-effort of the open set — start here.
-- **B-2 (#2):** the only HIGH-severity open item and the biggest *functional* gap (vague
-  free-path follow-ups like "why?" ignore conversation history). Ranked below B-3 because it is a
-  flagged design decision (M5 deliberately kept memory off the free path), M effort, MED risk,
-  and its fully honest fix leans on the hosted-model path — so today's free-path deliverable is
-  partial. Execute it after B-4 in the composer chain.
-- **B-4 (#3):** LOW severity and low value on its own, but a trivial word-boundary one-liner that
-  must land before B-2 to de-risk the shared `composer.py`; cheap to fold into Wave 1 Track A.
+- **B-13 (#1):** HIGH severity + HIGH value. It is the observability plane the new `ux-surface.md`
+  rule explicitly points to, it carries the job-ad "observability/tracing" skill, and together with
+  B-14 it is a precondition for the chat redesign (internals need a home before they are stripped
+  from the chat). Wider blast radius (agent spans + pipeline + main + config) than B-14, so landing
+  it first and alone keeps the risky instrumentation isolated. Honors the human's stated order.
+- **B-14 (#2):** MEDIUM severity, MEDIUM–HIGH value, LOW–MED risk (read-only, no DDL). It makes the
+  already-written `audit_log` visible through a governed admin surface — the governance/auditability
+  story becomes demonstrable. Ranked below B-13 both by the human's order and because it shares
+  `main.py` with B-13 (must land after it), not because it is blocked functionally.
+- **B-9 (#3):** optional, cost-gated, DB-mutating; ranked last deliberately. Priority ≠ "do it" — see
+  flags. It is the one item that rewrites the live corpus, so it only runs on explicit go-ahead.
 
 ## Flags / open questions for the human
 
-1. **B-2 is a real design decision, not a patch.** M5 deliberately kept memory off the free path;
-   B-7's hosted open-weight model is available as the honest disambiguation enabler, but the cloud
-   plane is parked. Confirm you want the LLM-path fix now (vs a narrower rule/composer history
-   patch, vs deferring B-2 until a hosted model is live again). Assumption made: ranked #2/Wave 1
-   assuming you want it addressed this round via B-7.
-2. **B-3 scope choice.** Two acceptable fixes in BACKLOG — (a) make the per-line tag reliable
-   (confident-only) or (b) drop the per-line tag and keep the "Governing policy" callout. Assumed
-   either is fine; flag which you prefer at `/change` time.
-3. **B-9 is optional** (BACKLOG marks it so) and the only item that recreates the vector dimension
-   + forces a full re-embed of the real corpus. Kept last and isolated; confirm whether to
-   schedule it at all.
+1. **B-13 vs B-14 order — no hard dependency found; human order honored.** Neither item functionally
+   depends on the other's code. The only coupling is the shared `backend/app/main.py`, which forces
+   *serialization* (not a specific direction). I kept **B-13 → B-14** per your stated order and because
+   B-13 is HIGH / wider-blast-radius while B-14 is a thin read-only surface. No deviation made.
+2. **B-14 shows exactly what the chat must not.** By design B-14 surfaces ids, cost, routing, tokens —
+   the internal fields `ux-surface.md` bars from the chat. Confirm the admin surface is firmly
+   **role-gated (admin-scoped) and server-enforced**, kept out of the chat shapes, so the
+   surface-boundary rule holds. (Assumption: enforced server-side at the endpoint, same posture as
+   retrieval — stated in the item.)
+3. **B-13 Langfuse must stay off the latency path and gated.** Assumption: feature-flagged off by
+   default, batch/async span export, self-host or gated-hosted. Confirm whether a hosted Langfuse is
+   in scope (spend → `COST.md`) or local/self-hosted only ($0).
+4. **Is B-9 worth the re-embed given B-8 already ran?** B-8's live 6-model study found answer quality
+   saturated and model-independent (grounded-path + citation-validity 1.00 — "governance does the
+   work"). B-9 varies a *different* axis (embedder → retrieval recall@k / MRR, not answer quality), so
+   it is not redundant — but if end-to-end quality is already governance-bound, confirm a better
+   embedder moves a metric a recruiter cares about before paying the full-corpus re-embed. **Assumption:
+   B-9 stays optional/deferred unless you explicitly want the retrieval-quality comparison as a
+   portfolio artifact.**
+5. **B-9 value is ambiguous — stated, not guessed.** Scored MED-flagged because its payoff depends on
+   whether a retrieval-quality delta is a story you want to tell. Flagging rather than guessing silently.
+6. **Only theoretical parallel track:** B-14 ‖ B-9 are file-disjoint, but not parallelized here (B-9 is
+   optional/last and DB-mutating → serialize). Noted only so the option is visible.
+7. **Chat UI persona redesign is deliberately absent from the ranked table** — it is Design Track
+   `/design` iteration-4, not a backlog `/change`. It is listed only as the downstream dependent that
+   B-13 + B-14 unblock.

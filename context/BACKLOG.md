@@ -212,3 +212,46 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
   again, or a rebuilt corpus will be wiped a second time.
 - **Where:** `backend/tests/test_vector_store.py` (the `store` fixture), test config / conftest,
   `.env.example` (document the test DB URL). Sequencing: B-12 fix → P4 recovery → B-11 benchmark.
+
+---
+
+# Productionization plane (added 2026-11-02)
+
+Two items that give the operator-facing data its proper homes, so the chat UI can stay
+a clean non-technical surface (see `.claude/rules/ux-surface.md`). Build these **before**
+the chat UI persona redesign — that redesign is **iteration-4 of the Design Track
+(`/design`), not a backlog item** — so the internals have somewhere to live before they
+are stripped out of the chat. Intended order: **B-13 → B-14 → chat UI redesign.** Each
+runs as its own `/change`.
+
+## B-13 — Observability plane (Langfuse tracing) — HIGH
+
+- **Symptom:** there is no span-level view of a turn as it moves through the pipeline
+  (router → retrieval → composer → LLM). `audit_log` records per-answer governance facts,
+  but debugging *why* routing/latency/cost behaved a certain way across turns means reading
+  raw rows and reconstructing the path by hand.
+- **Root cause:** the pipeline emits an audit row at the end of an answer, but nothing
+  traces the intermediate steps — no spans, timings, token/cost attribution per stage, or
+  cross-turn thread view.
+- **Fix:** add **Langfuse** as an observability plane behind the provider seam —
+  feature-flagged (off by default, gated like the other external providers), instrumenting
+  router/retrieval/composer/LLM as spans with timings, tokens, and cost. It is an
+  **operator plane, never a user surface**: redact PII, and nothing from it leaks into the
+  chat UI. Keep it batch/async so it never sits on the per-query latency path.
+- **Where:** `backend/agents/` (span instrumentation), `backend/app/main.py` (trace
+  lifecycle per request), `app/config.py` (flag + keys), `.env.example`.
+
+## B-14 — Audit admin view (read-only over the existing `audit_log`) — MEDIUM
+
+- **Symptom:** every answer already logs query, role, retrieved sources, tool path, tokens,
+  cost, and latency to `audit_log`, but there is no way to *see* it — reconstructing why an
+  answer was given requires direct DB access.
+- **Root cause:** `audit_log` is written but never read back by any surface; there is no
+  endpoint and no view over it.
+- **Fix:** a **read-only** admin view over the existing `audit_log` (no schema change, no
+  new writes) — a role-gated API read endpoint plus a small admin surface that lists and
+  inspects audit rows. It is a **separate operator surface from the chat UI**, admin-scoped,
+  and shows exactly the internal fields the chat must not (ids, cost, routing, tokens).
+  Access control enforced server-side, same posture as retrieval.
+- **Where:** `backend/app/main.py` (read endpoint over `audit_log`), the audit store in
+  `backend/`, a small admin view under `frontend/src/` (kept apart from the chat shapes).
