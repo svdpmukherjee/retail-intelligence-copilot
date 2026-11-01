@@ -19,10 +19,15 @@ MAX_TURN_CHARS = 400
 MAX_ITEMS_SHOWN = 5
 MAX_SUMMARY_CHARS = 300
 SUMMARY_SENTENCES = 2
+FOLLOWUP_MAX_WORDS = 3
 
 PREFERENCE_RE = re.compile(
     r"\b(?:i prefer|i like|please always|always (?:show|give|use|answer)|"
     r"from now on)\b[^.!?\n]*",
+    re.IGNORECASE,
+)
+FOLLOWUP_CUE_RE = re.compile(
+    r"^\s*(?:why|how come|what about|and\b|same but\b|really\b)",
     re.IGNORECASE,
 )
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
@@ -67,6 +72,22 @@ class MemoryContext(BaseModel):
         return "Conversation memory (background only; cite only the numbered sources):\n" + (
             "\n\n".join(sections)
         )
+
+
+def _is_vague_followup(query: str) -> bool:
+    """Too short to retrieve on its own, or opening with a follow-up cue."""
+    return len(query.split()) <= FOLLOWUP_MAX_WORDS or bool(FOLLOWUP_CUE_RE.match(query))
+
+
+def effective_query(query: str, context: MemoryContext) -> str:
+    """Query used for routing + retrieval: a vague follow-up inherits the last user turn's
+    subject (deterministic, $0). Anything else is returned unchanged."""
+    if not _is_vague_followup(query):
+        return query
+    prior = next((t.content for t in reversed(context.history) if t.role_kind == "user"), None)
+    if prior is None:
+        return query
+    return f"{' '.join(prior.split())[:MAX_TURN_CHARS]} {query}"
 
 
 class MemoryManager:

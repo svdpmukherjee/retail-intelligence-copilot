@@ -717,3 +717,25 @@ Durable design decisions (newest at the bottom). Decision → why.
   non-$0). (D) a 24–27B Mistral from the exact Ministral-3 *2512* line for the large tier — none
   exists (the line tops at 14B), so the Apache-2.0 Mistral Small 3.1 24B (2503) is the large pick, with
   a footnote that it is a different vintage than its small/medium siblings.
+
+- **B-2 (2026-11-01): free-path follow-ups fixed by deterministic query augmentation,
+  not by feeding history into the extractive composer.** M5 deliberately kept memory off
+  the free path (M5.2: the extractive composer "ignores" the context block; only the LLM
+  `user` message ever saw it). A vague follow-up ("why?") therefore routed and — crucially —
+  **retrieved** on the bare word, embedding to nothing useful, so the answer quoted irrelevant
+  hits. **Decision:** add a deterministic, $0 `effective_query(query, context)` seam: when the
+  current query is a vague follow-up (short, or a follow-up cue like why/what about/same but)
+  **and** prior history exists, prepend the last user turn's text so the follow-up inherits its
+  subject; the augmented query feeds **routing + retrieval** (the place the follow-up actually
+  failed), while the original query is kept for the composer prompt and the audit record. Audit
+  gains `memory.followup_augmented` for traceability. Runs model-free on the free path; also
+  improves the LLM path (retrieval is the shared blind spot a hosted router alone can't fix).
+  **Why not** wire context into `route`/`compose`'s free path (the backlog's literal "where"):
+  it leaves retrieval embedding the bare "why?", so the composer still has only garbage to
+  quote — a half-fix. **Why not** an LLM query-rewrite (A2): it spends per query on the free
+  path, whose whole point is $0/model-free, and adds a failure mode there; the deterministic
+  concat is transparent and auditable. **Why not** defer to the B-7 hosted LLM path: that path
+  improves routing/phrasing but still retrieves on the bare follow-up, so it doesn't close the
+  symptom. Localized to `.claude/specs/M5_conversation_memory.md` (new sub-module M5.5); touches
+  `backend/memory/manager.py` + `backend/agents/pipeline.py` + a memory test; no change to the
+  `route`/`compose`/retrieval signatures, the audit schema's existing keys, or the M4/$0 contract.

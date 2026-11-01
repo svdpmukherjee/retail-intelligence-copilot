@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,12 +7,15 @@ from fastapi.testclient import TestClient
 from agents import pipeline
 from app.config import Settings
 from app.main import app
+from memory.manager import MemoryContext, Turn, effective_query
 from memory.store import MemoryStore
+from retrieval.index_docs import index_docs
 from retrieval.index_reviews import index_reviews, read_gold_reviews
 from retrieval.schema import Chunk, SearchHit
 from retrieval.vector_store import get_vector_store
 
 client = TestClient(app)
+POLICY_DOC = Path(__file__).resolve().parents[2] / "data/docs/authored/return-refund-policy.md"
 
 
 class NoLLM:
@@ -74,6 +78,7 @@ def test_two_turn_thread_loads_turn_one_and_persists_at_zero_cost(live_db) -> No
         "thread_id": thread_id,
         "history_turns_used": 0,
         "persisted": 1,
+        "followup_augmented": False,
     }
     assert second.audit["memory"]["history_turns_used"] == 2
     assert second.audit["memory"]["persisted"] == 1
@@ -121,3 +126,48 @@ def test_without_ids_there_is_no_memory_block(monkeypatch) -> None:
     for kwargs in ({}, {"thread_id": "t"}, {"user_id": "u"}):
         result = asyncio.run(pipeline.answer("hello?", "support", **kwargs))
         assert "memory" not in result.audit
+
+
+def _context(*turns: tuple[str, str]) -> MemoryContext:
+    return MemoryContext(thread_id="t", history=[Turn(role_kind=r, content=c) for r, c in turns])
+
+
+def test_effective_query_augments_vague_followup_with_last_user_turn() -> None:
+    context = _context(
+        ("user", "what is the return policy?"),
+        ("assistant", "Returns are accepted within 30 days."),
+    )
+    assert "return policy" in effective_query("why?", context)
+    assert effective_query("why?", context).endswith("why?")
+    cue = effective_query("what about opened items for gadgets today?", context)
+    assert cue.startswith("what is the return policy?")
+
+
+def test_effective_query_leaves_non_vague_or_history_free_query_unchanged() -> None:
+    context = _context(("user", "what is the return policy?"), ("assistant", "30 days."))
+    long_query = "which products get the most battery complaints this year"
+    assert effective_query(long_query, context) == long_query
+    assert effective_query("why?", _context()) == "why?"
+    assert effective_query("why?", _context(("assistant", "hello"))) == "why?"
+
+
+def test_vague_followup_after_policy_question_retrieves_policy_docs(live_db, tmp_path) -> None:
+    (tmp_path / "return-refund-policy.md").write_text(POLICY_DOC.read_text(encoding="utf-8"))
+    index_docs(tmp_path)
+
+    async def two_turns():
+        first = await pipeline.answer(
+            "what is the return policy?", "support", thread_id=thread_id, user_id="alice"
+        )
+        second = await pipeline.answer("why?", "support", thread_id=thread_id, user_id="alice")
+        return first, second
+
+    thread_id = pipeline.new_thread("alice", "support")
+    first, second = asyncio.run(two_turns())
+
+    assert first.audit["memory"]["followup_augmented"] is False
+    assert second.audit["memory"]["followup_augmented"] is True
+    assert second.audit["query"] == "why?"
+    assert second.audit["intent"] == "docs_rag"
+    assert second.citations and second.audit["cost_usd"] == 0.0
+    assert not any(c.label.startswith("review ") for c in second.citations)

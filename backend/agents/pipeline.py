@@ -11,7 +11,7 @@ from app.config import get_settings
 from app.cost import CostLedger
 from governance.audit import record_audit
 from governance.policy import AccessDenied
-from memory.manager import MemoryContext, MemoryManager
+from memory.manager import MemoryContext, MemoryManager, effective_query
 from memory.store import get_memory_store
 from retrieval.schema import SearchHit
 
@@ -60,6 +60,9 @@ async def answer(
         except Exception as exc:  # memory is optional: degrade to a plain answer
             log.warning("memory load failed: %s", type(exc).__name__)
             memory["error"] = f"load: {type(exc).__name__}"
+    retrieval_query = effective_query(query, context) if context else query
+    if memory is not None:
+        memory["followup_augmented"] = retrieval_query != query
     ctx = {"context": context} if context else {}  # no memory: M4 call shape unchanged
     started = time.perf_counter()
     ledger = CostLedger()
@@ -68,7 +71,7 @@ async def answer(
     sql_error: str | None = None
     hits: list[SearchHit] = []
     try:
-        decision = await route(query, role, ledger, **ctx)
+        decision = await route(retrieval_query, role, ledger, **ctx)
         if decision.intent in ("sql", "sql_rag"):
             tool_path.append("sql_agent")
             try:
@@ -78,10 +81,10 @@ async def answer(
                 sql_error = "could not compute"
         if decision.intent in ("review_rag", "sql_rag"):
             tool_path.append("review_rag")
-            hits = await asyncio.to_thread(review_rag, query, decision.scope)
+            hits = await asyncio.to_thread(review_rag, retrieval_query, decision.scope)
         if decision.intent == "docs_rag":
             tool_path.append("docs_rag")
-            hits = await asyncio.to_thread(docs_rag, query, decision.scope)
+            hits = await asyncio.to_thread(docs_rag, retrieval_query, decision.scope)
         result = await compose(query, sql_result, hits, ledger, **ctx)
     except PipelineError:
         raise

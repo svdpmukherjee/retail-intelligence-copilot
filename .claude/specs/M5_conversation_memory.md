@@ -44,6 +44,11 @@ memory recall and the knowledge graph are the documented stretch, out of scope h
       returns them with the answer; a **real, non-mocked** two-turn end-to-end smoke (free path,
       local Postgres, no hosted model) shows turn 2 using turn 1's history. `ruff`/`black` clean
       on `backend/memory/` and changed `backend/agents/` files.
+- [ ] **(B-2, 2026-11-01)** On the **free path**, a vague follow-up inherits the prior turn's
+      subject: a deterministic `effective_query` prepends the last user turn when the current query
+      is a vague follow-up and history exists, and the augmented query feeds routing + retrieval.
+      A two-turn free-path smoke ("what is the return policy?" → "why?") shows turn 2 retrieving
+      policy-relevant hits, not an irrelevant review, with `audit.memory.followup_augmented` true.
 
 ## Sub-modules (ordered, each build → verify → integrate)
 
@@ -145,6 +150,43 @@ memory recall and the knowledge graph are the documented stretch, out of scope h
 - Integration point: ties M5.1–M5.3 into the existing `answer` orchestration and `POST /query`;
   full UI/threads panel is M8.
 
+### M5.5 Free-path follow-up query augmentation (B-2, 2026-11-01)
+- Goal: close the B-2 gap — on the free path a vague follow-up ("why?") was routed and
+  **retrieved** on the bare word, so it embedded to nothing useful and quoted an irrelevant hit.
+  M5.2 intentionally kept memory off the extractive path; this sub-module adds the one seam that
+  makes a follow-up inherit the prior turn's subject, deterministically and at $0. The real
+  failure is in **retrieval** (not route/compose), so the fix augments the query that reaches
+  routing + retrieval, not the composer's output.
+- Acceptance criteria:
+  - [ ] A deterministic `effective_query(query, context)` (in `backend/memory/manager.py`) returns
+        an **augmented** query — the last user turn's text prepended to the current query — when
+        (a) `context` has at least one prior user turn **and** (b) the current query is a *vague
+        follow-up*: short (≤ a small word cap) or opening with a follow-up cue (why, why not, how
+        come, what about, and …, same but …, really). Otherwise it returns the query **unchanged**.
+        No LLM, $0; bounded length.
+  - [ ] `pipeline.answer` computes the effective query once (only when a `MemoryContext` is loaded)
+        and uses it for **`route(...)` and retrieval** (`review_rag`/`docs_rag`). The **original**
+        query is kept for `compose(...)` (LLM prompt + extractive display) and for the `audit.query`
+        field. `audit.memory` gains `followup_augmented: bool` (true only when augmentation fired).
+  - [ ] Non-follow-up and memory-off turns are **unchanged**: with no context, or a non-vague query,
+        the effective query equals the original and routing/retrieval are byte-for-byte as before.
+  - [ ] `route`/`compose`/`review_rag`/`docs_rag` **signatures are unchanged**; the audit schema
+        gains only the one additive boolean. `ruff`/`black` clean.
+- Build steps:
+  1. Add `effective_query(query, context)` + a small `_is_vague_followup(query)` helper and a
+     module-level follow-up-cue regex + word-cap constant to `backend/memory/manager.py`.
+  2. In `backend/agents/pipeline.py`: when `context` is loaded, compute `retrieval_query =
+     effective_query(query, context)`; pass it to `route(...)`, `review_rag`, `docs_rag`; keep
+     `query` for `compose(...)`; set `memory["followup_augmented"] = retrieval_query != query`.
+  3. Extend `backend/tests/test_pipeline_memory.py` (or a focused new test) with the two-turn
+     free-path smoke + a unit test of `effective_query` (vague→augmented, non-vague→unchanged,
+     no-history→unchanged).
+- Files to touch: `backend/memory/manager.py`, `backend/agents/pipeline.py`,
+  `backend/tests/test_pipeline_memory.py`.
+- Integration point: sits between M5.2's loaded `MemoryContext` and the existing M4 route/retrieval
+  calls in `answer(...)`; additive and gated on a loaded context, so the memory-off / $0 path and
+  all M4 behaviour are untouched.
+
 ## Test plan
 - M5.1: unit — seed a thread + messages + memory, read back `recent_messages` (order + cap) and
   `list_memory` filtered by `user_id`; a second user's id returns none. Skip-with-reason if no DB.
@@ -155,6 +197,10 @@ memory recall and the knowledge graph are the documented stretch, out of scope h
   with no LLM; persisted content has email/phone redacted and carries the turn's `scope`;
   `memory_max_items` trims oldest.
 - M5.4: unit — memory-off call equals M4 behaviour; audit has no/empty memory block.
+- M5.5: unit — `effective_query` augments a vague follow-up when history exists, returns the query
+  unchanged for a non-vague query and when there is no history; a two-turn free-path smoke
+  ("what is the return policy?" → "why?") shows turn 2 routed/retrieved on the augmented query with
+  `audit.memory.followup_augmented` true and policy-relevant (not irrelevant-review) hits, at $0.
 - Module end-to-end smoke (the one real check): `provider_mode=free`, local Postgres, no hosted
   model — index the tiny M3 slice, then two `answer(...)` calls on one `thread_id`/`user_id`;
   assert turn 2's `audit.memory.history_turns_used > 0` and a durable item was persisted, at $0,

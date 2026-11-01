@@ -77,7 +77,7 @@ These go to CHECKPOINT 2 and are not defects against the M5 acceptance criteria.
 | **No role-to-scope enforcement on memory reads, no durable audit-log store** | Memory is keyed by user and scope-stamped, but reads do not filter by the stamped scope. The audit `memory` block is returned, not stored | M6 |
 | **Memory's effect on answer quality, cost, latency is unmeasured** | No evaluation of whether history improves follow-ups | M7 |
 | **Summariser exceptions are swallowed** | A failed LLM summary silently falls back to the deterministic one (by design, so memory never fails the turn), but is not logged | Accepted |
-| **Free-mode follow-ups don't resolve ellipsis** | With no model the router uses rules and the composer is extractive, which ignore context, so history is stored and loaded but only changes behaviour on the LLM path | By design; LLM path ungated-run is not exercised |
+| **Free-mode follow-ups: only vague ones are resolved** | The extractive composer and rule router still ignore context, so history does not change *how* the free path answers. As of B-2 (M5.5, 2026-11-01) a deterministic `effective_query` seam augments routing and retrieval for vague follow-ups (see Changes after initial build). Richer disambiguation (LLM query-rewrite, pronoun/ellipsis resolution beyond prepending the last user turn) remains deferred | Partly closed by B-2; LLM rewrite deferred (spends per query; see B-2 ADR) |
 
 ## Visuals
 
@@ -157,6 +157,32 @@ TODO for the human: no `POST /query` screenshot or raw capture of the two-turn r
 
 - All Azure paths remain gated by `GoAheadRequired`; none were run.
 - **Next:** M6 replaces the open `derive_scope` stub with a real role policy, enforces role-to-scope on memory reads using the stamped `scope`, verifies thread ownership on the write path, hardens PII patterns, and persists the audit record. M7 evaluates memory's effect on quality, cost, and latency. M8 adds the chat/thread UI on the extended `POST /query`.
+
+## Changes after initial build
+
+### 2026-11-01 - B-2 / M5.5: follow-ups use history on the free path
+
+Delivered via `/change`. Backlog item B-2 (HIGH): "Follow-ups don't use conversation history on the free path."
+
+| Aspect | Record |
+|---|---|
+| **Symptom** | On the free (non-LLM) path a vague follow-up such as "why?" was routed and retrieved on the bare word. It embedded to nothing useful, so the answer came from an irrelevant review. M5.2 had deliberately kept memory off the extractive path: context only ever entered the LLM `user` message |
+| **Decision (Option A1, B-2 ADR in `context/DECISIONS.md`)** | New deterministic, $0 seam `effective_query(query, context)` in `backend/memory/manager.py`. If the query is a vague follow-up (at most `FOLLOWUP_MAX_WORDS` = 3 words, or opens with a cue: why / how come / what about / "and" / "same but" / really) and history has a prior user turn, it prepends the most recent user turn (whitespace-normalised, capped at `MAX_TURN_CHARS`). Otherwise the query is returned unchanged |
+| **Where applied** | `backend/agents/pipeline.py` `answer()`: `retrieval_query = effective_query(query, context) if context else query`, used for `route` and `review_rag`/`docs_rag`. The original `query` is kept for `compose` and `audit.query` |
+| **Audit** | New additive key `audit.memory.followup_augmented` (bool; true only when augmentation fired; present only when memory is on) |
+| **Signatures** | `route`, `compose`, `review_rag`, `docs_rag` untouched |
+| **Why not the alternatives** | Wiring context into free-path route/compose (the backlog's literal "where") still retrieves on the bare "why?", leaving the composer only garbage to quote: a half-fix. An LLM query-rewrite (A2) spends per query on a path whose point is $0/model-free. Deferring to the B-7 hosted LLM path still retrieves on the bare follow-up |
+| **Settings** | No new keys. Reuses `MAX_TURN_CHARS` and `memory_history_turns` |
+
+Retrieval query for a "why?" follow-up, after "what is the return policy?":
+
+```
+before:  route + retrieve on  "why?"                              -> irrelevant review
+after:   route + retrieve on  "what is the return policy? why?"   -> docs_rag, policy docs
+         compose / audit.query still see the original "why?"
+```
+
+**Verification (tester, scoped, non-mocked, local pgvector):** `backend/tests/test_pipeline_memory.py` - 7 passed (0:40:56). Includes two `effective_query` unit tests and a real free-path two-turn smoke, `test_vague_followup_after_policy_question_retrieves_policy_docs` ("what is the return policy?" then "why?"). Turn 2 asserts `followup_augmented` true, intent `docs_rag`, citations present, `cost_usd` 0.0, and no citation label starting with "review ". The pre-existing two-turn test's exact-dict memory assertion was updated to include `"followup_augmented": False` and still passes. ruff and black clean on the three changed files. Only this scoped file was run, not the full backend suite.
 
 ## Build metadata
 

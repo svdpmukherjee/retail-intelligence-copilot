@@ -34,3 +34,9 @@ and a data-loss recovery. `main` = `f12af36`, synced with `origin/main`; working
 Phone reflow spot-check on a real device; 4 error-state banners not force-driven; per-turn
 `audit`/`citations` persistence is a pending schema change for full-fidelity resume; a demo
 `support_1` thread left in the dev DB (harmless).
+
+## In progress: M5.5 (B-2 /change under M5) - built, awaiting tester
+- `effective_query` + `_is_vague_followup` in `backend/memory/manager.py`; `pipeline.answer` routes/retrieves on
+  the augmented query, composes + audits the original; `audit.memory.followup_augmented` added.
+- Tests added in `backend/tests/test_pipeline_memory.py` (2 unit + 1 live free-path smoke).
+- Left: tester run of the live smoke; then orchestrator close-out.
