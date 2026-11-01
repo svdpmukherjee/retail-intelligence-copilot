@@ -1,0 +1,1 @@
+Prices in `models.json` are PROVISIONAL (researched via web on 2026-11-01) and must be re-confirmed live against OpenRouter before the gated live study run. `$/query` is computed from actual token usage x these per-1M-token rates (`eval/study_cost.py`).

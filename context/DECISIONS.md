@@ -654,3 +654,40 @@ Durable design decisions (newest at the bottom). Decision → why.
   order on distance ties, risking flaky eval/ordering assertions (rejected). (C) inner distance-only
   SQL + re-sort `(score DESC, id)` in Python — also correct, but splits the ordering contract across
   SQL and Python; keeping it in one SQL statement is clearer (rejected).
+- **Controlled model-comparison study as a separate runner over M7's harnesses (B-8, 2026-11-01).**
+  B-8 turns "model choice by assertion" into evidence: a new `backend/eval/study.py` runner loops a
+  fixed set of **6 open-weight hosted models** (via the B-7 `openrouter` seam + `get_llm(model=slug)`)
+  over the committed golden set, holding embeddings / retrieval / SQL engine / judge **fixed** and
+  varying **only the generation model** (the one axis). It **reuses** M7's primitives (`metrics.py`,
+  `answer_eval.answer_docs` + the deterministic `judge_deterministic`, the audit `cost_usd`/`latency_ms`/
+  `tokens`/`grounding` fields) and emits a `docs/model-comparison.md` report + the committed golden set
+  it ran on. **Models (finalized, tier-matched, web-confirmed 2026-11-01):** small = Gemma 3 4B ‖
+  Ministral 3 3B (2512); medium = Gemma 3 12B ‖ Ministral 3 14B (2512); large = Gemma 3 27B ‖ Mistral
+  Small 3.1 24B (2503). All Mistral = **Apache 2.0**; all Gemma = Google **Gemma Terms of Use** (open
+  weight, commercial-with-conditions, not OSI) — so the report's **license/portability column is a real
+  differentiator**, not a formality. **Why a separate runner, not an extension of `run_eval.py`:** the
+  M7 gate must stay single-model, deterministic, and **$0 in CI**; putting 6 paid models in the CI gate
+  would break that contract and spend money per push. **Why the deterministic ($0) judge, not the LLM
+  judge:** a judge *model* would confound the very axis under test (faithfulness scored by one of the
+  contestants); the deterministic grounded+coverage judge is model-agnostic and $0. **Why SQL
+  descriptive-only:** SQL correctness is a function of which model writes the SQL, so gating on it
+  would smuggle a second varying axis into a "vary one thing" study; instead the report *describes*
+  whether each model emits runnable/schema-valid SQL on a few questions, un-gated. **Why a per-model
+  price map:** the flat `openrouter_usd_per_1m_tokens` (one rate) cannot produce a per-model `$/query`;
+  a committed `backend/eval/ground_truth/models.json` carries each model's slug / tier / family /
+  license / input+output price (confirmed against live OpenRouter pages at build time), and `$/query`
+  is computed from real token counts × that model's rate. **Cost gate:** build + tests are **$0**
+  (stubbed LLM in unit tests; a 1-model free/Ollama smoke); the live 6-model run is gated behind
+  `OPENROUTER_GO_AHEAD=true` + key **and** a separate explicit human go-ahead, prints an up-front spend
+  estimate, respects the `CostLedger` cap, and logs actual spend to `COST.md`. Latency reflects the
+  B-11 (merged) index-hitting serving path. Localized to `.claude/specs/M7_evaluation.md` (the B-8
+  section); touches `backend/eval/` + `backend/app/config.py` (price-map seam) + `docs/`; no change to
+  `pipeline.answer`, the audit schema, retrieval, or the M7 CI gate. **Rejected alternatives:**
+  (A) extend `run_eval.py` to loop models — rejected, couples the study to the $0 CI gate and risks a
+  paid CI run. (B) vary the model across *all* LLM steps incl. router + SQL-gen and gate SQL
+  correctness (the fuller BACKLOG reading) — rejected as muddying the single-axis methodology and
+  enlarging the golden set + live spend; routing accuracy is kept as a small separate sub-run and SQL
+  stays descriptive. (C) LLM-as-judge for cross-model faithfulness — rejected (judge-model bias +
+  non-$0). (D) a 24–27B Mistral from the exact Ministral-3 *2512* line for the large tier — none
+  exists (the line tops at 14B), so the Apache-2.0 Mistral Small 3.1 24B (2503) is the large pick, with
+  a footnote that it is a different vintage than its small/medium siblings.

@@ -1,0 +1,6 @@
+[
+  {"question": "Which product category sells the most units?"},
+  {"question": "Which brand earns the best typical star score?"},
+  {"question": "Show the share of one-star reviews per category."},
+  {"question": "Which month had the most reviews?"}
+]

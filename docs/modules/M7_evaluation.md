@@ -124,3 +124,83 @@ No screenshot was captured. TODO for the human: optionally add a screenshot of t
 - Sub-module cycles: 4 (M7.1-M7.4), plus a fixture correction (folded into M7.4) and one hermeticity fix round after the module test. Sub-agent call count: 13 (1 planner, 5 developer incl. the hermeticity fix, 6 tester incl. module + re-test, 1 documenter).
 - Cloud spend this module: $0.00 (free path only; logged in COST.md).
 - Claude session usage: run `/cost` for this session's token usage.
+
+---
+
+# B-8 — Controlled model-comparison study (2026-11-01)
+
+Added via `/change` as an extension of M7. The M7 CI gate is untouched (single-model, deterministic, $0). B-8 is a separate, gated runner that varies **one axis, the generation model**, and reports quality, latency, cost and licence side by side.
+
+## What was built
+
+| Sub-module | What now works | Files |
+|---|---|---|
+| B-8.1 Registry + price map | Six tier-matched open-weight models (id, slug, tier, family, licence, portability, in/out price, price confidence). Pure `dollars_for` helper turns token counts into `$/query` using that model's rate. | `backend/eval/ground_truth/models.json`, `models.README.md`, `backend/eval/study_cost.py`, `tests/test_study_registry.py` |
+| B-8.2 Study runner | `run_study(models, *, dry_run)` reuses M7 `answer_docs` and the deterministic $0 judge. Per-model client via `get_llm(model=slug)`, injected through an additive `compose(llm=...)` seam. `DryRunLLM` canned stub. Up-front go-ahead gate. | `backend/eval/study.py`, `agents/composer.py`, `tests/test_study_runner.py` |
+| B-8.3 Routing + descriptive SQL | Routing-accuracy sub-run (questions authored to miss the router rules, so the LLM classifies). Descriptive-SQL sub-run (runnable / schema-valid, **not gated**). Citation validity hardened to per-`[n]`-marker, distinct from the grounded-path rate. Additive `route(llm=...)` and `generate_sql(llm=...)` seams. | `ground_truth/study_routing.json` (8), `study_sql.json` (4), `agents/router.py`, `agents/sql_agent.py`, `tests/test_study_routing_sql.py` |
+| B-8.4 Report + CLI | `render_report`, `estimate_spend`, and `python -m eval.study` (dry-run default; prints spend estimate first, about $0.0228 worst case for 132 calls; `--live` needs go-ahead; logs to `COST.md`). Committed DRY-RUN scaffold. | `backend/eval/report.py`, `docs/model-comparison.md`, `tests/test_study_report.py` |
+
+Models (tier-matched): Gemma 3 4B / 12B / 27B vs Ministral 3 3B / 14B (2512) + Mistral Small 3.1 24B (2503).
+
+## Key decisions
+
+| Decision | Why | Rejected alternative |
+|---|---|---|
+| Separate runner, not in `run_eval.py` | CI gate must stay single-model, deterministic, $0 | Loop models inside the gate: couples the study to CI and risks paid runs per push |
+| Deterministic $0 judge | A judge model would be one of the contestants and confound the axis | LLM-as-judge: judge bias and not $0 |
+| SQL descriptive-only; routing a small separate sub-run | SQL correctness depends on which model writes it, a second varying axis | Vary the model across all steps and gate SQL: muddies method, bigger golden set and spend |
+| Per-model price map in `models.json` | The flat `openrouter_usd_per_1m_tokens` setting cannot give per-model `$/query` | Single flat rate |
+| Six tier-matched open-weight models; licence/portability as a real column | Mistral is Apache-2.0, Gemma uses custom terms (open weight, not OSI), a genuine differentiator | Models picked without matching tiers |
+| Mistral Small 3.1 24B (2503) for the large tier | The Ministral-3 2512 line tops at 14B | Footnoted as a different vintage |
+| Cost gate | Build and tests $0; live run needs `OPENROUTER_GO_AHEAD`, key, and a separate human go-ahead | Auto-run in CI |
+
+## Problems faced & fixes
+
+| Problem | Resolution |
+|---|---|
+| A reworded routing question accidentally matched the `sql` rule, so the router never reached the LLM | Reworded again so each of the 8 cases misses every rule; the test asserts they fall through |
+| `data/gold` is absent in this worktree, so descriptive-SQL and `test_sql_agent.py` cannot exercise real Gold | Test skips with reason; dry-run table shows 0 / 4. Environment gap, not a code fault. Gold must be present for the live run |
+| Embedder metadata fetch was HuggingFace rate-limited (429), so the dry-run smoke took about 4.5 min | Network, not code; no change made |
+| `COST.md` "actual" sums answer-path spend only; routing and SQL calls are bounded by the up-front estimate | Accepted and labelled honestly (under $0.03 worst case). Optional to tighten before the live run |
+| `compose` swallows the go-ahead error, so a refusal would be hidden | Runner checks the go-ahead gate up front, before any model call |
+
+## Discussion / corrections
+
+The citation-validity metric was tightened in B-8.3: it now requires every `[n]` marker in the answer to resolve to a citation, rather than duplicating the grounded-path rate. No reviewer course-corrections beyond that.
+
+## Visuals
+
+```mermaid
+flowchart TD
+    REG["models.json registry + price map (B-8.1)"] --> RUN["run_study (B-8.2)"]
+    RUN --> MODE{"dry-run or --live?"}
+    MODE -->|"dry-run default"| DRY["DryRunLLM, $0"]
+    MODE -->|"--live + go-ahead + key"| GATE["spend estimate printed, CostLedger cap"]
+    GATE --> LIVE["get_llm(model=slug) per model"]
+    DRY --> M
+    LIVE --> M
+    subgraph M["per model"]
+        A["answer_docs, then deterministic judge"]
+        R["routing sub-run (B-8.3)"]
+        S["descriptive SQL sub-run, not gated (B-8.3)"]
+    end
+    M --> AGG["aggregate rows, $/query via dollars_for"]
+    AGG --> REP["render_report to docs/model-comparison.md (B-8.4)"]
+    LIVE -.-> LOG["log_spend to COST.md"]
+```
+
+Output shape (DRY-RUN placeholder numbers only): [docs/model-comparison.md](../model-comparison.md). No screenshot captured.
+
+## Result
+
+- **Tests:** B-8.1 5/5; B-8.2 3/3 (+ composer 4/4); B-8.3 10 passed / 1 skipped (Gold absent); B-8.4 6/6; final combined 15/15.
+- **Module smoke:** $0 dry-run end to end exited 0, report written, `COST.md` untouched, `--live` refused without go-ahead.
+- **NOT done:** the real 6-model paid run has not been run; it needs a separate explicit human go-ahead. Prices in `models.json` are provisional (several marked low confidence) and must be re-confirmed live on OpenRouter first. Gold must be present in the run environment for the SQL rows to populate. Latency will reflect the merged B-11 index path.
+- **Next:** the gated live run, then publishing real numbers into `docs/model-comparison.md`.
+
+## Build metadata
+
+- Build time: n/a (not tracked for this `/change`).
+- Sub-module cycles: 4 (B-8.1 to B-8.4). Sub-agent calls: n/a.
+- Cloud spend: $0.00 (dry-run only; `COST.md` untouched).
+- Claude session usage: run `/cost`.
