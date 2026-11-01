@@ -60,15 +60,26 @@ def test_uncited_llm_draft_is_blocked_and_falls_back(monkeypatch) -> None:
     assert [c.source_id for c in result.citations] == ["c1"]
 
 
-def test_sql_block_matches_cited_citation_rounded_capped_and_redacted() -> None:
+def test_sql_block_rounds_redacts_and_caps_at_the_query_bound() -> None:
+    from agents.composer import MAX_SQL_ROWS_SHOWN
+
+    # A modest result (15 rows) must show in FULL -- the old 10-row display cap silently
+    # dropped rows the query kept (B-10 follow-up).
     rows = [[f"user{i}@example.com", i + 0.123456] for i in range(15)]
     sql = {"sql": "select 1", "columns": ["who", "score"], "rows": rows}
     result = asyncio.run(compose("q", sql, [], CostLedger()))
-
     assert result.citations[0].source_id == "sql"
     assert result.sql is not None and result.sql.sql == "select 1"
-    assert len(result.sql.rows) == 10
-    assert result.sql.rows[0] == ["[EMAIL]", 0.12]
+    assert len(result.sql.rows) == 15 and result.sql.total_rows == 15
+    assert result.sql.rows[0] == ["[EMAIL]", 0.12]  # redacted + rounded to 2dp
+
+    # Past the display bound, rows are capped but total_rows reports the full count so the
+    # UI can say "showing X of Y".
+    big = [[f"u{i}@x.com", float(i)] for i in range(MAX_SQL_ROWS_SHOWN + 5)]
+    capped = asyncio.run(
+        compose("q", {"sql": "s", "columns": ["who", "n"], "rows": big}, [], CostLedger())
+    ).sql
+    assert len(capped.rows) == MAX_SQL_ROWS_SHOWN and capped.total_rows == MAX_SQL_ROWS_SHOWN + 5
 
 
 def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) -> None:

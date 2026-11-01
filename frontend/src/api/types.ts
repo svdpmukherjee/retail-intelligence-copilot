@@ -50,6 +50,7 @@ export interface SqlBlock {
   sql: string;
   columns: string[];
   rows: (string | number | null)[][];
+  total_rows: number; // rows the query returned; show "X of Y" when > rows.length
 }
 
 export interface AnswerResult {

@@ -6,7 +6,12 @@ export default function SqlTable({ block }: { block: SqlBlock }) {
     <div className="datacard">
       <div className="dc-h">
         <span className="h">Result</span>
-        <span className="src">source: SQL</span>
+        <span className="src">
+          source: SQL
+          {block.total_rows > block.rows.length
+            ? ` · showing ${block.rows.length} of ${block.total_rows}`
+            : ""}
+        </span>
       </div>
       <table className="sqltable" aria-label="SQL result">
         <thead>

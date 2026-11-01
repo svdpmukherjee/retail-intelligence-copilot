@@ -4,6 +4,7 @@ import httpx
 from pydantic import BaseModel
 
 from agents.llm import get_llm
+from agents.sql_agent import MAX_ROWS
 from app.cost import CostLedger
 from governance.grounding import CITE, enforce_grounding
 from governance.pii import redact
@@ -13,7 +14,10 @@ from retrieval.schema import SearchHit
 
 SQL_SOURCE = "sql"
 MAX_QUOTE_CHARS = 240
-MAX_SQL_ROWS_SHOWN = 10
+# Match the SQL query's own row bound (sql_agent.MAX_ROWS): the result set is already capped
+# there, so the display must never drop a row the query kept. SqlBlock.total_rows lets the UI
+# say "showing X of Y" on the rare case a query actually hits that bound.
+MAX_SQL_ROWS_SHOWN = MAX_ROWS
 SQL_FLOAT_DECIMALS = 2
 
 SYSTEM_PROMPT = (
@@ -36,6 +40,7 @@ class SqlBlock(BaseModel):
     sql: str
     columns: list[str]
     rows: list[list]
+    total_rows: int  # rows the query returned before display truncation; UI shows "X of Y" when > len(rows)
 
 
 class AnswerResult(BaseModel):
@@ -58,6 +63,8 @@ def _sql_text(sql_result: dict) -> str:
         ", ".join(f"{c}={v}" for c, v in zip(cols, row, strict=False))
         for row in rows[:MAX_SQL_ROWS_SHOWN]
     )
+    if len(rows) > MAX_SQL_ROWS_SHOWN:
+        shown += f" (showing first {MAX_SQL_ROWS_SHOWN} of {len(rows)})"
     return shown or "no rows"
 
 
@@ -70,8 +77,14 @@ def _cell(value):
 
 
 def _sql_block(sql_result: dict) -> SqlBlock:
-    rows = [[_cell(v) for v in row] for row in sql_result["rows"][:MAX_SQL_ROWS_SHOWN]]
-    return SqlBlock(sql=sql_result.get("sql", ""), columns=sql_result["columns"], rows=rows)
+    all_rows = sql_result["rows"]
+    rows = [[_cell(v) for v in row] for row in all_rows[:MAX_SQL_ROWS_SHOWN]]
+    return SqlBlock(
+        sql=sql_result.get("sql", ""),
+        columns=sql_result["columns"],
+        rows=rows,
+        total_rows=len(all_rows),
+    )
 
 
 def _snippet(text: str) -> str | None:
