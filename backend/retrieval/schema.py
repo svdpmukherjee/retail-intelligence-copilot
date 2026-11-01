@@ -67,4 +67,7 @@ def chunks_ddl(dim: int) -> list[str]:
         f"CREATE INDEX IF NOT EXISTS chunks_source_type_idx ON {CHUNKS_TABLE} (source_type)",
         f"CREATE INDEX IF NOT EXISTS chunks_fts_idx ON {CHUNKS_TABLE} "
         "USING GIN (to_tsvector('english', text))",
+        # Matches the `<=>` cosine-distance ordering in vector_store.query().
+        f"CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw_idx ON {CHUNKS_TABLE} "
+        "USING hnsw (embedding vector_cosine_ops)",
     ]
