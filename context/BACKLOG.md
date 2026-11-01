@@ -29,7 +29,7 @@ conversation: "What is the return policy?" → "why?"), 2026-10-29.
   bare "why?". Run as a `/change` (routing-rule revision).
 - **Where:** `route()` keyword patterns in `backend/agents/router.py`.
 
-## B-2 — Follow-ups don't use conversation history on the free path — HIGH
+## B-2 — Follow-ups don't use conversation history on the free path — HIGH — ✅ DONE 2026-11-01 (`868e2a4`; M5.5 deterministic query augmentation on the free path)
 
 - **Symptom:** the thread is stored and now *displayed* (v3), but a vague
   follow-up ("why?") is routed and answered on the bare word, with no awareness
