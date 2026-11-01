@@ -40,7 +40,9 @@ class SqlBlock(BaseModel):
     sql: str
     columns: list[str]
     rows: list[list]
-    total_rows: int  # rows the query returned before display truncation; UI shows "X of Y" when > len(rows)
+    total_rows: (
+        int  # rows the query returned before display truncation; UI shows "X of Y" when > len(rows)
+    )
 
 
 class AnswerResult(BaseModel):
@@ -87,8 +89,19 @@ def _sql_block(sql_result: dict) -> SqlBlock:
     )
 
 
+def _truncate(text: str) -> str:
+    """Cap display text at MAX_QUOTE_CHARS on a word boundary, marking the cut with an ellipsis."""
+    text = " ".join(text.split())
+    if len(text) <= MAX_QUOTE_CHARS:
+        return text
+    window = text[:MAX_QUOTE_CHARS]
+    # A single token longer than the cap (e.g. a URL) has no boundary to back off to: hard cut.
+    cut = window.rsplit(" ", 1)[0] if " " in window else window
+    return cut + "…"
+
+
 def _snippet(text: str) -> str | None:
-    return redact(" ".join(text.split())[:MAX_QUOTE_CHARS]) if text else None
+    return redact(_truncate(text)) if text else None
 
 
 def build_sources(sql_result: dict | None, hits: list[SearchHit]) -> list[tuple[Citation, str]]:
@@ -112,7 +125,7 @@ def build_sources(sql_result: dict | None, hits: list[SearchHit]) -> list[tuple[
 def _extractive(sources: list[tuple[Citation, str]]) -> str:
     lines = []
     for cite, text in sources:
-        quote = " ".join(text.split())[:MAX_QUOTE_CHARS]
+        quote = _truncate(text)
         lines.append(f"{cite.label}: {quote} [{cite.n}]")
     return "\n".join(lines)
 

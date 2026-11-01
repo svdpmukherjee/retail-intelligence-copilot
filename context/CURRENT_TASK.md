@@ -42,3 +42,4 @@ Phone reflow spot-check on a real device; 4 error-state banners not force-driven
 - Left: tester run of the live smoke; then orchestrator close-out.
 
 - 2026-11-01 test-infra: DB fixtures bounded + split (session-scoped read-only `indexed_chunks`, function-scoped memory reset `live_db`); test_pipeline_memory ~40 min -> ~13 s; test_index_reviews/test_pipeline index a 50-row slice. No product code changed.
+- 2026-11-02 B-4: word-boundary truncation (_truncate in composer.py, used by _snippet + _extractive) + 4 unit tests in test_composer.py. Left: tester/close-out.

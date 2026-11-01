@@ -235,6 +235,12 @@ the free/local path; Azure LLM + any hosted reranker sit behind the provider sea
         `answer` is unchanged (still the cited narrative); the block is the display truth for the UI.
         Any text column is redacted at the boundary like a snippet. The composer no longer flattens
         SQL into a prose metric string for the UI to re-parse.
+  - [ ] **Word-boundary truncation (B-4, 2026-11-02).** Citation display text is truncated on a
+        word boundary, not mid-word. A single `_truncate(text)` helper slices at `MAX_QUOTE_CHARS`,
+        backs off to the last whitespace, and appends an ellipsis "…" only when the text was
+        actually shortened; a single token longer than the cap (e.g. a URL) falls back to a hard
+        cut. Both the UI snippet (`_snippet`) and the extractive quote (`_extractive`) use it, so
+        the two sites can't drift. Display-only: citation keys, grounding, and audit are unchanged.
 - Build steps:
   1. Write `backend/agents/composer.py` (`AnswerResult` model with the top-level `sql` block,
      LLM + extractive paths, citation-resolution check; drop the SQL source iff [1] is not cited).

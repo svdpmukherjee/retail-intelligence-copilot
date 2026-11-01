@@ -333,3 +333,21 @@ redaction; `sql` is `None` with no SQL result and when only [2] is cited). Seria
 offline through FastAPI's `jsonable_encoder` (Decimal → number, no raise). **Not run:** a live
 `/query` SQL path (needs a free-mode LLM endpoint + Gold Delta data, unconfirmed this session) —
 flagged honestly, not a silent pass. Files: `composer.py`, `test_composer.py`.
+
+## Change — B-4 citation snippets truncate on a word boundary (2026-11-02)
+
+Citation display text was hard-sliced at `MAX_QUOTE_CHARS` (240) in two places —
+`_snippet` (the UI snippet) and `_extractive` (the extractive-answer quote) — cutting
+mid-word (e.g. *"…the battery drain iss"*). The two sites shared the identical bug because
+each duplicated `" ".join(text.split())[:MAX_QUOTE_CHARS]`. **Fix (ADR "B-4 … one shared
+helper"):** one `_truncate(text)` helper normalises whitespace, returns text ≤ cap unchanged
+(no stray ellipsis), else cuts the `[:cap]` window at its last space (`rsplit(" ", 1)[0]`) and
+appends "…"; a single token longer than the cap (e.g. a URL) has no space and falls back to a
+hard cut. Result is ≤ cap+1 chars. Both `_snippet` (still redacts, still `None` for empty) and
+`_extractive` call it, so they can't drift. **Display-only** — citation keys, grounding, audit,
+and the B-10 SQL block are untouched.
+
+**Tests:** `backend/tests/test_composer.py` — 10 pass (4 new: short text unchanged/no ellipsis;
+long spaced text ends on a whole word + "…" within cap+1; a 720-char single token hard-cut to
+`"x"*240 + "…"`; `_snippet("lovely "*100)` ends `"lovely…"`, not mid-word). Pure unit, no DB.
+ruff + black clean. Files: `composer.py`, `test_composer.py`.

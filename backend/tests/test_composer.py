@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from agents.composer import compose
+from agents.composer import MAX_QUOTE_CHARS, _snippet, _truncate, compose
 from app.cost import CostLedger
 from governance.grounding import enforce_grounding
 from retrieval.schema import Chunk, SearchHit
@@ -96,3 +96,25 @@ def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) 
     result = asyncio.run(compose("q", sql, [_hit("c1", "loud")], CostLedger()))
     assert [c.n for c in result.citations] == [2]
     assert result.sql is None
+
+
+def test_truncate_leaves_short_text_unchanged() -> None:
+    assert _truncate("battery  dies\nfast") == "battery dies fast"
+
+
+def test_truncate_cuts_at_word_boundary_with_ellipsis() -> None:
+    words = ["battery"] * 60
+    out = _truncate(" ".join(words))
+    assert out.endswith("…")
+    assert len(out) <= MAX_QUOTE_CHARS + 1
+    assert set(out[:-1].split()) == {"battery"}
+
+
+def test_truncate_hard_cuts_single_long_token() -> None:
+    out = _truncate("x" * (MAX_QUOTE_CHARS * 3))
+    assert out == "x" * MAX_QUOTE_CHARS + "…"
+
+
+def test_snippet_of_long_review_does_not_end_mid_word() -> None:
+    snippet = _snippet("lovely " * 100)
+    assert snippet is not None and snippet.endswith("lovely…")

@@ -739,3 +739,15 @@ Durable design decisions (newest at the bottom). Decision → why.
   symptom. Localized to `.claude/specs/M5_conversation_memory.md` (new sub-module M5.5); touches
   `backend/memory/manager.py` + `backend/agents/pipeline.py` + a memory test; no change to the
   `route`/`compose`/retrieval signatures, the audit schema's existing keys, or the M4/$0 contract.
+
+- **B-4 (2026-11-01): citation snippets/quotes truncate on a word boundary via one shared
+  helper.** `composer._snippet` (UI snippet) and `composer._extractive` (extractive-answer quote)
+  each hard-sliced `" ".join(text.split())[:MAX_QUOTE_CHARS]`, cutting mid-word. **Decision:**
+  add one `_truncate(text)` helper — slice at the cap, back off to the last whitespace, append an
+  ellipsis "…" only when the text was actually truncated — and call it from both sites. A single
+  token longer than the cap (rare, e.g. a URL) has no space to back off to and falls back to a
+  hard cut. **Why one helper, not two inline edits:** the two sites shared the identical bug
+  because they duplicated the slice; a shared helper fixes both and is the single place to test.
+  **Why the ellipsis:** it signals to the reader that the quote continues. Localized to
+  `.claude/specs/M4_retrieval_agents.md`; touches `backend/agents/composer.py` only (no signature
+  changes, no audit/grounding change — snippets are display text, never a citation key).
