@@ -9,7 +9,14 @@ this file is behaviour + UX correctness.
 Found during live verification of the M8 v3 build (support role, two-turn
 conversation: "What is the return policy?" → "why?"), 2026-10-29.
 
-## B-1 — Vague follow-up ("why?") false-routes to `sql_rag` — MEDIUM
+## B-1 — Vague follow-up ("why?") false-routes to `sql_rag` — MEDIUM — ❌ DROPPED (resolved) 2026-11-01
+
+> **Dropped — root cause no longer exists.** The `sql_rag` rule in `router.py` already
+> requires `\bwhy\b` **paired with** a change-word (`chang|drop|increas|decreas|declin|
+> fell|fall|rose|rise|spik|dip`), from the D-2 rule-first routing work — so a bare "why?"
+> matches **no** rule and never routes to `sql_rag`. The specific false-route is fixed.
+> The residual symptom (a bare "why?" gives a useless answer because the free path has no
+> history awareness) is **B-2's** territory, not a routing bug. See `context/BACKLOG_PLAN.md`.
 
 - **Symptom:** a bare "why?" follow-up routed to `sql_rag`, the SQL query failed
   (degraded gracefully), and it answered from an irrelevant Electronics review —
@@ -56,8 +63,10 @@ conversation: "What is the return policy?" → "why?"), 2026-10-29.
 - **Symptom:** citation [3] ended "…eligible only for a partial re" — severed
   mid-word, no ellipsis.
 - **Fix:** truncate snippets on a word boundary and append "…".
-- **Where:** the citation/snippet render in `frontend/src/components/` (evidence
-  panel + inline citation).
+- **Where (re-pointed 2026-11-01):** snippets are now produced **server-side** in
+  `backend/agents/composer.py` `_snippet()` (`redact(" ".join(text.split())[:MAX_QUOTE_CHARS])`),
+  since M8 v2 moved redacted snippets to the backend — fix the word-boundary truncate there.
+  `frontend/src/components/EvidencePanel.tsx` only *displays* `shown.snippet` (no change needed).
 
 ---
 
@@ -67,9 +76,17 @@ Surfaced while taking the app back to the **local** build and preparing a contro
 model-evaluation study for the portfolio. These are independent of the (now de-scoped)
 cloud operationalization — all run on the local stack. Run each as a `/change` (clarify →
 weigh options → decide → log ADR → edit spec → rebuild the affected sub-module), then let
-the evaluation gate measure the before/after. Suggested order: B-5, B-6, B-7, B-8, B-9, B-10.
+the evaluation gate measure the before/after. **Live priority order + parallel-track / conflict
+map: `context/BACKLOG_PLAN.md`** (the Product Owner's blueprint — re-run `/prioritize` if the
+backlog changes). Wave 1 (B-5, B-6, B-7) is **done + merged 2026-11-01**; next is the full-corpus
+embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
 
-## B-5 — No ANN index on the vector store; search is brute-force — HIGH
+## B-5 — No ANN index on the vector store; search is brute-force — HIGH — ✅ DONE 2026-11-01 (`095328f`)
+
+> **Done.** HNSW index `chunks_embedding_hnsw_idx` on `chunks.embedding` (`vector_cosine_ops`,
+> pgvector defaults `m=16, ef_construction=64`) added to `chunks_ddl()`. Chosen over IVFFlat
+> because `ensure_schema()` runs the DDL before data loads. Headline p50/p95 + recall@k
+> before/after lands when the full-corpus embed (P4) runs.
 
 - **Symptom:** fine at 3k rows, but embedding the full gold corpus (225k) makes every
   review/doc query scan all vectors. Latency grows linearly with corpus size.
@@ -83,7 +100,12 @@ the evaluation gate measure the before/after. Suggested order: B-5, B-6, B-7, B-
 - **Where:** `backend/retrieval/schema.py` (`chunks_ddl`); verify the query in
   `backend/retrieval/vector_store.py` uses the indexed operator.
 
-## B-6 — Indexer loads the entire corpus into RAM — MEDIUM
+## B-6 — Indexer loads the entire corpus into RAM — MEDIUM — ✅ DONE 2026-11-01 (`5b86f3e`)
+
+> **Done.** `index_reviews.py` now streams Gold via `to_pyarrow_dataset().to_batches()`
+> and embeds+upserts one batch at a time through `_embed_upsert_batch()` with a single shared
+> `CostLedger` (cap stays global). Peak RAM is flat regardless of corpus size, so the P4 embed
+> is memory-safe. `read_gold_reviews(limit)` kept as a thin wrapper.
 
 - **Symptom:** embedding all 225k reviews spikes memory; the full-gold read is the heavy
   call that stalled before.
@@ -93,7 +115,13 @@ the evaluation gate measure the before/after. Suggested order: B-5, B-6, B-7, B-
   peak memory is flat regardless of corpus size. (Pairs naturally with B-5's full-corpus run.)
 - **Where:** `backend/retrieval/index_reviews.py` (`read_gold_reviews`, `embed_and_upsert`).
 
-## B-7 — Add OpenRouter as a generation provider behind the seam — HIGH
+## B-7 — Add OpenRouter as a generation provider behind the seam — HIGH — ✅ DONE 2026-11-01 (`ce4febd`)
+
+> **Done.** `provider_mode` gains `"openrouter"`; `OpenRouterLLM` (in `backend/agents/llm.py`)
+> reuses `FreeLLM`'s OpenAI-compatible transport and mirrors `AzureLLM`'s gating
+> (`OPENROUTER_GO_AHEAD=true` + `OPENROUTER_API_KEY`). `get_llm(*, model=None)` lets the B-8
+> study build a per-slug client without mutating the global settings. `openrouter` ⇒ hosted
+> LLM + local free embeddings. Dormant until the go-ahead flag + key are set. Unblocks B-8.
 
 - **Symptom:** generation is limited to local Ollama (small models) or gated Azure; no clean
   way to run open-weight hosted models for the comparison study.
