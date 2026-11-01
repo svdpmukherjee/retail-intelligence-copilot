@@ -172,3 +172,23 @@ embed (data-op P4), then Wave 2 = B-8 (needs B-7) ‖ B-10.
   prose. Keep grounding/citation invariants.
 - **Where:** `backend/agents/composer.py`, `backend/app/main.py`, `frontend/src/api/types.ts`,
   `frontend/src/answer.ts`, `frontend/src/components/shapes/`.
+
+## B-11 — Production vector query defeats the HNSW index (`, id` tiebreaker) — HIGH (B-5 follow-up)
+
+- **Symptom:** the B-5 HNSW index is built and healthy, but every live `review_rag`/vector
+  query still does a **sequential scan** over all 225k vectors — the index is never used, so
+  B-5's ~125× speedup is not realized in the serving path.
+- **Root cause:** `PgVectorStore.query()` orders by `embedding <=> %s, id` (an `id` tiebreaker
+  for deterministic ties). A secondary `ORDER BY` key forces Postgres into a full Sort node,
+  which the HNSW index cannot satisfy — so the planner falls back to a `Parallel Seq Scan`.
+  pgvector only uses the index when the `ORDER BY` is **distance-only** + `LIMIT k`. Verified
+  live via `EXPLAIN`: distance-only ⇒ `Index Scan using chunks_embedding_hnsw_idx`; with `, id`
+  ⇒ `Seq Scan`.
+- **Fix:** keep both the index *and* deterministic ordering by splitting it — an **inner**
+  query does the ANN search (`ORDER BY embedding <=> %s LIMIT k`, hits the index), an **outer**
+  query re-sorts those k rows by `score DESC, id`. Re-run the B-5 benchmark against the
+  production query form as the acceptance evidence (target: ~0.5 ms p50, was ~61 ms).
+  Measured 2026-11-01: brute-force p50 60.6 ms / p95 63.8 ms → HNSW p50 0.48 ms / p95 0.71 ms,
+  ≈125× / ≈90×, recall@10 100% — but only on the distance-only form.
+- **Where:** `backend/retrieval/vector_store.py` (`PgVectorStore.query`); the `keyword_query`
+  path is unaffected. Benchmark harness: adapt `scratchpad/bench_b5.py`.

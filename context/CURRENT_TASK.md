@@ -20,7 +20,7 @@ No module in progress.
 
 Taking the app from the $0 local build to a one-shot live Azure + Databricks run,
 then tearing down. **Phase 0 DONE** (activation ADR in `DECISIONS.md` + budget plan +
-checklist in `COST.md`). **P1 (provision) DONE 2026-10-29. P2 (connectivity + schema smoke) DONE 2026-10-29. P3 (real ETL, local Spark → Blob) DONE 2026-10-29.** **Next = P4 (embed the corpus for real).**
+checklist in `COST.md`). **P1 (provision) DONE 2026-10-29. P2 (connectivity + schema smoke) DONE 2026-10-29. P3 (real ETL, local Spark → Blob) DONE 2026-10-29.** **P4 (embed the corpus) DONE 2026-11-01 — run LOCAL (Azure parked): 225,000 reviews + 79 docs in local pgvector, HNSW index live, 949 MB, $0.**
 
 **P1 result:** Azure Postgres `ric-pg-13396` (GP `Standard_D2ds_v5`, 2 vCore/32 GB/PG16, Sweden
 Central — GP fallback after burstable RegionalAllocationFailed). Firewall = single IP
