@@ -58,7 +58,7 @@ conversation: "What is the return policy?" → "why?"), 2026-10-29.
   which reads correctly. A UI fix — can fold into a v3 follow-up or a `/change`.
 - **Where:** the v3 support-shape component under `frontend/src/components/`.
 
-## B-4 — Citation snippet truncates mid-word — LOW
+## B-4 — Citation snippet truncates mid-word — LOW — ✅ DONE 2026-11-02 (`484e5ce`; shared `_truncate` word-boundary helper + ellipsis)
 
 - **Symptom:** citation [3] ended "…eligible only for a partial re" — severed
   mid-word, no ellipsis.
