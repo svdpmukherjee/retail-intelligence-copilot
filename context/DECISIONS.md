@@ -579,3 +579,18 @@ Durable design decisions (newest at the bottom). Decision → why.
   picked up in dependency-safe, file-disjoint order (and parallelised only where safe)
   instead of re-deriving priority each session. The plan is advice; the human still
   approves each item, executed as its own `/change`.
+- **HNSW ANN index on `chunks.embedding` (B-5, 2026-11-01).** Added an approximate-nearest-neighbour
+  index — `CREATE INDEX IF NOT EXISTS ... USING hnsw (embedding vector_cosine_ops)` with pgvector
+  defaults (`m=16, ef_construction=64`) — to `chunks_ddl()` in `backend/retrieval/schema.py`.
+  **Why:** `chunks_ddl` previously created only a PK, a btree on `source_type`, and a GIN FTS index,
+  so pgvector did exact (sequential) nearest-neighbour search — fine at 3k rows but linear-cost at the
+  225k gold corpus. HNSW gives sub-linear search at high recall; `vector_cosine_ops` matches the query
+  operator already in `vector_store.py` (`embedding <=> %s`, cosine distance), so no query change is
+  needed. Recall/latency stays tunable at query time via `hnsw.ef_search` without a rebuild. The M7
+  gate's before/after p50/p95 + recall@k is the deliverable. **Rejected alternatives:** (A) IVFFlat —
+  lighter build but trains its `lists` centroids on the rows present at creation; `ensure_schema()`
+  runs the DDL *before* any data is loaded, so it would train on an empty table (rejected: wrong index
+  given the creation lifecycle). (B) Move index creation to a separate post-embed build step so the
+  bulk load is index-free — faster embed but adds a new lifecycle stage + CLI wiring, overkill for a
+  reference build (rejected: HNSW `IF NOT EXISTS` in the DDL is correct whether created empty or
+  populated). (C) Non-default HNSW params — deferred; tune only if the M7 gate shows a recall gap.

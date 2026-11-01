@@ -61,6 +61,13 @@ Azure AI Search paths behind the provider seam, gated on explicit go-ahead.
         `id`, `source_type` (`review|doc`), `text`, `embedding vector(dim)`, `category`,
         `asin`, `year`, `doc_id`, `doc_title`, `section`, `chunk_index`, plus a `source`
         column reserved for M6 access-policy filtering.
+  - [ ] The DDL includes an **HNSW ANN index on `embedding`** using the `vector_cosine_ops`
+        op class (matching the `<=>` cosine-distance query in `vector_store.py`), created with
+        `CREATE INDEX IF NOT EXISTS` so it is correct whether built on an empty or populated
+        table. Added for B-5: without it pgvector does exact (sequential) nearest-neighbour
+        search, which is linear-cost at the 225k gold corpus. Recall/latency stays tunable at
+        query time via `hnsw.ef_search`. (HNSW over IVFFlat: IVFFlat trains `lists` centroids on
+        rows present at creation, but `ensure_schema()` runs the DDL before data is loaded.)
   - [ ] `get_vector_store()` returns `PgVectorStore` (default) or `AzureSearchStore`;
         `PgVectorStore.ensure_schema()`/`upsert(chunks)`/`query(vector, k)` work against a
         local Postgres+pgvector at $0; `AzureSearchStore` is inert and raises

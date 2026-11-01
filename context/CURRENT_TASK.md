@@ -1,5 +1,7 @@
 # CURRENT_TASK.md
 
+**B-5 (HNSW index) built 2026-11-01:** added `chunks_embedding_hnsw_idx` (`USING hnsw (embedding vector_cosine_ops)`, pgvector defaults) to `chunks_ddl()` in `backend/retrieval/schema.py`; `vector_store.query()` unchanged (already orders by `<=>`). ruff/black clean; `tests/test_vector_store.py` 5 passed against local pgvector. Awaiting tester/close.
+
 No module in progress.
 
 ## ▶ ACTIVE NEXT: Cloud operationalization (P1–P8)

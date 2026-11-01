@@ -100,3 +100,28 @@ Screenshots: none captured. TODO (human, optional): a terminal capture of `pytho
 - Cloud spend: **$0.00** (local sentence-transformers embedder + local pgvector in Docker; no Azure/cloud call). See `COST.md`.
 - Cloud spend this module: $0.00 (from COST.md).
 - Claude session usage: run `/cost` for this session's token usage.
+
+## Change log
+
+### B-5 — HNSW ANN index on `chunks.embedding` (2026-11-01, `/change`)
+
+- **What changed:** `chunks_ddl()` in `backend/retrieval/schema.py` now emits one extra
+  statement — `CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw_idx ON chunks USING hnsw
+  (embedding vector_cosine_ops)`. One line; no other code touched.
+- **Why:** the DDL previously built only the PK, a btree on `source_type`, and a GIN FTS
+  index — no index on `embedding` — so pgvector did exact (sequential) NN search. Fine at
+  ~3k rows, but linear-cost at the 225k gold corpus. HNSW gives sub-linear, high-recall
+  search; `vector_cosine_ops` matches the `embedding <=> %s` cosine-distance ordering already
+  in `vector_store.query()`, so the query is unchanged — the index just accelerates it.
+- **Decision (see DECISIONS.md):** HNSW over IVFFlat because `ensure_schema()` runs the DDL
+  *before* data is loaded; IVFFlat would train its `lists` centroids on an empty table,
+  whereas HNSW builds correctly empty or populated. pgvector default `m=16, ef_construction=64`;
+  recall/latency stays tunable at query time via `hnsw.ef_search`.
+- **Verification:** scoped — `tests/test_vector_store.py` 5 passed; index object confirmed
+  live in local pgvector after `ensure_schema()` (`indexdef` shows `USING hnsw
+  (embedding vector_cosine_ops)`). Full backend suite not run (scoped change).
+- **Deliverable still open:** the before/after p50/p95 + recall@k via the M7 gate — captured
+  when the full-corpus embed (data-op P4) runs; B-5 + B-6 exist precisely to make that scale.
+- **Note:** the index lands on whichever `chunks` table `ensure_schema()` is run against
+  (local pgvector here). The parked Azure Postgres table would pick it up only on a future
+  `ensure_schema()` run there.
