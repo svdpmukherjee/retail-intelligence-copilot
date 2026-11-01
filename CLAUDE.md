@@ -33,6 +33,7 @@ open a **new session** for the next one.
 | Role | Who | Job |
 |---|---|---|
 | Orchestrator | you (this session) | sequence phases, manage checkpoints, update `context/` |
+| Product Owner | `product-owner` sub-agent | rank `BACKLOG.md` into a delivery blueprint (`context/BACKLOG_PLAN.md`): priority order, dependencies, parallel tracks, conflict map — on-demand (`/prioritize`), **not** in the per-module loop |
 | Planner | `planner` sub-agent | turn a module into a spec + numbered build plan |
 | Developer | `developer` sub-agent | implement the spec into the repo |
 | Tester | `tester` sub-agent | verify code against the spec's acceptance criteria only (scoped), report pass/fail |
@@ -43,10 +44,18 @@ open a **new session** for the next one.
 **Handoff rule:** sub-agents never hand work to each other directly. They hand
 off through **files**. You pass the file paths between them.
 
-**Outside the loop:** three rituals sit apart from the per-module loop — `/change`
-(an architect-style review before revising something already built, run by you
-the orchestrator in-thread), `/value-review` (calls the Solution Architect at
-a milestone), and `/design` (the Design Track below). None is a normal module step.
+**Outside the loop:** four rituals sit apart from the per-module loop — `/prioritize`
+(calls the Product Owner to rank `BACKLOG.md` into `context/BACKLOG_PLAN.md` before you
+pick up deferred work), `/change` (an architect-style review before revising something
+already built, run by you the orchestrator in-thread), `/value-review` (calls the
+Solution Architect at a milestone), and `/design` (the Design Track below). None is a
+normal module step.
+
+**Picking up backlog work:** when the user wants to work the backlog (not a module),
+read `context/BACKLOG_PLAN.md` for the current priority order and parallel-track map;
+if it is missing or stale, run `/prioritize` first. Execute each item as its own
+`/change`, respecting the plan's waves and conflict matrix (never run two items that
+share a file concurrently).
 
 ## Module Development Loop (two-level: module → sub-modules)
 

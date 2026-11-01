@@ -23,19 +23,20 @@ observe its cost and behaviour. Read this once; it points to everything else.
   approval.
 
 ## 3. Run from scratch
-**Prerequisites:** Claude Code (`claude`), Python 3.12, Node 18+. For cloud
-modules (M2+): an Azure subscription + Azure CLI (`az`). A **free-tier mode**
-(`PROVIDER_MODE=free`) runs everything without Azure.
 
-**Steps:**
-1. Clone the repo; open it; run `claude`.
-2. Copy `backend/.env.example` → `backend/.env`; fill the keys you have (leave the
-   rest for free-tier mode).
-3. Check `context/PROJECT.md` for the next TODO module.
-4. In a new session: `/module <ID>` (or "build <ID>"). Approve the spec at
-   CHECKPOINT 1, then the finished module at CHECKPOINT 2.
-5. Run it — backend: `cd backend && uvicorn app.main:app --reload`; frontend:
-   `cd frontend && npm install && npm run dev`.
+Two **separate** activities — keep them apart:
+
+- **Build / inspect the code** (module loop): clone, run `claude`, copy
+  `backend/.env.example` → `backend/.env`, check `context/PROJECT.md` for the next
+  TODO, then `/module <ID>` (or "build `<ID>`") and approve at both checkpoints.
+  This runs against the committed **40-row sample** — $0, no data download.
+- **Populate real data + run the live app** (one-off): follow
+  **[`data-pipeline-setup/`](../data-pipeline-setup/README.md)** — `local/LOCAL_SETUP.md`
+  for the $0 local stack, `cloud/CLOUD_SETUP.md` for the cost-gated Azure run. Those
+  are the **single source of truth** for setup commands (download → medallion lake →
+  embed → serve); they're not repeated here so they can't drift.
+
+Free-tier mode (`PROVIDER_MODE=free`, the default) needs no Azure.
 
 ## 4. Understand how it grows
 | Question | Look at |

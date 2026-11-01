@@ -28,7 +28,7 @@ incremental. **Hosting still burning ~€4–5/day.**
 **P3 result:** "Databricks serverless" was never implemented in code (three `NotImplementedError`
 gates: `get_spark`/`run_bronze` on `etl_runtime=databricks`, `resolve_layer_path` on
 `etl_storage=blob`; no Databricks SDK/job/notebook; Bronze read only the 15 KB sample). Human chose
-**local Spark → Blob**. Minimal build (spec `docs/operationalization/P3_etl_spec.md`): Bronze now
+**local Spark → Blob**. Minimal build (spec `data-pipeline-setup/cloud/P3_etl_spec.md`): Bronze now
 reads `data/raw/*.jsonl` with category-from-filename; Silver tolerates the real feed's missing
 `price`; `storage.resolve_layer_path` always computes local + new `publish_gold_to_blob` uploads the
 Gold tree to Blob when `ETL_STORAGE=blob`; Gold calls it; `config.py` category defaults fixed
@@ -42,7 +42,7 @@ serverless remains a documented, still-gated stretch.
 `azure-storage-blob` installed into `backend/.venv`; run from `backend/` with absolute
 `DATA_LAKE_PATH` so `backend/.env` (PII salt + blob conn str) loads. **Hosting still ~€4–5/day — P4 next, move promptly.**
 
-- **Step-by-step runbook (source of truth):** `docs/operationalization/RUNBOOK.md`
+- **Step-by-step runbook (source of truth):** `data-pipeline-setup/cloud/CLOUD_SETUP.md`
 - **Budget + per-phase cost + checklist:** `COST.md`
 - **Decision + rationale:** the "Cloud activation" ADR in `context/DECISIONS.md`
 - To run a phase: fresh session → paste that phase's opening line from the runbook.

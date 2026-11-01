@@ -570,3 +570,12 @@ Durable design decisions (newest at the bottom). Decision → why.
   in a single session — simplest to execute, but spends on embedding/LLM/Databricks before each is
   verified and defeats the per-phase go-ahead gate (rejected: every paid step must be independently
   gated and logged).
+- **Product Owner role + prioritization blueprint (2026-11-01).** Added a
+  `product-owner` sub-agent and a `/prioritize` ritual that rank `context/BACKLOG.md`
+  into `context/BACKLOG_PLAN.md` — a ranked table (severity vs priority, value, effort,
+  dependencies), a file-conflict matrix, and a wave/parallel-track plan with merge order.
+  Why: mirrors how a real team separates *what/when* (Product Owner) from *how* (build
+  agents); gives the orchestrator a single, derived execution map so deferred work is
+  picked up in dependency-safe, file-disjoint order (and parallelised only where safe)
+  instead of re-deriving priority each session. The plan is advice; the human still
+  approves each item, executed as its own `/change`.

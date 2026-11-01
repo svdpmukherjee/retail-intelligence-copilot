@@ -78,14 +78,39 @@ evidence** panel on the right. Per-turn **cost, tokens and latency** stay in vie
 
 ## Run it from the beginning (Claude Code)
 
-The whole system runs locally at **$0** — no cloud account required.
+The whole system runs locally at **$0** — no cloud account required. A fresh clone ships the
+**code, a 40-row sample, and the authored docs**; the real corpus, the medallion lake, `.env`, and
+the vector store are gitignored, so you populate them once on your own machine. There are **two
+independent tracks**:
 
+**A · Build & inspect the code (module loop).**
 1. Clone the repo and install **[Claude Code](https://docs.claude.com/en/docs/claude-code)**.
-2. Start local services: `docker compose -f infra/docker-compose.yml up -d` (Postgres + pgvector),
-   and an [Ollama](https://ollama.com) model for the free LLM.
-3. Open a session and skim **[`PRD.md`](./PRD.md)** (what) + **[`context/PROJECT.md`](./context/PROJECT.md)** (where we are).
-4. Say **"build M1"** (or **"next"**). The orchestrator runs the loop and **stops for
-   your approval** at each checkpoint — you can watch every phase.
+2. Open a session and skim **[`PRD.md`](./PRD.md)** (what) + **[`context/PROJECT.md`](./context/PROJECT.md)** (where we are).
+3. Say **"build M1"** (or **"next"**). The orchestrator runs the loop and **stops for your
+   approval** at each checkpoint. Modules build and verify code against the committed **40-row
+   sample** — instant and $0; they deliberately do **not** touch the real dataset.
 
-Going to the cloud is optional and **cost-gated** (see [`COST.md`](./COST.md)); one
-env flag swaps the free stack for Azure. New here? Start with **[`docs/GUIDE.md`](./docs/GUIDE.md)**.
+**B · Load the real data (one-off local operationalization).**
+To actually query ~225K reviews, run the data pipeline once on your machine: download the Hugging
+Face slice → build the medallion lake (Bronze→Silver→Gold) → embed into pgvector, then start the
+API + UI. This is the local mirror of the cloud operationalization phase, fully **$0**.
+→ Step-by-step: **[`data-pipeline-setup/local/LOCAL_SETUP.md`](./data-pipeline-setup/local/LOCAL_SETUP.md)**.
+
+Going to the cloud is optional and **cost-gated**: see **[`COST.md`](./COST.md)** for the budget and
+**[`data-pipeline-setup/cloud/CLOUD_SETUP.md`](./data-pipeline-setup/cloud/CLOUD_SETUP.md)** for the one-off live run.
+
+---
+
+## Where to go next
+
+This README is the front door; each doc below has one job, so you never read the same thing twice.
+
+| You want to… | Read |
+|---|---|
+| Know what this is (you're here) | `README.md` |
+| The full product & architecture spec | **[`PRD.md`](./PRD.md)** |
+| **Run it locally** ($0) | **[`data-pipeline-setup/local/LOCAL_SETUP.md`](./data-pipeline-setup/local/LOCAL_SETUP.md)** |
+| **Run the one-off cloud demo** (cost-gated) | **[`data-pipeline-setup/cloud/CLOUD_SETUP.md`](./data-pipeline-setup/cloud/CLOUD_SETUP.md)** |
+| **Work on / extend** the repo (developer manual) | **[`docs/GUIDE.md`](./docs/GUIDE.md)** |
+| See what it has cost | **[`COST.md`](./COST.md)** |
+| Drive the AI build loop (Claude Code's own rules) | **[`CLAUDE.md`](./CLAUDE.md)** |

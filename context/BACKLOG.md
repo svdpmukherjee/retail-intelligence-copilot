@@ -58,3 +58,89 @@ conversation: "What is the return policy?" → "why?"), 2026-10-29.
 - **Fix:** truncate snippets on a word boundary and append "…".
 - **Where:** the citation/snippet render in `frontend/src/components/` (evidence
   panel + inline citation).
+
+---
+
+# Retrieval sharpness + model-evaluation batch (added 2026-11-01)
+
+Surfaced while taking the app back to the **local** build and preparing a controlled
+model-evaluation study for the portfolio. These are independent of the (now de-scoped)
+cloud operationalization — all run on the local stack. Run each as a `/change` (clarify →
+weigh options → decide → log ADR → edit spec → rebuild the affected sub-module), then let
+the evaluation gate measure the before/after. Suggested order: B-5, B-6, B-7, B-8, B-9, B-10.
+
+## B-5 — No ANN index on the vector store; search is brute-force — HIGH
+
+- **Symptom:** fine at 3k rows, but embedding the full gold corpus (225k) makes every
+  review/doc query scan all vectors. Latency grows linearly with corpus size.
+- **Root cause:** `chunks_ddl()` creates a PK, a btree on `source_type`, and a GIN FTS
+  index on `text`, but **no index on the `embedding` column** — so pgvector does exact
+  (sequential) nearest-neighbour search.
+- **Fix:** add an approximate-nearest-neighbour index on `embedding` — **HNSW** (high
+  recall, standard) or IVFFlat (lighter, tune `lists`/`probes`). Decide the distance op
+  class to match the query (cosine). Measure p50/p95 + recall@k before vs after via the M7
+  gate — that before/after is the deliverable.
+- **Where:** `backend/retrieval/schema.py` (`chunks_ddl`); verify the query in
+  `backend/retrieval/vector_store.py` uses the indexed operator.
+
+## B-6 — Indexer loads the entire corpus into RAM — MEDIUM
+
+- **Symptom:** embedding all 225k reviews spikes memory; the full-gold read is the heavy
+  call that stalled before.
+- **Root cause:** `read_gold_reviews()` does `DeltaTable(...).to_pyarrow_table().to_pylist()`
+  then slices — it materialises every row (with review text) into a Python list at once.
+- **Fix:** stream the read in row-group / fixed-size batches and embed+upsert per batch, so
+  peak memory is flat regardless of corpus size. (Pairs naturally with B-5's full-corpus run.)
+- **Where:** `backend/retrieval/index_reviews.py` (`read_gold_reviews`, `embed_and_upsert`).
+
+## B-7 — Add OpenRouter as a generation provider behind the seam — HIGH
+
+- **Symptom:** generation is limited to local Ollama (small models) or gated Azure; no clean
+  way to run open-weight hosted models for the comparison study.
+- **Root cause:** the provider seam exposes `free` (local OpenAI-compatible) and `azure`;
+  there is no `openrouter` adapter.
+- **Fix:** add an `openrouter` provider (OpenAI-compatible base URL + keyed) behind the
+  existing seam. Must let the eval harness construct an LLM client per arbitrary model slug
+  **without mutating global config**, and respect the cost ledger. Open-weight models only
+  (portable to on-prem later); log any spend in `COST.md`. Keep behind a go-ahead flag like
+  the Azure path.
+- **Where:** provider/LLM factory in `backend/` (where `get_llm()` / the free/azure adapters
+  live), `app/config.py`, `.env.example`.
+
+## B-8 — Controlled model-comparison evaluation study — HIGH
+
+- **Symptom:** model choice is currently by assertion, not evidence — not a defensible story
+  for recruiters.
+- **Root cause:** M7 measures a single configured model; there is no multi-model harness.
+- **Fix:** extend M7 into a controlled study over the 6 target models (Mistral + Gemma,
+  small/mid/large) via B-7. **Hold embeddings, retrieval, and SQL fixed; vary only the
+  generation model.** Metrics: SQL correctness, routing accuracy, grounded-path rate,
+  citation validity, latency p50/p95, $/query, plus a license/portability column. Output a
+  `docs/` comparison report + the golden set it runs on. Depends on B-7.
+- **Where:** `backend/eval/`, golden-set fixtures, `docs/` report.
+
+## B-9 — Embedder bake-off (retrieval-quality axis) — MEDIUM, optional
+
+- **Symptom:** `all-MiniLM-L6-v2` (384-dim) is a fast $0 baseline, not necessarily the best
+  retrieval quality.
+- **Root cause:** embedder was never compared against stronger open-weight options.
+- **Fix:** evaluate MiniLM vs open-weight alternatives (e.g. `bge-base/large`, `e5-base`,
+  `nomic-embed-text`) on recall@k / MRR against the golden set. NOTE: changing embedder
+  changes the vector **dimension** → recreate `chunks.embedding vector(N)` and **re-embed
+  everything**, and the query-time embedder must match the stored one. Keep this a **separate
+  experiment from B-8** — vary one axis at a time (embedder here, generation model there).
+- **Where:** `backend/retrieval/embeddings.py`, `app/config.py` (`EMBEDDING_MODEL_FREE`),
+  `backend/retrieval/schema.py` (dim), `backend/eval/`.
+
+## B-10 — Composer flattens structured SQL into prose; UI re-scrapes it — MEDIUM
+
+- **Symptom:** SQL answers show wrong "metrics" (a year plotted as a value), full float
+  precision, mid-value truncation, and no real chart — reads developer-first, not user-first.
+- **Root cause:** `composer._sql_text()` flattens SQL rows to a prose string and the
+  structured rows/columns are dropped before the API; the frontend then regex-scrapes the
+  first number back out of the prose.
+- **Fix:** pass the structured SQL result (columns + rows) through `AnswerResult`/the API as
+  a typed data block, and render it as a table/chart in the role shapes instead of scraping
+  prose. Keep grounding/citation invariants.
+- **Where:** `backend/agents/composer.py`, `backend/app/main.py`, `frontend/src/api/types.ts`,
+  `frontend/src/answer.ts`, `frontend/src/components/shapes/`.

@@ -70,7 +70,7 @@ DATABASE_URL=postgresql://ricadmin:<password>@<pg-name>.postgres.database.azure.
 `psql "$DATABASE_URL"`.
 **Cost:** hosting starts now (~€2–5/day). Arm the budget alert (`infra/budget.bicep` /
 portal) if not already.
-**Open line:** *"Operationalization P1 — see docs/operationalization/RUNBOOK.md. Provision
+**Open line:** *"Operationalization P1 — see data-pipeline-setup/cloud/CLOUD_SETUP.md. Provision
 Blob + Postgres(pgvector) in rg-ric-demo, then set the three .env keys. Stop at the cost gate before creating anything."*
 
 ---
@@ -92,7 +92,7 @@ the cloud DB to confirm connectivity.
 
 **Flags:** none. **Cost:** €0 incremental (rides P1 hosting).
 **Verify:** `\dt` in psql shows `chunks`, `threads`, `messages`, `user_memory`, `audit_log`.
-**Open line:** *"Operationalization P2 — RUNBOOK. Point the app at Azure Postgres, create the
+**Open line:** *"Operationalization P2 — CLOUD_SETUP. Point the app at Azure Postgres, create the
 pgvector extension + all schemas, run the suite against the cloud DB."*
 
 ---
@@ -107,7 +107,7 @@ pgvector extension + all schemas, run the suite against the cloud DB."*
 > Databricks SDK/job/notebook, and Bronze read only the 15 KB sample. **Decision (human):**
 > run the *real* medallion ETL in **local Spark** over the full corpus and **publish Gold to
 > Blob**; keep the Databricks-serverless runtime as a documented, still-gated seam (optional
-> later stretch). €0 ETL compute. Spec: `docs/operationalization/P3_etl_spec.md`.
+> later stretch). €0 ETL compute. Spec: `data-pipeline-setup/cloud/P3_etl_spec.md`.
 
 **Entrypoint:** `data/etl/pipeline.py` (bronze→silver→gold). Bronze now reads the real
 `<lake>/raw/*.jsonl` glob (category from file name); `storage.publish_gold_to_blob()` uploads
@@ -140,7 +140,7 @@ manifest). Local `data/gold/reviews` reads via the P4 path (`read_gold_reviews`)
 **Optional later stretch (not done):** wire a real Databricks serverless job (SDK + notebook,
 Spark→Blob via abfss) behind the still-gated `ETL_RUNTIME=databricks` seam.
 
-**Open line:** *"Operationalization P3 — RUNBOOK. Run the real medallion ETL in local Spark over
+**Open line:** *"Operationalization P3 — CLOUD_SETUP. Run the real medallion ETL in local Spark over
 data/raw (ETL_STORAGE=blob, ETL_RUNTIME=local), publish Gold to Blob, verify the manifest. €0 compute."*
 
 ---
@@ -160,7 +160,7 @@ data/raw (ETL_STORAGE=blob, ETL_RUNTIME=local), publish Gold to Blob, verify the
 
 **Flags:** `AZURE_EMBEDDING_GO_AHEAD`. **Cost:** **~€1** one-off.
 **Verify:** `SELECT count(*) FROM chunks;` ≈ up to ~225k (reviews) + doc chunks; log actual $ in `COST.md`.
-**Open line:** *"Operationalization P4 — RUNBOOK. Flip AZURE_EMBEDDING_GO_AHEAD, run index_reviews then index_docs into Azure pgvector, verify chunk counts, log the actual embedding cost. Stop at the cost gate first."*
+**Open line:** *"Operationalization P4 — CLOUD_SETUP. Flip AZURE_EMBEDDING_GO_AHEAD, run index_reviews then index_docs into Azure pgvector, verify chunk counts, log the actual embedding cost. Stop at the cost gate first."*
 
 ---
 
@@ -177,7 +177,7 @@ data/raw (ETL_STORAGE=blob, ETL_RUNTIME=local), publish Gold to Blob, verify the
 
 **Flags:** `PROVIDER_MODE`, `AZURE_LLM_GO_AHEAD`. **Cost:** < €1 (a handful of queries, capped by `MAX_COST_USD`/`MAX_TOKENS_PER_QUERY`).
 **Verify:** answers now come from the real corpus; `audit.cost_usd` > 0; `/threads` + memory work.
-**Open line:** *"Operationalization P5 — RUNBOOK. Flip PROVIDER_MODE=azure + AZURE_LLM_GO_AHEAD, run the stack, smoke one query per intent live, confirm grounded+cited+scoped and cost logged. Stop at the cost gate first."*
+**Open line:** *"Operationalization P5 — CLOUD_SETUP. Flip PROVIDER_MODE=azure + AZURE_LLM_GO_AHEAD, run the stack, smoke one query per intent live, confirm grounded+cited+scoped and cost logged. Stop at the cost gate first."*
 
 ---
 
@@ -192,7 +192,7 @@ differ from the local slice; the harness warms up before timing. Capture the met
 
 **Flags:** none new (uses P5 paths). **Cost:** < €1.
 **Verify:** recall@k / MRR / faithfulness / cost / p50–p95 recorded; note any threshold changes in `DECISIONS.md`.
-**Open line:** *"Operationalization P6 — RUNBOOK. Run backend/eval/run_eval.py against the live Azure paths, re-tune thresholds if needed, capture the metrics for the portfolio."*
+**Open line:** *"Operationalization P6 — CLOUD_SETUP. Run backend/eval/run_eval.py against the live Azure paths, re-tune thresholds if needed, capture the metrics for the portfolio."*
 
 ---
 
@@ -210,7 +210,7 @@ differ from the local slice; the harness warms up before timing. Capture the met
   cloud pipeline; you just don't expose a public URL.
 
 **Flags:** none new. **Cost:** Container Apps scales to zero (cheap); folds into P1 hosting.
-**Open line:** *"Operationalization P7 — RUNBOOK. Deploy backend to Container Apps + frontend to Static Web Apps (option A), wiring CORS + VITE_API_BASE_URL. Stop at the cost gate first."* (or "do option B — run locally against cloud and record a demo.")
+**Open line:** *"Operationalization P7 — CLOUD_SETUP. Deploy backend to Container Apps + frontend to Static Web Apps (option A), wiring CORS + VITE_API_BASE_URL. Stop at the cost gate first."* (or "do option B — run locally against cloud and record a demo.")
 
 ---
 
@@ -235,7 +235,7 @@ differ from the local slice; the harness warms up before timing. Capture the met
 5. **Rotate the Databricks token** (it was shared during setup).
 
 **Cost:** €0 (stops burn).
-**Open line:** *"Operationalization P8 — RUNBOOK. Capture evidence screenshots + final COST.md actuals, then tear down with az group delete, revert .env to $0 local defaults, rotate the Databricks token."*
+**Open line:** *"Operationalization P8 — CLOUD_SETUP. Capture evidence screenshots + final COST.md actuals, then tear down with az group delete, revert .env to $0 local defaults, rotate the Databricks token."*
 
 ---
 
