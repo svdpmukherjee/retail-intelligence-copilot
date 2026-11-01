@@ -1,5 +1,11 @@
 # BACKLOG_PLAN.md — delivery blueprint (Product Owner)
 
+> **⚠️ SUPERSEDED 2026-11-02 — Wave 1 has shipped.** B-2 (`868e2a4`), B-4 (`484e5ce`), and
+> B-3 (`d6c80d4`) are all DONE+merged. The only open backlog item left is the optional,
+> DB-mutating **B-9** (embedder bake-off, Wave 2 — cost-gated). The ranking and waves below
+> are the pre-work snapshot; **re-run `/prioritize` before picking up new backlog work** so the
+> top wave reflects reality.
+
 Regenerated 2026-11-01 (full re-rank, no human focus). Source: `context/BACKLOG.md`.
 Advice to the orchestrator — each item runs as its own `/change`; the human approves each.
 Severity = impact-if-it-occurs (from BACKLOG); **priority** = severity + business value +
