@@ -197,3 +197,175 @@ M7 adds `backend/eval/` (PRD §11; `eval` is already in `pyproject` packages) an
   or memory behaviour — M7 only measures them.
 - Tuning retrieval/prompts to hit thresholds — the harness measures; tuning is a
   separate change via `/change`.
+
+---
+
+# B-8 — Controlled model-comparison study (extends M7, added via `/change` 2026-11-01)
+
+## User story
+As the builder presenting this copilot in a portfolio, I want a **controlled,
+reproducible study** that compares a fixed set of open-weight generation models on
+the copilot's own tasks — so "which model" is answered with evidence (grounded-path
+rate, citation validity, faithfulness, latency, `$/query`, license/portability)
+rather than assertion. The study runs **off** the CI path, costs nothing to build or
+test, and spends money only on an explicit, logged, human-gated live run.
+
+## Intent & how it integrates with M7
+B-8 is **not** a change to the M7 CI gate (`run_eval.py` stays single-model,
+deterministic, `$0`). It adds a **separate runner** that **reuses** M7's seams:
+- Varies **one axis only** — the generation model — through the B-7 `openrouter`
+  provider and `agents.llm.get_llm(model=<slug>)` (per-client slug override, no
+  global-settings mutation). Embeddings, retrieval (the B-11 index-hitting path),
+  the SQL engine, the prompts, and the judge are all held **fixed**.
+- Scores answers with the **existing deterministic `$0` judge**
+  (`answer_eval.judge_deterministic`: `0.5·grounded + 0.5·must_include coverage`) so
+  no judge *model* confounds the axis under test.
+- Reads per-query `cost_usd` / `latency_ms` / `tokens` / `grounding` from the audit
+  fields `answer_docs` already populates, and the resolvable-citation signal from
+  `AnswerResult.citations` + `governance.grounding` — no change to `pipeline.answer`
+  or the audit schema.
+- Spend is bounded by the existing `CostLedger` cap; the live run is gated exactly
+  like the Azure/OpenRouter seams.
+
+## Finalized model set (tier-matched; slugs provisional → confirm live at build)
+| Tier | Family A (Google) | slug (provisional) | Family B (Mistral) | slug (provisional) |
+|---|---|---|---|---|
+| small | Gemma 3 4B | `google/gemma-3-4b-it` | Ministral 3 3B (2512) | `mistralai/ministral-3-3b-instruct-2512` |
+| medium | Gemma 3 12B | `google/gemma-3-12b-it` | Ministral 3 14B (2512) | `mistralai/ministral-3-14b-instruct-2512` |
+| large | Gemma 3 27B | `google/gemma-3-27b-it` | Mistral Small 3.1 24B (2503) | `mistralai/mistral-small-3.1-24b-instruct` |
+
+License/portability: **all Mistral = Apache 2.0**; **all Gemma = Google Gemma Terms
+of Use** (open weight, commercial-with-conditions, "Built with Gemma" notice,
+prohibited-use policy — not OSI). The large Mistral is the 2503 vintage (the
+Ministral-3 *2512* line tops at 14B) — footnote this in the report. **The exact
+slugs, context windows, and per-1M input/output prices MUST be confirmed against the
+live OpenRouter model pages at build time** (the figures gathered during `/change`
+are cached third-party snapshots); do not hard-code a price without that check.
+
+## Module acceptance criteria
+- [ ] `python -m eval.study --dry-run` (or a free/Ollama 1-model run) executes the
+      full study flow at **`$0`** — no hosted/paid call — and writes a report; a live
+      multi-model run requires `PROVIDER_MODE=openrouter`, `OPENROUTER_GO_AHEAD=true`,
+      a key, **and** the printed up-front cost estimate shown before the first paid call.
+- [ ] The study loops the committed 6-model registry, and for each model reports:
+      **grounded-path rate**, **citation validity**, **faithfulness** (deterministic
+      judge), **latency p50/p95 (ms)**, **`$/query` (USD, per-model price)**, plus a
+      static **license/portability** column. **Routing accuracy** is reported as a
+      separate sub-run over router-LLM-reaching questions. **SQL** is **descriptive
+      only** — per model, whether it emits runnable/schema-valid SQL on a few
+      questions (no pass/fail gate).
+- [ ] `$/query` is computed from **actual token usage × that model's committed
+      input/output rate** (`ground_truth/models.json`), not the flat
+      `openrouter_usd_per_1m_tokens`.
+- [ ] A `docs/model-comparison.md` report is produced: the comparison table (all
+      axes), the methodology (one axis varied, fixed everything else, deterministic
+      judge, B-11 index path), the model registry + price source note, and a pointer
+      to the committed golden set it ran on.
+- [ ] The M7 CI gate (`run_eval.py`, `thresholds.json`, the workflow) is **unchanged**;
+      no paid model is reachable from CI.
+- [ ] `ruff`/`black` clean on all changed files; build + the scoped tests run at `$0`.
+
+## Sub-modules (ordered, each build → verify → integrate)
+
+### B-8.1 Model registry + per-model price map + `$/query` helper
+- Goal: one committed source of truth for the 6 models and a pure cost helper.
+- Acceptance:
+  - [ ] `backend/eval/ground_truth/models.json` lists the 6 models, each with
+        `{id, family, tier, slug, license, portability, usd_per_1m_input,
+        usd_per_1m_output, price_source_url, price_checked}`.
+  - [ ] A pure helper (e.g. `eval/study_cost.py::dollars_for(model, in_tokens,
+        out_tokens)`) computes `$/query` from per-model rates; unit-tested on
+        hand-worked numbers, no network.
+  - [ ] A fixture-integrity test: exactly 6 models, 3 tiers × 2 families, every
+        field present, slugs non-empty.
+- Files: `backend/eval/ground_truth/models.json`, `backend/eval/study_cost.py`,
+  `backend/tests/test_study_registry.py`.
+- Integration: standalone; later sub-modules import it.
+- **Build step gate:** confirm each slug + input/output price against the live
+  OpenRouter page before writing `models.json`; record the URL + date in the file.
+
+### B-8.2 Study runner core — answer-path, per model, `$0`-testable
+- Goal: loop the registry over the answer golden set and aggregate per-model rows.
+- Acceptance:
+  - [ ] `backend/eval/study.py::run_study(models, *, dry_run=False)` runs each model
+        through `answer_eval.answer_docs` (reusing `get_llm(model=slug)` via the
+        `openrouter` seam), scores with `judge_deterministic`, and aggregates per
+        model: faithfulness (mean), grounded-path rate (share with
+        `grounding.path != "none"` + resolvable citation + clean `enforce_grounding`),
+        citation-validity rate, latency p50/p95, mean `$/query` (via B-8.1 helper),
+        tokens.
+  - [ ] A `--dry-run` / free-mode path exercises the whole flow with a **stub or
+        local** LLM at `$0`; the live path refuses without the go-ahead + prints the
+        estimate first (reuse the `GoAheadRequired` + `CostLedger` gate; never a
+        silent paid call).
+  - [ ] Unit test with a stubbed LLM asserts the aggregation shape + that dry-run
+        makes no paid call; a 1-model free/Ollama smoke is skip-with-reason if no
+        local LLM.
+- Files: `backend/eval/study.py`, `backend/tests/test_study_runner.py`;
+  reuses `answer_eval.py`, `metrics.py`, `agents.llm.get_llm`, `app.cost.CostLedger`.
+- Integration: imports B-8.1; no change to `answer_eval`/`pipeline`.
+
+### B-8.3 Routing-accuracy sub-run + descriptive-SQL capture
+- Goal: the two non-answer axes, kept honest and small.
+- Acceptance:
+  - [ ] `backend/eval/ground_truth/study_routing.json`: ~6–10 `{question,
+        expected_intent}` cases **chosen to miss the router rules** (so `route()`
+        actually calls the LLM — rules-first short-circuits otherwise); the study
+        runs `route()` per model and reports routing accuracy per model.
+  - [ ] `backend/eval/ground_truth/study_sql.json`: ~3–5 metric questions; the study
+        runs the SQL-gen path per model and **records** the emitted SQL + whether it
+        is runnable/schema-valid (descriptive table rows), **no gate**.
+  - [ ] Tests assert both sub-runs produce the expected per-model row shape with a
+        stubbed LLM; skip-with-reason if the DB/LLM path is unavailable.
+- Files: `backend/eval/ground_truth/study_routing.json`,
+  `backend/eval/ground_truth/study_sql.json`, additions to `study.py`,
+  `backend/tests/test_study_routing_sql.py`; reuses `agents.router.route`,
+  `agents.sql_agent`.
+- Integration: folds rows into the same per-model result object as B-8.2.
+
+### B-8.4 Report generation + gated live-run entry point
+- Goal: the human-readable deliverable + the one gated place money is spent.
+- Acceptance:
+  - [ ] `study.py` (or `report.py`) renders `docs/model-comparison.md`: the full
+        comparison table (all axes + license/portability), methodology + single-axis
+        statement, the model registry + price-source note + the B-11-index latency
+        caveat, and a link to the committed golden set.
+  - [ ] `python -m eval.study` prints an **up-front spend estimate** (questions ×
+        models × est. tokens × per-model rate) and, on a live run, refuses without
+        `OPENROUTER_GO_AHEAD` + key, then logs actual spend to `COST.md`.
+  - [ ] A dry-run produces the report from a tiny committed sample/fixture result at
+        `$0` so the format is testable without a paid run.
+- Files: `backend/eval/study.py` (or `backend/eval/report.py`), `docs/model-comparison.md`
+  (scaffold committed; real numbers filled on the gated run), `COST.md` (spend line on
+  the live run), `backend/tests/test_study_report.py`.
+- Integration: terminal sub-module; consumes B-8.1–B-8.3 outputs.
+
+## Test plan (scoped per sub-module; all `$0`)
+- B-8.1 pure cost helper + fixture integrity (no DB/network).
+- B-8.2 stubbed-LLM aggregation shape + dry-run-makes-no-paid-call; 1-model
+  free/Ollama smoke (skip-with-reason if absent).
+- B-8.3 both sub-runs' row shapes with a stubbed LLM (skip-with-reason if DB/LLM down).
+- B-8.4 report renders from a committed sample result at `$0`; estimate printed;
+  live run refuses without go-ahead.
+- Module smoke (Tester, `$0`): `python -m eval.study --dry-run` runs the full flow
+  end-to-end, writes `docs/model-comparison.md`, and makes **no** paid call. The real
+  6-model run is a **separate, human-gated, logged** step — not part of the scoped
+  verification.
+
+## Security & cost notes
+- **Build + all scoped tests = `$0`.** No hosted call without
+  `PROVIDER_MODE=openrouter` + `OPENROUTER_GO_AHEAD=true` + key; the runner prints the
+  spend estimate before the first paid call and respects the `CostLedger` cap.
+- The live 6-model run is a **separate explicit human go-ahead** (a `/change` decision
+  does not authorize spend) and its **actual** spend is logged to `COST.md`.
+- No secrets introduced or logged; `.env.example` already documents the OpenRouter
+  keys (B-7). Golden-set fixtures are authored/committed, no PII.
+
+## Out of scope
+- Any change to the M7 CI gate, `thresholds.json`, `pipeline.answer`, the audit
+  schema, retrieval, or memory — B-8 only measures.
+- Gating on SQL correctness, or varying the model in the router/SQL steps as a *gated*
+  axis — SQL stays descriptive; routing accuracy is reported, not gated.
+- An embedder/retrieval bake-off — that is B-9, deliberately a separate single-axis
+  study run strictly after B-8.
+- A live quality dashboard or historical trend store — the report + `audit_log` suffice.

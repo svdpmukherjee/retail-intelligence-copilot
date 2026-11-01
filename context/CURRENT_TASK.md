@@ -1,6 +1,18 @@
 # CURRENT_TASK.md
 
 **B-10 (structured SQL passthrough) built 2026-11-01:** `composer.py` adds `SqlBlock` + top-level `AnswerResult.sql` (floats rounded to 2dp, Decimal->float, rows capped at `MAX_SQL_ROWS_SHOWN`, string cells redacted; set only if citation `sql` survives `used` filter). Frontend: `SqlBlock` type, `sqlBlockMetrics()` replaces prose-scraping `sqlMetrics`, new `SqlTable`, Executive/Marketing shapes use `res.sql`. 2 composer tests added (6 pass), `npm run build` green. Awaiting tester/close.
+**B-8 (controlled model-comparison study) IN PROGRESS 2026-11-01 (`/change`).** Decided: Option B
+(answer-path study, separate runner from the M7 CI gate), SQL descriptive-only, deterministic $0
+judge, 6 tier-matched open-weight models (Gemma 3 4B/12B/27B ‖ Ministral 3 3B/14B 2512 + Mistral
+Small 3.1 24B). ADR in `DECISIONS.md`; spec = B-8 section appended to `.claude/specs/M7_evaluation.md`
+(sub-modules B-8.1 registry+price map, B-8.2 study runner, B-8.3 routing+descriptive-SQL, B-8.4
+report+gated live run). Build + tests are $0; the live 6-model run is a SEPARATE human-gated, logged
+step (not yet authorized). Slugs + per-1M prices MUST be confirmed live against OpenRouter at build.
+
+**B-8.1 built 2026-11-01:** `eval/ground_truth/models.json` (+ `models.README.md`), `eval/study_cost.py` (`load_models`, `models_by_id`, `dollars_for`), `tests/test_study_registry.py` (5 pass). Prices PROVISIONAL - re-confirm live on OpenRouter before the gated run. B-8.2-8.4 not started.
+**B-8.2 built 2026-11-01:** `eval/study.py` (`run_study(models, *, dry_run)`; DryRunLLM $0 stub; up-front GoAheadRequired gate since compose swallows it) + `tests/test_study_runner.py`. Seam: additive optional `llm` param on `agents.composer.compose` (default `get_llm()`); study replicates answer_docs body to inject the per-model client. $/query: in = tokens - llm_max_tokens, out = estimate_tokens(answer).
+**B-8.3 built 2026-11-01:** `study_routing.json` (8 rule-missing cases) + `study_sql.json` (4); `study.py` adds `routing_accuracy` per model row and `run_study()["sql"]` descriptive rows (model, question, sql, runnable = passes SELECT guard and executes on scoped Gold; no gate); `citation_validity_rate` now = every `[n]` in answer resolves to a citation. Seams: additive `llm=None` on `route` and `sql_agent.generate_sql`. `tests/test_study_routing_sql.py`.
+**B-8.4 built 2026-11-01:** `eval/report.py` (`render_report`, `estimate_spend`) + `study.py` CLI (`python -m eval.study`, default `--dry-run`; `--live` needs PROVIDER_MODE=openrouter + OPENROUTER_GO_AHEAD + key; prints estimate first; `log_spend` appends to COST.md), committed DRY-RUN scaffold `docs/model-comparison.md`, `tests/test_study_report.py` (6). Real 6-model run still awaits human go-ahead.
 
 **B-11 (HNSW-friendly query) built 2026-11-01:** `PgVectorStore.query` now inner `ORDER BY embedding <=> %s LIMIT %s` (filters in inner WHERE) + outer `ORDER BY score DESC, id`; `keyword_query` untouched. 3 tests added in `tests/test_vector_store.py` (SQL shape, tie/filter/k, EXPLAIN uses `chunks_embedding_hnsw_idx`); 8 pass. **WARNING:** the `store` test fixture does `DROP TABLE chunks` on the DATABASE_URL DB; running it dropped the P4 corpus from local pgvector (DB now ~8 MB, no `chunks`). Corpus must be re-embedded (local, $0) before the benchmark (scratchpad `bench_b5.py`) can run. Awaiting tester/close.
 

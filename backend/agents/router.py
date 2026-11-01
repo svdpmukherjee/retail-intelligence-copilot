@@ -5,7 +5,7 @@ from typing import Literal, get_args
 import httpx
 from pydantic import BaseModel
 
-from agents.llm import get_llm
+from agents.llm import LLM, get_llm
 from app.cost import CostLedger
 from governance.policy import scope_for_role
 from memory.manager import MemoryContext
@@ -99,13 +99,14 @@ async def route(
     ledger: CostLedger | None = None,
     *,
     context: MemoryContext | None = None,
+    llm: LLM | None = None,
 ) -> RouteDecision:
     """Classify intent (rules first; LLM only for queries no rule matches) and attach the scope."""
     scope = derive_scope(role)
     # Rules are high-confidence and deterministic; a nondeterministic LLM must not override them.
     if hit := _rule_intent(query):
         return RouteDecision(intent=hit[0], scope=scope, rationale=hit[1])
-    llm = get_llm()
+    llm = llm or get_llm()
     if llm.available:
         user = query
         if context is not None and (block := context.render()):

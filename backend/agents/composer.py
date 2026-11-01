@@ -3,7 +3,7 @@ from decimal import Decimal
 import httpx
 from pydantic import BaseModel
 
-from agents.llm import get_llm
+from agents.llm import LLM, get_llm
 from agents.sql_agent import MAX_ROWS
 from app.cost import CostLedger
 from governance.grounding import CITE, enforce_grounding
@@ -124,6 +124,7 @@ async def compose(
     ledger: CostLedger,
     *,
     context: MemoryContext | None = None,
+    llm: LLM | None = None,
 ) -> AnswerResult:
     """Cited answer: LLM when available, else extractive; uncited output never leaves here."""
     sources = build_sources(sql_result, hits)
@@ -135,7 +136,7 @@ async def compose(
         return AnswerResult(answer=answer, citations=[], audit={"grounding": grounding})
 
     answer = _extractive(sources)
-    llm = get_llm()
+    llm = llm or get_llm()
     if llm.available:
         listing = "\n".join(f"[{c.n}] ({c.label}) {' '.join(t.split())}" for c, t in sources)
         user = f"Question: {query}\n\nSources:\n{listing}"

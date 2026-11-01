@@ -5,7 +5,7 @@ from pathlib import Path
 import duckdb
 from deltalake import DeltaTable
 
-from agents.llm import get_llm
+from agents.llm import LLM, get_llm
 from app.config import get_settings
 from app.cost import CostLedger
 from retrieval.vector_store import Filters
@@ -99,8 +99,8 @@ def _columns() -> list[str]:
     return [f.name for f in DeltaTable(str(gold_structured_path())).schema().fields]
 
 
-async def generate_sql(query: str, ledger: CostLedger) -> str:
-    llm = get_llm()
+async def generate_sql(query: str, ledger: CostLedger, *, llm: LLM | None = None) -> str:
+    llm = llm or get_llm()
     if not llm.available:
         raise SQLGenerationUnavailable(
             "SQL generation needs an LLM; set FREE_LLM_BASE_URL/FREE_LLM_MODEL or use azure mode."

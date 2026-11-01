@@ -1,0 +1,10 @@
+[
+  {"question": "Which shoppers seem happiest with the battery life of the new earbuds?", "expected_intent": "review_rag"},
+  {"question": "Do buyers complain about the fit of the running shoes?", "expected_intent": "review_rag"},
+  {"question": "Which product category sells the most units?", "expected_intent": "sql"},
+  {"question": "Which brand earns the best typical star score?", "expected_intent": "sql"},
+  {"question": "What is covered if my blender stops working after a few months?", "expected_intent": "docs_rag"},
+  {"question": "Can I send back an item I bought on sale?", "expected_intent": "docs_rag"},
+  {"question": "Ratings for the headphones slumped last quarter; what are customers upset about?", "expected_intent": "sql_rag"},
+  {"question": "Sales of the air fryer softened recently; what do reviewers blame?", "expected_intent": "sql_rag"}
+]

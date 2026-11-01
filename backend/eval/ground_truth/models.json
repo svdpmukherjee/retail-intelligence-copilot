@@ -1,0 +1,80 @@
+[
+  {
+    "id": "gemma-3-4b",
+    "family": "google",
+    "tier": "small",
+    "slug": "google/gemma-3-4b-it",
+    "license": "Gemma Terms of Use",
+    "portability": "open-weight, commercial-with-conditions (not OSI)",
+    "usd_per_1m_input": 0.05,
+    "usd_per_1m_output": 0.10,
+    "price_source_url": "https://openrouter.ai/google/gemma-3-4b-it",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  },
+  {
+    "id": "ministral-3-3b-2512",
+    "family": "mistral",
+    "tier": "small",
+    "slug": "mistralai/ministral-3b-2512",
+    "license": "Apache-2.0",
+    "portability": "open-weight, OSI, self-host/on-prem",
+    "usd_per_1m_input": 0.1,
+    "usd_per_1m_output": 0.1,
+    "price_source_url": "https://openrouter.ai/mistralai/ministral-3b-2512",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  },
+  {
+    "id": "gemma-3-12b",
+    "family": "google",
+    "tier": "medium",
+    "slug": "google/gemma-3-12b-it",
+    "license": "Gemma Terms of Use",
+    "portability": "open-weight, commercial-with-conditions (not OSI)",
+    "usd_per_1m_input": 0.05,
+    "usd_per_1m_output": 0.15,
+    "price_source_url": "https://openrouter.ai/google/gemma-3-12b-it",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  },
+  {
+    "id": "ministral-3-14b-2512",
+    "family": "mistral",
+    "tier": "medium",
+    "slug": "mistralai/ministral-14b-2512",
+    "license": "Apache-2.0",
+    "portability": "open-weight, OSI, self-host/on-prem",
+    "usd_per_1m_input": 0.2,
+    "usd_per_1m_output": 0.2,
+    "price_source_url": "https://openrouter.ai/mistralai/ministral-14b-2512",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  },
+  {
+    "id": "gemma-3-27b",
+    "family": "google",
+    "tier": "large",
+    "slug": "google/gemma-3-27b-it",
+    "license": "Gemma Terms of Use",
+    "portability": "open-weight, commercial-with-conditions (not OSI)",
+    "usd_per_1m_input": 0.08,
+    "usd_per_1m_output": 0.35,
+    "price_source_url": "https://openrouter.ai/google/gemma-3-27b-it",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  },
+  {
+    "id": "mistral-small-3.1-24b",
+    "family": "mistral",
+    "tier": "large",
+    "slug": "mistralai/mistral-small-3.1-24b-instruct",
+    "license": "Apache-2.0",
+    "portability": "open-weight, OSI, self-host/on-prem",
+    "usd_per_1m_input": 0.351,
+    "usd_per_1m_output": 0.555,
+    "price_source_url": "https://openrouter.ai/mistralai/mistral-small-3.1-24b-instruct",
+    "price_confidence": "confirmed (OpenRouter API, 2026-11-01)",
+    "price_checked": "2026-11-01"
+  }
+]
