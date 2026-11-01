@@ -10,6 +10,7 @@ from datetime import date
 from pathlib import Path
 
 import duckdb
+import httpx
 from deltalake.exceptions import TableNotFoundError
 
 from agents.composer import compose
@@ -127,6 +128,9 @@ async def _sql_rows(model: dict, llm: LLM) -> list[dict]:
             FileNotFoundError,
             UnsafeSQLError,
             duckdb.Error,
+            # A provider HTTP error (e.g. an unavailable model slug) is recorded as
+            # runnable=False for this case, not allowed to abort the whole study.
+            httpx.HTTPStatusError,
         ):
             pass
         rows.append(row)
