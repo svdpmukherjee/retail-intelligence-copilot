@@ -199,6 +199,40 @@ def test_effective_query_leaves_non_vague_or_history_free_query_unchanged() -> N
     assert effective_query("why?", _context(("assistant", "hello"))) == "why?"
 
 
+def test_reply_to_clarification_is_folded_onto_the_clarified_subject() -> None:
+    # The transcript loop: a clarify question was asked, and the user's short answer must be
+    # resolved against the original subject, not treated as a fresh (and re-clarified) query.
+    context = _context(
+        ("user", "which products have the highest revenue?"),
+        ("assistant", "Would you like the best-rated or the most-reviewed products instead?"),
+    )
+    context.pending_clarification = True
+    context.clarify_subject = "which products have the highest revenue?"
+    resolved = effective_query("most-reviewed products", context)
+    assert resolved.startswith("which products have the highest revenue?")
+    assert resolved.endswith("most-reviewed products")
+
+
+def test_pending_clarification_detected_from_assistant_payload_kind() -> None:
+    from types import SimpleNamespace
+
+    from memory.manager import MemoryManager
+
+    msgs = [
+        SimpleNamespace(role_kind="user", content="highest revenue?", payload=None),
+        SimpleNamespace(
+            role_kind="assistant", content="best-rated or most-reviewed?",
+            payload={"kind": "clarification"},
+        ),
+    ]
+    pending, subject = MemoryManager._pending_clarification(msgs)
+    assert pending is True
+    assert subject == "highest revenue?"
+    # A normal answered turn is not pending.
+    msgs[-1].payload = {"kind": "answer"}
+    assert MemoryManager._pending_clarification(msgs) == (False, None)
+
+
 def test_vague_followup_after_policy_question_retrieves_policy_docs(live_db, tmp_path) -> None:
     (tmp_path / "return-refund-policy.md").write_text(POLICY_DOC.read_text(encoding="utf-8"))
     index_docs(tmp_path)
