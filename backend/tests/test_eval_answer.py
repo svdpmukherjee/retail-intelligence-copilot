@@ -8,7 +8,14 @@ from eval.answer_eval import evaluate_answers, judge_deterministic
 from eval.retrieval_eval import ensure_docs_indexed
 
 GOOD = "Electronics can be returned within 15 days of delivery. [1]"
-CITES = [Citation(n=1, source_id="authored/return-refund-policy#0", label="Return policy")]
+CITES = [
+    Citation(
+        n=1,
+        source_id="authored/return-refund-policy#0",
+        label="Return policy",
+        display_label="Return & refund policy",
+    )
+]
 
 
 def test_judge_scores_grounded_answer_high_and_ungrounded_low() -> None:

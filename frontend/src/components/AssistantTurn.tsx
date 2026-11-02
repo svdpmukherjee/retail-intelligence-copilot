@@ -59,6 +59,32 @@ function HistoricalTurn({ role, content }: { role: string; content: string }) {
 export default function AssistantTurn(props: Props) {
   if (props.historical) return <HistoricalTurn {...props.historical} />;
   const { res, state, activeN = null, onCiteClick, restored = false } = props;
+  // A clarification is a question back to the user, not an answer: plain question, no sources,
+  // no charts, no warnings. The conversation continues with the user's next message.
+  if (res.kind === "clarification") {
+    return (
+      <div className="turn bot clarify" data-state="clarify">
+        <div className="av" aria-hidden="true">
+          R
+        </div>
+        <div className="body">
+          <div className="answer">
+            <div className="clarifyq" role="status">
+              <span className="ic" aria-hidden="true">
+                &#63;
+              </span>
+              <p>{res.answer}</p>
+            </div>
+            {restored && (
+              <div className="hist-note" role="note">
+                Replayed from history
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
   const { audit, citations } = res;
   const lines = splitClaims(res.answer);
   const Shape = SHAPES[audit.role as keyof typeof SHAPES] ?? DefaultShape;

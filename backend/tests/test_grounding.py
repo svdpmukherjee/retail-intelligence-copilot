@@ -40,7 +40,7 @@ def test_composer_discards_failing_draft_and_records_issues(monkeypatch) -> None
     class BadLLM:
         available = True
 
-        async def complete(self, system, user, *, ledger, max_tokens=None):
+        async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
             return "Unsourced praise."
 
     monkeypatch.setattr("agents.composer.get_llm", lambda **_: BadLLM())

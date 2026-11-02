@@ -55,6 +55,21 @@ export function getThread(id: string, userId: string): Promise<ThreadDetail> {
   );
 }
 
+// Permanent deletes. The UI warns the user before calling either (data is erased from the DB).
+export function deleteThread(id: string, userId: string): Promise<{ deleted: number }> {
+  return request<{ deleted: number }>(
+    `/threads/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export function deleteAllThreads(userId: string, role: string): Promise<{ deleted: number }> {
+  return request<{ deleted: number }>(
+    `/threads?user_id=${encodeURIComponent(userId)}&role=${encodeURIComponent(role)}`,
+    { method: "DELETE" },
+  );
+}
+
 export function getAudit(role: string, limit: number, offset: number): Promise<AuditListResponse> {
   return request<AuditListResponse>(
     `/audit?role=${encodeURIComponent(role)}&limit=${limit}&offset=${offset}`,

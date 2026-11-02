@@ -67,15 +67,20 @@ def test_metadata_drops_text_and_non_scalars():
 
 class _FakeSpan:
     def __init__(self, name):
-        self.name, self.meta = name, {}
+        self.name, self.meta, self.input, self.output = name, {}, None, None
 
-    def update(self, metadata):
-        self.meta.update(metadata)
+    def update(self, metadata=None, *, input=None, output=None):
+        self.meta.update(metadata or {})
+        if input is not None:
+            self.input = input
+        if output is not None:
+            self.output = output
 
 
 class _FakeTrace:
-    def __init__(self, metadata):
+    def __init__(self, metadata, input=None):
         self.metadata, self.spans, self.ended = dict(metadata), [], None
+        self.input, self.output = input, None
 
     @contextmanager
     def span(self, name, *, metadata=None):
@@ -83,16 +88,17 @@ class _FakeTrace:
         self.spans.append(span)
         yield span
 
-    def end(self, metadata=None):
+    def end(self, metadata=None, *, output=None):
         self.ended = dict(metadata or {})
+        self.output = output
 
 
 class _FakeTracer:
     def __init__(self):
         self.traces = []
 
-    def start_trace(self, name, *, metadata=None):
-        self.traces.append(_FakeTrace(metadata or {}))
+    def start_trace(self, name, *, metadata=None, input=None):
+        self.traces.append(_FakeTrace(metadata or {}, input=input))
         return self.traces[-1]
 
     def flush(self):

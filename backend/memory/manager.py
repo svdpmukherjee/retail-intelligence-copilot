@@ -163,6 +163,7 @@ class MemoryManager:
                     f"Question: {query}\n\nAnswer: {result.answer}",
                     ledger=ledger,
                     max_tokens=get_settings().memory_summary_max_tokens,
+                    task="summary",
                 )
                 if text.strip():
                     return " ".join(text.split())[:MAX_SUMMARY_CHARS]
@@ -199,6 +200,7 @@ class MemoryManager:
         if "sql_error" in audit:
             render_audit["sql_error"] = audit["sql_error"]
         return {
+            "kind": result.kind,  # "clarification" replays as a question (no sources), like it drew
             "answer": result.answer,
             "citations": [c.model_dump() for c in result.citations],
             "sql": result.sql.model_dump() if result.sql else None,

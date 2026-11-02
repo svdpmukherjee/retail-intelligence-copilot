@@ -108,7 +108,7 @@ async def generate_sql(query: str, ledger: CostLedger, *, llm: LLM | None = None
             "SQL generation needs an LLM; set FREE_LLM_BASE_URL/FREE_LLM_MODEL or use azure mode."
         )
     system = SYSTEM_PROMPT.format(table=TABLE, columns=", ".join(_columns()))
-    raw = await llm.complete(system, query, ledger=ledger)
+    raw = await llm.complete(system, query, ledger=ledger, task="sql")
     return re.sub(r"^```(?:sql)?\s*|\s*```$", "", raw.strip(), flags=re.IGNORECASE)
 
 

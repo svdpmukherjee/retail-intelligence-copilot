@@ -124,6 +124,43 @@ class MemoryStore:
             rows = conn.execute(sql, [*params, limit]).fetchall()
         return [MessageRow(**r) for r in reversed(rows)]
 
+    def delete_thread(self, thread_id: str, user_id: str) -> bool:
+        """Permanently delete one thread and its messages — only if `user_id` owns it. Returns
+        True when a thread was removed, False when it was unknown or owned by someone else."""
+        with self._connect() as conn:
+            owned = conn.execute(
+                f"SELECT 1 FROM {THREADS_TABLE} WHERE id = %s AND user_id = %s",
+                [thread_id, user_id],
+            ).fetchone()
+            if owned is None:
+                return False
+            conn.execute(f"DELETE FROM {MESSAGES_TABLE} WHERE thread_id = %s", [thread_id])
+            conn.execute(
+                f"DELETE FROM {THREADS_TABLE} WHERE id = %s AND user_id = %s", [thread_id, user_id]
+            )
+        return True
+
+    def delete_all_threads(self, user_id: str, role: str) -> int:
+        """Permanently delete every thread (and its messages) this user holds under `role`.
+        Returns the number of threads removed. Durable user_memory is left untouched."""
+        with self._connect() as conn:
+            ids = [
+                r["id"]
+                for r in conn.execute(
+                    f"SELECT id FROM {THREADS_TABLE} WHERE user_id = %s AND role = %s",
+                    [user_id, role],
+                ).fetchall()
+            ]
+            if not ids:
+                return 0
+            conn.execute(
+                f"DELETE FROM {MESSAGES_TABLE} WHERE thread_id = ANY(%s)", [ids]
+            )
+            conn.execute(
+                f"DELETE FROM {THREADS_TABLE} WHERE user_id = %s AND role = %s", [user_id, role]
+            )
+        return len(ids)
+
     def add_memory(self, user_id: str, kind: MemoryKind, content: str, scope: dict) -> MemoryRow:
         sql = (
             f"INSERT INTO {MEMORY_TABLE} (user_id, kind, content, scope) "

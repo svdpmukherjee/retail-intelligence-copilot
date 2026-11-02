@@ -1,11 +1,11 @@
 from decimal import Decimal
+from typing import Literal
 
 import httpx
 from pydantic import BaseModel
 
 from agents.llm import LLM, get_llm
 from agents.model_policy import model_for
-from agents.sql_agent import MAX_ROWS
 from app.cost import CostLedger
 from governance.grounding import CITE, enforce_grounding
 from governance.pii import redact
@@ -16,10 +16,10 @@ from retrieval.schema import SearchHit
 SQL_SOURCE = "sql"
 SQL_DISPLAY_LABEL = "Calculated from your data"
 MAX_QUOTE_CHARS = 240
-# Match the SQL query's own row bound (sql_agent.MAX_ROWS): the result set is already capped
-# there, so the display must never drop a row the query kept. SqlBlock.total_rows lets the UI
-# say "showing X of Y" on the rare case a query actually hits that bound.
-MAX_SQL_ROWS_SHOWN = MAX_ROWS
+# A chat answer is a summary, not a data export: show a readable head of the result and let
+# SqlBlock.total_rows drive a "showing X of Y" note when the query returned more. (A query can
+# still return up to sql_agent.MAX_ROWS; the UI never renders a hundred-row wall in the thread.)
+MAX_SQL_ROWS_SHOWN = 25
 SQL_FLOAT_DECIMALS = 2
 
 SYSTEM_PROMPT = (
@@ -54,10 +54,18 @@ class SqlBlock(BaseModel):
 
 
 class AnswerResult(BaseModel):
+    # "clarification" is a turn where the copilot asks the user a question instead of answering
+    # (too vague, or data we do not have); the UI renders it as a question, with no sources.
+    kind: Literal["answer", "clarification"] = "answer"
     answer: str
     citations: list[Citation]
     audit: dict
     sql: SqlBlock | None = None  # set only when the SQL citation survives into `citations`
+
+
+def clarification(question: str, audit: dict) -> "AnswerResult":
+    """A turn that asks the user a question rather than answering — no evidence, no citations."""
+    return AnswerResult(kind="clarification", answer=question, citations=[], audit=audit)
 
 
 def _label(hit: SearchHit) -> str:
@@ -190,7 +198,7 @@ async def compose(
         if context is not None and (block := context.render()):
             user = f"{block}\n\n{user}"
         try:
-            draft = await llm.complete(SYSTEM_PROMPT, user, ledger=ledger)
+            draft = await llm.complete(SYSTEM_PROMPT, user, ledger=ledger, task="compose")
         except (httpx.HTTPError, RuntimeError, GoAheadRequired) as exc:
             grounding["issues"].append(f"llm unavailable: {type(exc).__name__}")
         else:

@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { ApiError, getThread, getThreads, postQuery } from "./api/client";
+import { ApiError, deleteAllThreads, deleteThread, getThread, getThreads, postQuery } from "./api/client";
 import type { QueryResponse, RestoredPayload, Scope, ThreadListItem } from "./api/types";
 import type { Turn } from "./turns";
 import ConversationPanel from "./components/ConversationPanel";
@@ -119,6 +119,7 @@ export default function App() {
   // omits (raw query, tokens, cost, latency) are filled with zeros; the chat never renders them.
   function restoredRes(p: RestoredPayload): QueryResponse {
     return {
+      kind: p.kind ?? "answer",
       answer: p.answer,
       citations: p.citations,
       sql: p.sql,
@@ -177,6 +178,36 @@ export default function App() {
       setThreadId(null);
       setFailedResumeId(id);
       setCurrentError(err instanceof ApiError ? err : new Error(errorMessage(err)));
+    }
+  }
+
+  // Permanent history deletes. Both warn first (the data is erased from the database, not hidden).
+  async function onDeleteThread(id: string) {
+    const ok = window.confirm(
+      "Delete this conversation permanently?\n\nIt will be erased from the database and cannot be recovered.",
+    );
+    if (!ok) return;
+    try {
+      await deleteThread(id, userId);
+      if (id === threadId) resetCenter();
+      void refreshThreads(identity);
+    } catch (err) {
+      setThreadsError(errorMessage(err));
+    }
+  }
+
+  async function onDeleteAll() {
+    if (threads.length === 0) return;
+    const ok = window.confirm(
+      `Delete all ${threads.length} conversation(s) permanently?\n\nThey will be erased from the database and cannot be recovered.`,
+    );
+    if (!ok) return;
+    try {
+      await deleteAllThreads(userId, role);
+      resetCenter();
+      void refreshThreads(identity);
+    } catch (err) {
+      setThreadsError(errorMessage(err));
     }
   }
 
@@ -268,6 +299,8 @@ export default function App() {
           threadsError={threadsError}
           onSelectThread={onSelectThread}
           onNewChat={resetCenter}
+          onDeleteThread={onDeleteThread}
+          onDeleteAll={onDeleteAll}
           identitySelectRef={identitySelectRef}
         />
         <HistoryDrawer
@@ -279,6 +312,8 @@ export default function App() {
           onClose={() => setDrawerOpen(false)}
           onSelect={onSelectThread}
           onNewChat={resetCenter}
+          onDeleteThread={onDeleteThread}
+          onDeleteAll={onDeleteAll}
         />
         <ConversationPanel
           title="Retail Intelligence Copilot"

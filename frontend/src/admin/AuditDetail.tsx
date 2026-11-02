@@ -65,15 +65,41 @@ export default function AuditDetail({ role, id, onClose }: Props) {
           <h3>Answer</h3>
           <div className="adm-answer">{row.answer ?? <span className="adm-muted">not stored</span>}</div>
 
+          <h3>Model routing</h3>
+          <p className="adm-muted adm-note">
+            Each task runs on the model measured as best-fit for it (see docs/model-comparison.md),
+            not simply the biggest — here is which model served each step and why.
+          </p>
+          {row.routing && row.routing.length > 0 ? (
+            <table className="adm-subtable adm-routing">
+              <thead>
+                <tr><th>Task</th><th>Tier</th><th>Model(s)</th><th>Why this model</th></tr>
+              </thead>
+              <tbody>
+                {row.routing.map((r, i) => (
+                  <tr key={i}>
+                    <td>{r.task}</td>
+                    <td>{r.tier ?? "—"}</td>
+                    <td>{r.models.join(", ") || "—"}</td>
+                    <td className="adm-why">{r.rationale ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="adm-muted">No model routing recorded (rule-routed or no provider configured).</p>
+          )}
+
           <h3>LLM calls</h3>
           {row.llm_calls && row.llm_calls.length > 0 ? (
             <table className="adm-subtable">
               <thead>
-                <tr><th>Model</th><th>Prompt</th><th>Completion</th><th>Total</th><th>Cost</th></tr>
+                <tr><th>Task</th><th>Model</th><th>Prompt</th><th>Completion</th><th>Total</th><th>Cost</th></tr>
               </thead>
               <tbody>
                 {row.llm_calls.map((c, i) => (
                   <tr key={i}>
+                    <td>{c.task ?? "—"}</td>
                     <td>{c.model}</td>
                     <td className="adm-num">{c.prompt_tokens.toLocaleString()}</td>
                     <td className="adm-num">{c.completion_tokens.toLocaleString()}</td>

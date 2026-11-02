@@ -11,11 +11,13 @@ interface Props {
   onClose: () => void;
   onSelect: (id: string) => void;
   onNewChat: () => void;
+  onDeleteThread: (id: string) => void;
+  onDeleteAll: () => void;
 }
 
 // Phone-only off-canvas history (CSS hides toggle + drawer above 760px). The
 // identity switcher stays in the top control, not here.
-export default function HistoryDrawer({ threads, error, activeId, open, onOpen, onClose, onSelect, onNewChat }: Props) {
+export default function HistoryDrawer({ threads, error, activeId, open, onOpen, onClose, onSelect, onNewChat, onDeleteThread, onDeleteAll }: Props) {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -67,6 +69,8 @@ export default function HistoryDrawer({ threads, error, activeId, open, onOpen, 
               onNewChat();
               close();
             }}
+            onDelete={onDeleteThread}
+            onDeleteAll={onDeleteAll}
           />
         </div>
       )}

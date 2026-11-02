@@ -33,6 +33,33 @@ def test_recent_messages_are_capped_newest_n_oldest_first(store: MemoryStore) ->
     assert rows[0].role_kind == "user" and rows[1].role_kind == "assistant"
 
 
+def test_delete_thread_is_owner_scoped_and_removes_messages(store: MemoryStore) -> None:
+    thread = store.create_thread("alice", "analyst")
+    store.append_message(thread.id, "user", "hi", user_id="alice")
+    # A non-owner cannot delete it, and the thread survives.
+    assert store.delete_thread(thread.id, "mallory") is False
+    assert store.get_thread(thread.id, "alice") is not None
+    # The owner can; the thread and its messages are gone.
+    assert store.delete_thread(thread.id, "alice") is True
+    assert store.get_thread(thread.id, "alice") is None
+    assert store.recent_messages(thread.id, 10) == []
+    # Deleting an already-gone thread is a no-op, not an error.
+    assert store.delete_thread(thread.id, "alice") is False
+
+
+def test_delete_all_threads_clears_only_this_user_and_role(store: MemoryStore) -> None:
+    keep_a = store.create_thread("alice", "analyst")
+    keep_b = store.create_thread("alice", "marketing")  # different role: must survive
+    other = store.create_thread("bob", "analyst")  # different user: must survive
+    for t, u in ((keep_a, "alice"), (keep_b, "alice"), (other, "bob")):
+        store.append_message(t.id, "user", "hi", user_id=u)
+    assert store.delete_all_threads("alice", "analyst") == 1
+    assert store.get_thread(keep_a.id, "alice") is None
+    assert store.get_thread(keep_b.id, "alice") is not None
+    assert store.get_thread(other.id, "bob") is not None
+    assert store.delete_all_threads("alice", "analyst") == 0  # nothing left under that role
+
+
 def test_assistant_payload_round_trips_for_replay(store: MemoryStore) -> None:
     """An assistant turn's render snapshot survives a write/read so the chat replays in full."""
     thread = store.create_thread("alice", "analyst")

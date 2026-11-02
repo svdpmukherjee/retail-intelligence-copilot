@@ -34,7 +34,7 @@ class FakeLLM:
         self.reply = reply
         self.users: list[str] = []
 
-    async def complete(self, system, user, *, ledger, max_tokens=None):
+    async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
         self.users.append(user)
         return self.reply
 
@@ -129,7 +129,9 @@ def test_compose_extractive_ignores_context(monkeypatch) -> None:
 def _result(answer: str = "Batteries die fast [1]. Returns are free [2].") -> AnswerResult:
     return AnswerResult(
         answer=answer,
-        citations=[Citation(n=1, source_id="c1", label="review B01 (E)")],
+        citations=[
+            Citation(n=1, source_id="c1", label="review B01 (E)", display_label="customer review"),
+        ],
         audit={"intent": "review_rag", "sources": ["c1"]},
     )
 

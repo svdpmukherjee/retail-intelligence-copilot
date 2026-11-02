@@ -34,7 +34,7 @@ export interface Scope {
 export interface Audit {
   query: string;
   role: string;
-  intent: "sql" | "review_rag" | "docs_rag" | "sql_rag";
+  intent: "sql" | "review_rag" | "docs_rag" | "sql_rag" | "clarify";
   tool_path: string[];
   sources: string[];
   tokens: number;
@@ -55,6 +55,9 @@ export interface SqlBlock {
 }
 
 export interface AnswerResult {
+  // "clarification" is a turn where the copilot asks the user a question instead of answering;
+  // the UI renders it as a question with no sources.
+  kind: "answer" | "clarification";
   answer: string;
   citations: Citation[];
   audit: Audit;
@@ -77,6 +80,7 @@ export interface ThreadListItem {
 // Full render snapshot stored for an assistant turn, so a reopened chat replays its charts and
 // evidence instead of stripped text. Absent on user turns and on turns saved before this existed.
 export interface RestoredPayload {
+  kind?: "answer" | "clarification"; // absent on turns saved before clarifications existed
   answer: string;
   citations: Citation[];
   sql: SqlBlock | null;
@@ -109,6 +113,19 @@ export interface LlmCall {
   completion_tokens: number;
   total_tokens: number;
   usd: number;
+  task: string | null; // the pipeline step this call served (route / sql / compose / summary)
+}
+
+// Why a given model served a task: the capability tier and the measured rationale for the choice
+// (see backend/agents/model_policy.py and docs/model-comparison.md). Operator plane only.
+export interface RoutingRecord {
+  task: string;
+  tier: string | null;
+  rationale: string | null;
+  models: string[];
+  llm_calls: number;
+  tokens: number;
+  cost_usd: number;
 }
 
 // Mirrors GET /audit (admin-only operator view; never rendered in the chat).
@@ -124,6 +141,7 @@ export interface AuditRow {
   tool_path: string[];
   sources: string[];
   llm_calls: LlmCall[];
+  routing: RoutingRecord[];
   tokens: number;
   cost_usd: number;
   latency_ms: number;

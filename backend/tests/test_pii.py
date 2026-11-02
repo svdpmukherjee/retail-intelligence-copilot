@@ -47,7 +47,7 @@ def test_citation_markers_are_preserved() -> None:
 class _Chunky:
     available = True
 
-    async def complete(self, system, user, *, ledger, max_tokens=None):
+    async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
         return "Reach support at help@shop.com or +44 20 7946 0958 [1]."
 
 

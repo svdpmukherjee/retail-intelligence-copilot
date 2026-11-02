@@ -17,7 +17,7 @@ class FakeLLM:
     def __init__(self, reply: str) -> None:
         self.reply = reply
 
-    async def complete(self, system, user, *, ledger, max_tokens=None):
+    async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
         return self.reply
 
 
@@ -45,10 +45,24 @@ def test_rules_route_to_each_intent(no_llm, query, intent):
     assert decision.rationale
 
 
-def test_all_four_intents_are_reachable(no_llm):
-    queries = ["how many orders", "refund policy", "why did sales drop", "love the fit"]
+def test_every_intent_is_reachable(no_llm):
+    # One deterministic trigger per intent: rules for sql/docs/sql_rag, the missing-measure gate
+    # for clarify, and the review_rag default (no_llm) for an open-ended question.
+    queries = [
+        "how many orders",  # sql
+        "refund policy",  # docs_rag
+        "why did the rating drop",  # sql_rag
+        "which products have the highest revenue",  # clarify (no sales data)
+        "love the fit",  # review_rag (default)
+    ]
     got = {asyncio.run(route(q, "analyst")).intent for q in queries}
     assert got == set(INTENTS)
+
+
+def test_missing_measure_query_asks_a_clarifying_question(no_llm):
+    decision = asyncio.run(route("show me revenue by category", "analyst"))
+    assert decision.intent == "clarify"
+    assert decision.question and "sales" in decision.question.lower()
 
 
 def test_scope_is_open_and_passes_through_to_filters(no_llm):
@@ -77,7 +91,7 @@ def test_rule_hit_wins_and_llm_is_not_called(monkeypatch):
     llm = FakeLLM('{"intent": "review_rag", "rationale": "wrong"}')
     calls = []
 
-    async def spy(system, user, *, ledger, max_tokens=None):
+    async def spy(system, user, *, ledger, max_tokens=None, task=None):
         calls.append(user)
         return llm.reply
 

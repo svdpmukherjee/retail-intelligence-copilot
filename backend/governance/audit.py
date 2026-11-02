@@ -25,6 +25,7 @@ def audit_ddl() -> list[str]:
             tool_path JSONB NOT NULL DEFAULT '[]'::jsonb,
             sources JSONB NOT NULL DEFAULT '[]'::jsonb,
             llm_calls JSONB NOT NULL DEFAULT '[]'::jsonb,
+            routing JSONB NOT NULL DEFAULT '[]'::jsonb,
             tokens INTEGER NOT NULL DEFAULT 0,
             cost_usd DOUBLE PRECISION NOT NULL DEFAULT 0,
             latency_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -36,6 +37,8 @@ def audit_ddl() -> list[str]:
         f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS model TEXT",
         f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS answer TEXT",
         f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS llm_calls JSONB "
+        "NOT NULL DEFAULT '[]'::jsonb",
+        f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS routing JSONB "
         "NOT NULL DEFAULT '[]'::jsonb",
         f"CREATE INDEX IF NOT EXISTS audit_log_created_idx ON {AUDIT_TABLE} (created_at)",
     ]
@@ -59,8 +62,8 @@ class AuditStore:
     def record(self, audit: dict) -> None:
         sql = (
             f"INSERT INTO {AUDIT_TABLE} (query, role, user_id, intent, model, answer, tool_path, "
-            "sources, llm_calls, tokens, cost_usd, latency_ms, grounding, memory) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            "sources, llm_calls, routing, tokens, cost_usd, latency_ms, grounding, memory) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         )
         grounding, memory = audit.get("grounding"), audit.get("memory")
         answer = audit.get("answer")
@@ -74,6 +77,7 @@ class AuditStore:
             Jsonb(audit.get("tool_path", [])),
             Jsonb(audit.get("sources", [])),
             Jsonb(audit.get("llm_calls", [])),
+            Jsonb(audit.get("routing", [])),
             audit.get("tokens", 0),
             audit.get("cost_usd", 0),
             audit.get("latency_ms", 0),

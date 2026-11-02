@@ -13,7 +13,7 @@ from memory.manager import MemoryContext
 from retrieval.embeddings import GoAheadRequired
 from retrieval.vector_store import Filters
 
-Intent = Literal["sql", "review_rag", "docs_rag", "sql_rag"]
+Intent = Literal["sql", "review_rag", "docs_rag", "sql_rag", "clarify"]
 INTENTS: tuple[str, ...] = get_args(Intent)
 
 SYSTEM_PROMPT = (
@@ -21,8 +21,27 @@ SYSTEM_PROMPT = (
     "sql (counts, averages, trends, rankings over structured data); "
     "review_rag (what customers say in reviews); "
     "docs_rag (policies, warranty, returns, manuals, how-to); "
-    "sql_rag (why a metric changed: needs numbers plus review evidence). "
-    'Reply with only JSON: {"intent": "<intent>", "rationale": "<short reason>"}.'
+    "sql_rag (why a metric changed: needs numbers plus review evidence); "
+    "clarify (the question is too vague to answer well, or asks for data that is not available "
+    "— ask one short clarifying question instead of guessing). "
+    "The data is customer reviews and product ratings/prices/categories — there is NO sales, "
+    "revenue, profit or units-sold data. "
+    'Reply with only JSON: {"intent": "<intent>", "rationale": "<short reason>", '
+    '"question": "<one clarifying question, only when intent is clarify>"}.'
+)
+
+# The Gold table is review-grain (ratings, prices, categories, review counts) with no sales ledger:
+# these measures have no column at all. Rather than emit SUM(<nothing>) and dump a page of nulls,
+# the copilot says so and offers what it *can* answer — a conversation, not a one-way dead end.
+_MISSING_MEASURE = re.compile(
+    r"\b(revenue|sales|profit|margin|income|turnover|earnings|units?\s+sold|quantity\s+sold"
+    r"|best[- ]?sell\w*|top[- ]?sell\w*)\b",
+    re.IGNORECASE,
+)
+_MISSING_MEASURE_QUESTION = (
+    "I don't have sales or revenue figures for these products — the data covers customer ratings, "
+    "review counts and categories, not transactions. Would you like the best-rated or the "
+    "most-reviewed products instead?"
 )
 
 # Order matters: "why did X drop" must win over the plain aggregate words it also contains.
@@ -62,6 +81,7 @@ class RouteDecision(BaseModel):
     intent: Intent
     scope: Filters
     rationale: str
+    question: str | None = None  # set only when intent == "clarify": the question to ask the user
 
 
 def derive_scope(role: str) -> Filters:
@@ -80,7 +100,8 @@ def _rule_intent(query: str) -> tuple[Intent, str] | None:
     return None
 
 
-def _parse_llm_intent(raw: str) -> tuple[Intent, str] | None:
+def _parse_llm_intent(raw: str) -> tuple[Intent, str, str | None] | None:
+    """(intent, rationale, question). `question` is set only for a clarify intent."""
     match = re.search(r"\{.*\}", raw, re.DOTALL)
     if not match:
         return None
@@ -91,7 +112,13 @@ def _parse_llm_intent(raw: str) -> tuple[Intent, str] | None:
     intent = data.get("intent") if isinstance(data, dict) else None
     if intent not in INTENTS:
         return None
-    return intent, str(data.get("rationale") or "LLM classification")
+    rationale = str(data.get("rationale") or "LLM classification")
+    if intent == "clarify":
+        question = str(data.get("question") or "").strip()
+        if not question:  # a clarify intent with no question is unusable: fall through to default
+            return None
+        return intent, rationale, question
+    return intent, rationale, None
 
 
 async def route(
@@ -104,10 +131,20 @@ async def route(
 ) -> RouteDecision:
     """Classify intent (rules first; LLM only for queries no rule matches) and attach the scope."""
     scope = derive_scope(role)
+    # Deterministic honesty gate, ahead of the aggregate rules: a question for sales/revenue data
+    # the dataset does not hold is answered with a clarifying question, never a dump of nulls.
+    if _MISSING_MEASURE.search(query):
+        return RouteDecision(
+            intent="clarify",
+            scope=scope,
+            rationale="asks for sales/revenue data the review dataset does not contain",
+            question=_MISSING_MEASURE_QUESTION,
+        )
     # Rules are high-confidence and deterministic; a nondeterministic LLM must not override them.
     if hit := _rule_intent(query):
         return RouteDecision(intent=hit[0], scope=scope, rationale=hit[1])
-    # Classification is a cheap task: route it to the fast tier when one is configured.
+    # Classification is routed to its own tier (see model_policy); it can also decide the question
+    # is too vague and return a clarify intent with a question.
     llm = llm or get_llm(model=model_for("route"))
     if llm.available:
         user = query
@@ -115,11 +152,13 @@ async def route(
             user = f"{block}\n\nQuestion: {query}"
         try:
             raw = await llm.complete(
-                SYSTEM_PROMPT, user, ledger=ledger or CostLedger(), max_tokens=100
+                SYSTEM_PROMPT, user, ledger=ledger or CostLedger(), max_tokens=100, task="route"
             )
         except (httpx.HTTPError, RuntimeError, GoAheadRequired):
             pass  # classification is best-effort; the default keeps the route deterministic
         else:
             if parsed := _parse_llm_intent(raw):
-                return RouteDecision(intent=parsed[0], scope=scope, rationale=parsed[1])
+                return RouteDecision(
+                    intent=parsed[0], scope=scope, rationale=parsed[1], question=parsed[2]
+                )
     return RouteDecision(intent="review_rag", scope=scope, rationale=DEFAULT_RATIONALE)

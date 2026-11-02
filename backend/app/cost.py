@@ -12,7 +12,9 @@ class LLMCall:
     """One chat completion's *actual* usage, for the audit + observability planes.
 
     `model` is the slug/deployment that served the call; token fields come from the provider's
-    `usage` block when it returns one, or the chars/4 estimate when it does not.
+    `usage` block when it returns one, or the chars/4 estimate when it does not. `task` is the
+    pipeline step the call served (route / sql / compose / summary), so the audit + observability
+    planes can explain which model ran where, and why (see agents.model_policy).
     """
 
     model: str
@@ -20,6 +22,7 @@ class LLMCall:
     completion_tokens: int
     total_tokens: int
     usd: float
+    task: str | None = None
 
     def as_dict(self) -> dict:
         return asdict(self)

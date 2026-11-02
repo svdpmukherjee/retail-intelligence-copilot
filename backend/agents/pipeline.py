@@ -4,14 +4,16 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from agents.composer import SQL_SOURCE, AnswerResult, compose
+from agents.composer import SQL_SOURCE, AnswerResult, clarification, compose
 from agents.docs_rag import docs_rag
+from agents.model_policy import TASKS, policy_for
 from agents.review_rag import review_rag
 from agents.router import route
 from agents.sql_agent import SQLComputeError, sql_agent
 from app.config import get_settings
 from app.cost import CostLedger
 from governance.audit import record_audit
+from governance.pii import redact
 from governance.policy import AccessDenied
 from memory.manager import MemoryContext, MemoryManager, effective_query
 from memory.store import get_memory_store
@@ -44,9 +46,10 @@ def _load_context(thread_id: str, user_id: str, role: str) -> MemoryContext:
     return MemoryManager().load(thread_id, user_id, role, limit=get_settings().memory_history_turns)
 
 
-def _start_trace(role: str) -> TraceHandle | None:
+def _start_trace(role: str, query: str) -> TraceHandle | None:
     try:
-        return get_tracer().start_trace("query", metadata={"role": role})
+        # input is the operator-plane query (redacted), so the Langfuse Preview is not empty.
+        return get_tracer().start_trace("query", metadata={"role": role}, input=redact(query))
     except Exception as exc:  # tracing is best-effort: it must never fail the turn
         log.warning("trace start failed: %s", type(exc).__name__)
         return None
@@ -57,22 +60,50 @@ def _record_retrieval(meta: dict, hits: list[SearchHit]) -> None:
     Scores and counts are non-PII; the chunk ids live in the audit plane (audit["sources"])."""
     meta["hits"] = len(hits)
     meta["top_score"] = round(hits[0].score, 4) if hits else 0.0
+    meta["_output"] = f"{len(hits)} chunk(s) retrieved"
 
 
-def _end_trace(trace: TraceHandle | None, metadata: dict) -> None:
+def _routing(ledger: CostLedger) -> list[dict]:
+    """Per-task routing record for the audit plane: which model served each pipeline task, its
+    capability tier, and the measured rationale for the choice (see agents.model_policy)."""
+    groups: dict[str, list] = {}
+    for call in ledger.llm_calls:
+        groups.setdefault(call.task or "other", []).append(call)
+    records = []
+    for task, calls in groups.items():
+        choice = policy_for(task) if task in TASKS else None
+        records.append(
+            {
+                "task": task,
+                "tier": choice.tier if choice else None,
+                "rationale": choice.rationale if choice else None,
+                "models": list(dict.fromkeys(c.model for c in calls)),
+                "llm_calls": len(calls),
+                "tokens": sum(c.total_tokens for c in calls),
+                "cost_usd": round(sum(c.usd for c in calls), 6),
+            }
+        )
+    return records
+
+
+def _end_trace(trace: TraceHandle | None, metadata: dict, *, output: str | None = None) -> None:
     if trace is None:
         return
     try:
-        trace.end(metadata)
+        trace.end(metadata, output=output)
     except Exception as exc:
         log.warning("trace end failed: %s", type(exc).__name__)
 
 
 @contextmanager
-def _stage(trace: TraceHandle | None, name: str, ledger: CostLedger) -> Iterator[dict]:
-    """Span one stage. Records its latency, ledger delta and the model(s) that served any LLM call
-    made inside it, and merges whatever scalar metadata the body writes into the yielded dict (hit
-    counts, grounding path, …). Scalar, non-text metadata only — the tracer drops anything else."""
+def _stage(
+    trace: TraceHandle | None, name: str, ledger: CostLedger, *, task: str | None = None
+) -> Iterator[dict]:
+    """Span one stage. Records its latency, ledger delta, the model(s) that served any LLM call
+    made inside it and — when `task` is given — the routing tier and the rationale for that model
+    (see agents.model_policy), so an operator sees not just which model ran but why. Merges the
+    scalar metadata the body writes into the yielded dict; the body may also set `_input`/`_output`
+    (redacted operator text) which travel on the span's input/output channel, not into metadata."""
     cm = span = None
     if trace is not None:
         try:
@@ -88,17 +119,25 @@ def _stage(trace: TraceHandle | None, name: str, ledger: CostLedger) -> Iterator
     finally:
         if cm is not None:
             try:
+                span_input = meta.pop("_input", None)
+                span_output = meta.pop("_output", None)
                 stage_calls = ledger.llm_calls[calls0:]
                 if stage_calls:
                     meta.setdefault("model", ", ".join(dict.fromkeys(c.model for c in stage_calls)))
                     meta.setdefault("llm_calls", len(stage_calls))
+                    if task is not None:
+                        choice = policy_for(task)
+                        meta.setdefault("tier", choice.tier)
+                        meta.setdefault("model_rationale", choice.rationale)
                 span.update(
                     {
                         "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
                         "tokens": ledger.tokens - tokens,
                         "cost_usd": ledger.usd - usd,
                         **meta,
-                    }
+                    },
+                    input=span_input,
+                    output=span_output,
                 )
                 cm.__exit__(None, None, None)
             except Exception as exc:
@@ -134,35 +173,46 @@ async def answer(
     sql_result: dict | None = None
     sql_error: str | None = None
     hits: list[SearchHit] = []
-    trace = _start_trace(role)
+    trace = _start_trace(role, query)
     try:
-        with _stage(trace, "route", ledger) as meta:
+        with _stage(trace, "route", ledger, task="route") as meta:
             decision = await route(retrieval_query, role, ledger, **ctx)
             meta["intent"] = decision.intent
             meta["scope_restricted"] = bool(decision.scope.get("category"))
-        if decision.intent in ("sql", "sql_rag"):
-            tool_path.append("sql_agent")
-            try:
-                with _stage(trace, "sql_agent", ledger) as meta:
-                    sql_result = await sql_agent(query, decision.scope, ledger)
-                    meta["rows"] = len(sql_result["rows"])
-            except SQLComputeError as exc:  # degrade to whatever evidence remains, not a 502
-                log.warning("sql_agent could not compute: %s", exc)
-                sql_error = "could not compute"
-        if decision.intent in ("review_rag", "sql_rag"):
-            tool_path.append("review_rag")
-            with _stage(trace, "review_rag", ledger) as meta:
-                hits = await asyncio.to_thread(review_rag, retrieval_query, decision.scope)
-                _record_retrieval(meta, hits)
-        if decision.intent == "docs_rag":
-            tool_path.append("docs_rag")
-            with _stage(trace, "docs_rag", ledger) as meta:
-                hits = await asyncio.to_thread(docs_rag, retrieval_query, decision.scope)
-                _record_retrieval(meta, hits)
-        with _stage(trace, "compose", ledger) as meta:
-            result = await compose(query, sql_result, hits, ledger, **ctx)
-            meta["grounding"] = result.audit.get("grounding", {}).get("path")
-            meta["citations"] = len(result.citations)
+            meta["_output"] = f"{decision.intent}: {decision.rationale}"
+        if decision.intent == "clarify":
+            # Ask, don't guess: short-circuit the tools and return the question as the turn.
+            result = clarification(
+                decision.question or "Could you tell me a little more about what you're after?",
+                {"grounding": {"path": "clarification", "issues": []}},
+            )
+        else:
+            if decision.intent in ("sql", "sql_rag"):
+                tool_path.append("sql_agent")
+                try:
+                    with _stage(trace, "sql_agent", ledger, task="sql") as meta:
+                        sql_result = await sql_agent(query, decision.scope, ledger)
+                        meta["rows"] = len(sql_result["rows"])
+                        meta["_output"] = sql_result.get("sql")
+                except SQLComputeError as exc:  # degrade to whatever evidence remains, not a 502
+                    log.warning("sql_agent could not compute: %s", exc)
+                    sql_error = "could not compute"
+            if decision.intent in ("review_rag", "sql_rag"):
+                tool_path.append("review_rag")
+                with _stage(trace, "review_rag", ledger) as meta:
+                    hits = await asyncio.to_thread(review_rag, retrieval_query, decision.scope)
+                    _record_retrieval(meta, hits)
+            if decision.intent == "docs_rag":
+                tool_path.append("docs_rag")
+                with _stage(trace, "docs_rag", ledger) as meta:
+                    hits = await asyncio.to_thread(docs_rag, retrieval_query, decision.scope)
+                    _record_retrieval(meta, hits)
+            with _stage(trace, "compose", ledger, task="compose") as meta:
+                result = await compose(query, sql_result, hits, ledger, **ctx)
+                meta["grounding"] = result.audit.get("grounding", {}).get("path")
+                meta["citations"] = len(result.citations)
+                meta["_input"] = redact(query)
+                meta["_output"] = redact(result.answer)
     except PipelineError:
         raise
     except AccessDenied as exc:
@@ -186,6 +236,7 @@ async def answer(
             "latency_ms": round((time.perf_counter() - started) * 1000, 1),
             "sql_error": bool(sql_error),
         },
+        output=redact(result.answer),
     )
     result.audit.update(
         query=query,
@@ -219,6 +270,9 @@ async def answer(
     result.audit["answer"] = result.answer
     result.audit["model"] = ", ".join(ledger.models) or None
     result.audit["llm_calls"] = [c.as_dict() for c in ledger.llm_calls]
+    # Why each model ran where: per-task tier + measured rationale (summary included, as it runs
+    # during persist above). Operator plane only.
+    result.audit["routing"] = _routing(ledger)
     if get_settings().audit_enabled:
         try:
             await asyncio.to_thread(record_audit, result.audit)

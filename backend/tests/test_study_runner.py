@@ -31,7 +31,7 @@ class FakeLLM(study.DryRunLLM):
 
     calls = 0
 
-    async def complete(self, system, user, *, ledger, max_tokens=None):
+    async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
         FakeLLM.calls += 1
         return await super().complete(system, user, ledger=ledger, max_tokens=max_tokens)
 

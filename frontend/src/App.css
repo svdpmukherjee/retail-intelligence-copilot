@@ -467,3 +467,39 @@ select.user { width: 100%; font-family: var(--sans); font-size: 13.5px; color: v
 .sqltable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .sqltable th, .sqltable td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); }
 .sqltable th { font-weight: 700; color: var(--muted); }
+
+/* --- Clarification turn: a question back to the user, not an answer (no sources/charts). --- */
+.clarifyq {
+  display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; line-height: 1.5;
+  background: var(--accent-weak); color: var(--fg);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); border-radius: 12px;
+  padding: 12px 14px;
+}
+.clarifyq .ic {
+  flex: none; font-size: 15px; font-weight: 700; color: var(--accent-ink);
+  width: 22px; height: 22px; border-radius: 50%; background: var(--surface);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  display: flex; align-items: center; justify-content: center;
+}
+.clarifyq p { margin: 0; }
+
+/* --- History actions + permanent delete controls --- */
+.histactions { display: flex; gap: 7px; margin-bottom: 11px; }
+.histactions .newchat { flex: 1; margin-bottom: 0; }
+.histclear {
+  appearance: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap;
+  color: var(--danger-ink); background: var(--danger-weak);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border)); border-radius: 10px; padding: 9px 11px;
+}
+.histclear:hover { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); }
+.histrow-wrap { display: flex; align-items: stretch; gap: 4px; }
+.histrow-wrap .histrow { flex: 1; }
+.histdel {
+  appearance: none; cursor: pointer; font: inherit; font-size: 15px; line-height: 1; flex: none; width: 30px;
+  color: var(--muted); background: transparent; border: 1px solid transparent; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.histdel:hover {
+  color: var(--danger-ink); background: var(--danger-weak);
+  border-color: color-mix(in srgb, var(--danger) 25%, var(--border));
+}

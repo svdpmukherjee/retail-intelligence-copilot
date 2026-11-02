@@ -40,10 +40,14 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_api_key: SecretStr | None = None
     openrouter_model: str | None = None
-    # Complexity-based routing: a cheaper/faster model for lightweight tasks (intent
-    # classification, memory summarisation). Falls back to openrouter_model when unset, so
-    # routing is an opt-in optimisation, never a hard dependency.
-    openrouter_model_fast: str | None = None
+    # Tiered, task-aware routing (B-8 model study, docs/model-comparison.md). model_policy maps
+    # each pipeline task to a capability tier and the tier to one of these slugs, picking the model
+    # measured as best-fit for the task — not simply the biggest. Defaults are the study's models
+    # so routing is live out of the box; any tier can be overridden (or cleared) in .env, and a
+    # cleared tier falls back to openrouter_model, so tiering is never a hard dependency.
+    openrouter_model_small: str | None = "google/gemma-3-4b-it"
+    openrouter_model_medium: str | None = "google/gemma-3-12b-it"
+    openrouter_model_large: str | None = "google/gemma-3-27b-it"
     openrouter_go_ahead: bool = False
     # Rough blended price used only to estimate spend in the ledger.
     openrouter_usd_per_1m_tokens: float = 1.0

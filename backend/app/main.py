@@ -34,7 +34,7 @@ app = FastAPI(title="Retail Customer Intelligence Copilot", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_allow_origins,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -145,6 +145,40 @@ async def thread_detail(thread_id: str, user_id: str = Query(min_length=1)) -> T
     return detail
 
 
+class DeleteResult(BaseModel):
+    deleted: int  # threads removed (0 or 1 for a single thread; N for clear-all)
+
+
+@app.delete("/threads/{thread_id}")
+async def delete_thread(thread_id: str, user_id: str = Query(min_length=1)) -> DeleteResult:
+    """Permanently delete one conversation (owner-scoped). The caller confirms in the UI first."""
+    try:
+        removed = await asyncio.to_thread(
+            get_memory_store().delete_thread, thread_id, user_id
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
+    if not removed:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return DeleteResult(deleted=1)
+
+
+@app.delete("/threads")
+async def delete_all_threads(
+    user_id: str = Query(min_length=1), role: str = Query(min_length=1)
+) -> DeleteResult:
+    """Permanently delete every conversation this user holds under `role`. UI warns first."""
+    if role not in ACCESS_POLICY:
+        raise HTTPException(status_code=400, detail=f"Unknown role: {role!r}")
+    try:
+        removed = await asyncio.to_thread(
+            get_memory_store().delete_all_threads, user_id, role
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
+    return DeleteResult(deleted=removed)
+
+
 class AuditRow(BaseModel):
     id: int
     created_at: datetime
@@ -157,6 +191,7 @@ class AuditRow(BaseModel):
     tool_path: list[Any]
     sources: list[Any]
     llm_calls: list[Any] = []
+    routing: list[Any] = []
     tokens: int
     cost_usd: float
     latency_ms: float

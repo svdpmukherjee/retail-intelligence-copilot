@@ -42,7 +42,13 @@ class DryRunLLM:
     available = True
 
     async def complete(
-        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+        self,
+        system: str,
+        user: str,
+        *,
+        ledger: CostLedger,
+        max_tokens: int | None = None,
+        task: str | None = None,
     ) -> str:
         ledger.add(
             estimate_tokens(system, user) + (max_tokens or get_settings().llm_max_tokens), 0.0

@@ -13,6 +13,8 @@ interface Props {
   threadsError: string | null;
   onSelectThread: (id: string) => void;
   onNewChat: () => void;
+  onDeleteThread: (id: string) => void;
+  onDeleteAll: () => void;
   identitySelectRef: React.Ref<HTMLSelectElement>;
 }
 
@@ -24,6 +26,8 @@ export default function RoleRail({
   threadsError,
   onSelectThread,
   onNewChat,
+  onDeleteThread,
+  onDeleteAll,
   identitySelectRef,
 }: Props) {
   return (
@@ -35,7 +39,15 @@ export default function RoleRail({
       <section className="card ident" aria-label="Demo identity">
         <IdentitySwitcher identity={identity} onIdentity={onIdentity} selectRef={identitySelectRef} />
       </section>
-      <HistoryRail threads={threads} error={threadsError} activeId={threadId} onSelect={onSelectThread} onNewChat={onNewChat} />
+      <HistoryRail
+        threads={threads}
+        error={threadsError}
+        activeId={threadId}
+        onSelect={onSelectThread}
+        onNewChat={onNewChat}
+        onDelete={onDeleteThread}
+        onDeleteAll={onDeleteAll}
+      />
     </aside>
   );
 }

@@ -42,3 +42,8 @@
 .adm-subtable td:first-child { font-family: var(--mono, ui-monospace, monospace); }
 
 .adm-pre { background: var(--mono-bg); padding: 8px; border-radius: 6px; overflow: auto; font-size: 12px; }
+
+/* Routing table: the "why this model" column is prose, not a mono id. */
+.adm-note { margin: 2px 0 8px; max-width: 60ch; line-height: 1.45; }
+.adm-routing td:first-child { font-weight: 600; }
+.adm-routing .adm-why { font-family: var(--sans, system-ui); color: var(--fg-2, inherit); max-width: 42ch; line-height: 1.4; white-space: normal; }

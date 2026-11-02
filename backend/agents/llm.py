@@ -17,7 +17,13 @@ class LLM(Protocol):
     def model(self) -> str: ...
 
     async def complete(
-        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+        self,
+        system: str,
+        user: str,
+        *,
+        ledger: CostLedger,
+        max_tokens: int | None = None,
+        task: str | None = None,
     ) -> str: ...
 
 
@@ -67,7 +73,13 @@ class FreeLLM:
         return self._settings.free_llm_model or "free-llm"
 
     async def complete(
-        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+        self,
+        system: str,
+        user: str,
+        *,
+        ledger: CostLedger,
+        max_tokens: int | None = None,
+        task: str | None = None,
     ) -> str:
         s = self._settings
         if not self.available:
@@ -89,7 +101,7 @@ class FreeLLM:
         url = f"{s.free_llm_base_url.rstrip('/')}/chat/completions"
         content, usage = await _chat(url, headers, payload)
         p, c, t = _actual_tokens(usage, system, user, limit)
-        ledger.settle(reserved, 0.0, LLMCall(self.model, p, c, t, 0.0))
+        ledger.settle(reserved, 0.0, LLMCall(self.model, p, c, t, 0.0, task))
         return content
 
 
@@ -127,7 +139,13 @@ class AzureLLM:
         )
 
     async def complete(
-        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+        self,
+        system: str,
+        user: str,
+        *,
+        ledger: CostLedger,
+        max_tokens: int | None = None,
+        task: str | None = None,
     ) -> str:
         endpoint, key, deployment = self._require_go_ahead()
         s = self._settings
@@ -150,7 +168,9 @@ class AzureLLM:
         }
         content, usage = await _chat(url, {"api-key": key}, payload)
         p, c, t = _actual_tokens(usage, system, user, limit)
-        ledger.settle(reserved, reserved_usd, LLMCall(deployment, p, c, t, t * price / 1_000_000))
+        ledger.settle(
+            reserved, reserved_usd, LLMCall(deployment, p, c, t, t * price / 1_000_000, task)
+        )
         return content
 
 
@@ -184,7 +204,13 @@ class OpenRouterLLM:
         )
 
     async def complete(
-        self, system: str, user: str, *, ledger: CostLedger, max_tokens: int | None = None
+        self,
+        system: str,
+        user: str,
+        *,
+        ledger: CostLedger,
+        max_tokens: int | None = None,
+        task: str | None = None,
     ) -> str:
         url, key, model = self._require_go_ahead()
         s = self._settings
@@ -206,7 +232,7 @@ class OpenRouterLLM:
         }
         content, usage = await _chat(url, {"Authorization": f"Bearer {key}"}, payload)
         p, c, t = _actual_tokens(usage, system, user, limit)
-        ledger.settle(reserved, reserved_usd, LLMCall(model, p, c, t, t * price / 1_000_000))
+        ledger.settle(reserved, reserved_usd, LLMCall(model, p, c, t, t * price / 1_000_000, task))
         return content
 
 

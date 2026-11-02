@@ -49,7 +49,7 @@ def test_uncited_llm_draft_is_blocked_and_falls_back(monkeypatch) -> None:
     class BadLLM:
         available = True
 
-        async def complete(self, system, user, *, ledger, max_tokens=None):
+        async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
             return "Customers love it [9]."
 
     monkeypatch.setattr("agents.composer.get_llm", lambda **_: BadLLM())
@@ -88,7 +88,7 @@ def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) 
     class Llm:
         available = True
 
-        async def complete(self, system, user, *, ledger):
+        async def complete(self, system, user, *, ledger, task=None):
             return "Only the review says it is loud [2]"
 
     monkeypatch.setattr("agents.composer.get_llm", lambda **_: Llm())

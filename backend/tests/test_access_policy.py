@@ -25,7 +25,8 @@ def test_two_roles_yield_different_where_params() -> None:
     assert mkt_params[0] == ["Electronics", "Beauty_and_Personal_Care", "Toys_and_Games"]
     assert set(sup_params[0]) & set(mkt_params[0]) == {"Electronics"}
     assert "Home_and_Kitchen" in sup_params[0] and "Home_and_Kitchen" not in mkt_params[0]
-    assert "Beauty_and_Personal_Care" in mkt_params[0] and "Beauty_and_Personal_Care" not in sup_params[0]
+    assert "Beauty_and_Personal_Care" in mkt_params[0]
+    assert "Beauty_and_Personal_Care" not in sup_params[0]
 
 
 def test_policy_only_uses_accepted_filter_keys() -> None:

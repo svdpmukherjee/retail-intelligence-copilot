@@ -71,7 +71,7 @@ def test_sql_agent_runs_generated_sql_through_guard(monkeypatch):
     class FakeLLM:
         available = True
 
-        async def complete(self, system, user, *, ledger, max_tokens=None):
+        async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
             return "```sql\nSELECT count(*) AS n FROM structured\n```"
 
     monkeypatch.setattr(mod, "get_llm", lambda **_: FakeLLM())
@@ -91,7 +91,7 @@ def _scripted_llm(monkeypatch, replies):
     class FakeLLM:
         available = True
 
-        async def complete(self, system, user, *, ledger, max_tokens=None):
+        async def complete(self, system, user, *, ledger, max_tokens=None, task=None):
             calls.append(user)
             return replies[len(calls) - 1]
 
