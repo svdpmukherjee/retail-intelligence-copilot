@@ -23,6 +23,7 @@ numbering starts at 2.
 |---|---|---|
 | [`iteration-2/`](iteration-2/) | First design pass of the chat UI — role→render, evidence/trust surface, inspectable citations | M8 v2 rebuild |
 | [`iteration-3/`](iteration-3/) | Conversation/memory layer — role+user identity, thread history (list/resume/new), stacked multi-turn with follow-ups, click-to-inspect evidence, declutter | M8 v3 rebuild |
+| [`iteration-4/`](iteration-4/) | User-centred declutter + trust redesign — strip operator values to the audit/Langfuse planes, human-readable source chips, honest states re-worded as reassurance, "answering as" scope line, demo switcher set apart, bounded transcript | M8 v4 rebuild (pending) |
 
 Each iteration folder contains the same stages:
 

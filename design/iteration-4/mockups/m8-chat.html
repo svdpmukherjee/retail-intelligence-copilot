@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Copilot Chat · iteration 4</title>
+<!--
+  Retail Intelligence Copilot · Design track ITERATION 4 · Stage 3 (hi-fi mockup) for CHECKPOINT D2.
+
+  This is a MOCKUP: self-contained HTML (zero external deps, no build, no backend) with realistic
+  CANNED data. It is NOT application code. It is the "Figma page" for the iteration-4 redesign.
+
+  WHAT ITERATION 4 IS: a user-centred DECLUTTER + TRUST redesign of the M8 chat surface for a
+  non-technical retail persona. Bar = ChatGPT-level simplicity. It REUSES the iteration-2/3 token
+  set, type scale, spacing and shadows (so it reads as the SAME product) and REMOVES everything the
+  updated .claude/rules/ux-surface.md names as a violation:
+    G1  the whole SESSION panel (cost / tokens / latency / thread id / user id / provider)   -> GONE
+    G2  per-answer footer chips (route / grounded(..) / latency / cost / why-expander / fallback:) -> GONE
+    G3  the "$0/query" brag in the brand line                                                 -> GONE ("grounded · cited")
+    G4  the "· <intent>" routing half of the conversation header                              -> GONE ("answering as: support")
+    G5  system-worded honest/fallback notes                                                   -> RE-WORDED as plain reassurance
+    G6  raw-id citations                                                                       -> human-readable source chips
+    G7/G8 demo switcher as product chrome / unbounded page                                     -> demo-only + bounded scroll
+
+  SURFACE AUDIT (brief §4 crit 1): NOWHERE on the user surface do we show thread_id / session_id /
+  tokens / cost_usd / latency / intent / tool_path / model slug / provider / raw audit JSON. Those
+  live in the audit admin view and Langfuse only. (The thin bar at the very top is a MOCKUP control,
+  explicitly labelled, not product chrome.)
+
+  CANNED CONTENT: returns / headphones / earbuds retail content; redacted snippets show [EMAIL] /
+  [PHONE] tokens exactly as the real PII-redacted citations[].snippet would. Fonts are the system
+  stack so the artifact is fully self-contained.
+-->
+<style>
+  /* ===================== TOKENS (inherited from iteration-2/3 mockups) ===================== */
+  :root {
+    color-scheme: light;
+    --bg:#eef0f4; --surface:#ffffff; --surface-2:#f6f7fb; --surface-3:#eef1f7;
+    --fg:#141821; --fg-2:#4b5263; --muted:#828b9c;
+    --border:rgba(20,24,31,0.12); --border-2:rgba(20,24,31,0.06);
+    --accent:#2a72d4; --accent-ink:#1b559e; --accent-weak:#e6f0fb;
+    --good:#0f9d58; --good-ink:#0a7a43; --good-weak:#e4f5ec;
+    --warn:#c77700; --warn-weak:#fbf0dc;
+    --danger:#d23c3c; --danger-ink:#b02a2a; --danger-weak:#fbe6e6;
+    --user-bubble:#e9f1fc; --c1:#2a72d4; --c2:#3ea0a0; --c3:#9a7bd0; --bar-track:#e3e8ef;
+    --mono-bg:#f1f3f7;
+    --shadow:0 1px 2px rgba(20,24,31,.06), 0 10px 30px rgba(20,24,31,.07);
+    --radius:14px;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:#0b0d12; --surface:#14171f; --surface-2:#191d26; --surface-3:#20242f;
+      --fg:#eef1f7; --fg-2:#b0b8c6; --muted:#7b8698;
+      --border:rgba(255,255,255,0.13); --border-2:rgba(255,255,255,0.06);
+      --accent:#4c93ec; --accent-ink:#87b7f2; --accent-weak:#13314f;
+      --good:#2ec27e; --good-ink:#4cd698; --good-weak:#10281d;
+      --warn:#e0a53a; --warn-weak:#2e2410;
+      --danger:#ef6a6a; --danger-ink:#f29191; --danger-weak:#2e1515;
+      --user-bubble:#182536; --c1:#4c93ec; --c2:#4fbcbc; --c3:#b199e6; --bar-track:#272c38;
+      --mono-bg:#10131a;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0b0d12; --surface:#14171f; --surface-2:#191d26; --surface-3:#20242f;
+    --fg:#eef1f7; --fg-2:#b0b8c6; --muted:#7b8698;
+    --border:rgba(255,255,255,0.13); --border-2:rgba(255,255,255,0.06);
+    --accent:#4c93ec; --accent-ink:#87b7f2; --accent-weak:#13314f;
+    --good:#2ec27e; --good-ink:#4cd698; --good-weak:#10281d;
+    --warn:#e0a53a; --warn-weak:#2e2410;
+    --danger:#ef6a6a; --danger-ink:#f29191; --danger-weak:#2e1515;
+    --user-bubble:#182536; --c1:#4c93ec; --c2:#4fbcbc; --c3:#b199e6; --bar-track:#272c38;
+    --mono-bg:#10131a;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing:border-box; }
+  html, body { background:var(--bg); }
+  body { margin:0; color:var(--fg); font-family:var(--sans); line-height:1.5;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  .wrap { max-width:1240px; margin:0 auto;
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+    padding-block:14px 32px; }
+
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ===================== MOCKUP CONTROL BAR (not product chrome) ===================== */
+  .mockbar { display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap;
+    background:var(--surface); border:1px dashed color-mix(in srgb, var(--warn) 45%, var(--border));
+    border-radius:12px; padding:8px 12px; margin-bottom:14px; box-shadow:var(--shadow); }
+  .mockbar .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--warn); background:var(--warn-weak); border:1px solid color-mix(in srgb, var(--warn) 40%, var(--border));
+    border-radius:999px; padding:3px 9px; font-weight:700; white-space:nowrap; }
+  .mockbar .cap { font-size:12px; color:var(--muted); }
+  .mockbar .sp { flex:1 1 auto; }
+  .mockbar .states { display:flex; gap:6px; flex-wrap:wrap; }
+  .mockbar .states .sl { font-size:11px; color:var(--muted); align-self:center; margin-right:2px; }
+  .statebtn { appearance:none; cursor:pointer; font:inherit; font-size:11.5px; color:var(--fg-2);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:4px 10px; }
+  .statebtn:hover { border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); color:var(--fg); }
+  .iconbtn { appearance:none; cursor:pointer; width:32px; height:32px; border-radius:999px;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--fg-2); font-size:14px; }
+
+  /* ===================== SHELL ===================== */
+  .shell { display:grid; grid-template-columns:244px 1fr 304px; gap:14px; align-items:start; }
+  @media (max-width:1080px){ .shell{ grid-template-columns:240px 1fr; } .evidence-dock{ display:none; } }
+  @media (max-width:760px){ .shell{ grid-template-columns:1fr; } }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+
+  /* ---- left rail ---- */
+  .rail { display:flex; flex-direction:column; gap:13px; position:sticky; top:12px; }
+  .rail .card { padding:14px; }
+  .rail h2 { font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); margin:0 0 9px; font-weight:700; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .logo { width:34px; height:34px; border-radius:9px; flex:none; color:#fff; font-weight:800; font-size:16px;
+    background:linear-gradient(145deg, var(--accent), var(--accent-ink)); display:grid; place-items:center; }
+  .brand .bn { font-size:14px; font-weight:700; letter-spacing:-.01em; }
+  .brand .bs { font-size:11px; color:var(--muted); font-family:var(--mono); }  /* G3: "grounded · cited" — no cost */
+
+  /* ---- demo switcher (set apart as demo-only) ---- */
+  .demo { border:1px dashed color-mix(in srgb, var(--warn) 45%, var(--border)) !important; background:var(--surface); }
+  .demo .demolabel { display:inline-flex; align-items:center; gap:5px; font-family:var(--mono);
+    font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; color:var(--warn);
+    background:var(--warn-weak); border:1px solid color-mix(in srgb, var(--warn) 40%, var(--border));
+    border-radius:999px; padding:2px 8px; margin-bottom:9px; }
+  select.user { width:100%; font-family:var(--sans); font-size:13.5px; color:var(--fg);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:9px 10px; }
+  .demo .idnote { margin-top:8px; font-size:10.5px; color:var(--muted); line-height:1.4; }
+  .histtoggle { display:none; }
+
+  /* ---- history list + new chat ---- */
+  .history h2 .yours { color:var(--accent-ink); }
+  .newchat { appearance:none; cursor:pointer; width:100%; font:inherit; font-size:13.5px; font-weight:700;
+    color:var(--accent-ink); background:var(--accent-weak); border:1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+    border-radius:10px; padding:9px 11px; margin-bottom:11px; display:inline-flex; align-items:center; gap:7px; justify-content:center; }
+  .newchat:hover { background:color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+  .histlist { display:flex; flex-direction:column; gap:7px; }
+  .histrow { appearance:none; cursor:pointer; text-align:left; font:inherit; width:100%;
+    display:flex; gap:9px; align-items:flex-start; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:10px; padding:8px 10px; }
+  .histrow:hover { border-color:color-mix(in srgb, var(--accent) 40%, var(--border)); }
+  .histrow.active { background:var(--accent-weak); border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); }
+  .histrow .mk { flex:none; width:9px; height:9px; border-radius:50%; margin-top:4px; border:1.5px solid var(--muted); background:transparent; }
+  .histrow.active .mk { border-color:var(--accent-ink); background:var(--accent-ink); }
+  .histrow .hb { min-width:0; display:flex; flex-direction:column; }
+  .histrow .hl { display:block; max-width:100%; font-size:12.5px; color:var(--fg); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .histrow.active .hl { font-weight:700; }
+  .histrow .ht { display:block; font-size:10.5px; color:var(--muted); margin-top:3px; }
+  .histempty { font-size:12px; color:var(--muted); line-height:1.5; background:var(--surface-2);
+    border:1px dashed var(--border); border-radius:10px; padding:11px 12px; }
+
+  /* ---- conversation panel ---- */
+  .panel { display:flex; flex-direction:column; min-height:620px; max-height:calc(100vh - 150px); overflow:hidden; }
+  .phead { display:flex; align-items:center; gap:9px; padding:13px 16px; border-bottom:1px solid var(--border-2); }
+  .phead .pt { font-weight:700; font-size:14px; }
+  .phead .answeringas { margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--fg-2);
+    background:var(--surface-2); border:1px solid var(--border-2); border-radius:999px; padding:4px 11px; }
+  .phead .answeringas b { color:var(--fg); }       /* G4: role only, no intent */
+  .phead .answeringas .lk { font-size:11px; }
+  .stream { padding:18px 16px; display:flex; flex-direction:column; gap:20px; flex:1 1 auto; overflow-y:auto; }
+
+  .turn { display:flex; gap:11px; }
+  .turn .av { width:28px; height:28px; border-radius:8px; flex:none; display:grid; place-items:center; font-size:11px; font-weight:800; }
+  .turn.user .av { background:var(--user-bubble); color:var(--accent-ink); }
+  .turn.bot .av { background:linear-gradient(145deg, var(--accent), var(--accent-ink)); color:#fff; }
+  .turn .body { min-width:0; flex:1 1 auto; }
+  .turn.user .body { align-self:flex-start; background:var(--user-bubble); border-radius:12px; padding:9px 13px; font-size:14px; }
+
+  .answer { font-size:14px; color:var(--fg); }
+  .answer .lead { font-size:15.5px; font-weight:700; letter-spacing:-.01em; margin:0 0 9px; }
+  .answer p { margin:0 0 9px; }
+  .answer p:last-child { margin-bottom:0; }
+
+  /* key/fix rows (plain, no routing pills) */
+  .kv { display:flex; gap:10px; margin:0 0 8px; align-items:baseline; }
+  .kv .k { font-family:var(--mono); font-size:10px; letter-spacing:.06em; font-weight:700; color:#fff;
+    background:var(--accent); border-radius:5px; padding:2px 7px; flex:none; min-width:42px; text-align:center; }
+  .kv .k.fix { background:var(--good); }
+  .kv .t { font-size:14px; }
+
+  /* human-readable SOURCE CHIPS (G6) */
+  .sources { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 0; }
+  .sources .lbl { width:100%; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:1px; }
+  .srcchip { appearance:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; max-width:100%;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--fg-2);
+    border-radius:999px; padding:5px 12px 5px 10px; font-size:12.5px; font:inherit; }
+  .srcchip:hover { border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); color:var(--fg); }
+  .srcchip.active { background:var(--accent-weak); border-color:color-mix(in srgb, var(--accent) 55%, var(--border)); color:var(--accent-ink); }
+  .srcchip .dot { flex:none; width:7px; height:7px; border-radius:2px; background:var(--accent); }
+  .srcchip .ct { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* suggested follow-ups + starters (plain, friendly) */
+  .followups { margin-top:14px; display:flex; flex-direction:column; gap:7px; }
+  .followups .lbl { font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .suggest { appearance:none; cursor:pointer; text-align:left; font:inherit; font-size:13px; color:var(--fg);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:9px 12px; display:flex; gap:8px; align-items:center; }
+  .suggest:hover { border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .suggest .ar { color:var(--accent-ink); font-weight:700; flex:none; }
+
+  /* honest states — reassurance, NOT warnings (G5) */
+  .verbatim { margin:2px 0 0; }
+  .verbatim .vl { font-size:14px; font-weight:700; color:var(--fg); margin:0 0 9px; display:flex; gap:7px; align-items:center; }
+  .verbatim .vl .lk { color:var(--accent); }
+  .verbatim blockquote { margin:0 0 4px; font-size:15px; line-height:1.45; color:var(--fg);
+    padding:10px 14px; background:var(--surface-2); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; }
+  .calc .cl { font-size:14px; font-weight:700; color:var(--fg); margin:0 0 9px; display:flex; gap:7px; align-items:flex-start; }
+  .calc .cl .lk { color:var(--accent); flex:none; margin-top:1px; }
+
+  /* simple themes bar (analytics stays legible, still cited) */
+  .themes { margin:12px 0 2px; display:flex; flex-direction:column; gap:8px; }
+  .theme-row { display:grid; grid-template-columns:150px 1fr 44px; gap:10px; align-items:center; }
+  @media (max-width:440px){ .theme-row{ grid-template-columns:104px 1fr 40px; } }
+  .theme-row .tl { font-size:12.5px; color:var(--fg-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .theme-row .tv { font-family:var(--mono); font-size:12px; font-weight:700; text-align:right; color:var(--fg); }
+  .track { height:18px; background:var(--bar-track); border-radius:5px; overflow:hidden; }
+  .fill { height:100%; border-radius:5px; }
+
+  /* "nothing found" & system error (plain language) */
+  .plainnote { display:flex; gap:11px; align-items:flex-start; font-size:14px; line-height:1.45;
+    background:var(--surface-2); border:1px dashed var(--border); border-radius:11px; padding:13px 14px; }
+  .plainnote .ic { flex:none; font-size:18px; color:var(--muted); line-height:1.3; }
+  .plainnote b { color:var(--fg); }
+  .plainnote.err { border-style:solid; }
+  .retry { appearance:none; cursor:pointer; margin-top:10px; font:inherit; font-size:13px; font-weight:700;
+    color:var(--accent-ink); background:var(--accent-weak); border:1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+    border-radius:9px; padding:7px 14px; }
+
+  /* composer (pinned) */
+  .composer { border-top:1px solid var(--border-2); padding:12px 16px; display:flex; gap:9px; align-items:center; }
+  .composer input { flex:1 1 auto; min-width:0; font-family:var(--sans); font-size:14px; padding:11px 13px;
+    border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--fg); }
+  .composer input:disabled { opacity:.55; }
+  .composer button.send { font-family:var(--sans); font-weight:700; font-size:14px; color:#fff; background:var(--accent);
+    border:none; border-radius:10px; padding:11px 18px; cursor:pointer; }
+  .composer button.send:disabled { opacity:.5; cursor:default; }
+
+  /* empty state */
+  .empty { text-align:center; padding:38px 16px 22px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .empty .elogo { width:54px; height:54px; border-radius:15px; color:#fff; font-weight:800; font-size:24px;
+    background:linear-gradient(145deg, var(--accent), var(--accent-ink)); display:grid; place-items:center; margin-bottom:8px; }
+  .empty h2 { margin:0; font-size:19px; letter-spacing:-.01em; }
+  .empty .tagline { font-size:13px; color:var(--fg-2); max-width:420px; }
+  .empty .scopeline { font-size:12px; color:var(--muted); margin-top:7px; }
+  .empty .tryh { margin:22px 0 9px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .starters { display:flex; flex-direction:column; gap:8px; width:100%; max-width:440px; }
+  .starter { appearance:none; cursor:pointer; text-align:left; font:inherit; font-size:13.5px; color:var(--fg);
+    background:var(--surface-2); border:1px solid var(--border); border-radius:11px; padding:11px 13px; display:flex; gap:9px; align-items:center; }
+  .starter:hover { border-color:color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .starter .ar { color:var(--accent-ink); font-weight:700; }
+
+  /* loading */
+  .loading { display:flex; gap:11px; align-items:center; color:var(--fg-2); font-size:14px; }
+  .spin { width:16px; height:16px; border-radius:50%; border:2px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; flex:none; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .spin{ animation:none; } }
+
+  /* ===================== EVIDENCE (one source at a time) ===================== */
+  .evidence-dock { position:sticky; top:12px; }
+  .evidence-dock .ehead { display:flex; align-items:center; gap:8px; padding:13px 14px; border-bottom:1px solid var(--border-2); }
+  .evidence-dock .ehead .et { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .evidence-dock .ebody { padding:14px; }
+  .evidence-dock .eempty { font-size:12.5px; color:var(--muted); line-height:1.55; }
+  .ev-item .eh { font-size:13px; font-weight:700; color:var(--fg); margin-bottom:9px; display:flex; gap:7px; align-items:baseline; }
+  .ev-item .eh .dot { flex:none; width:8px; height:8px; border-radius:2px; background:var(--accent); align-self:center; }
+  .ev-item .esnip { font-size:13px; color:var(--fg-2); font-style:italic; line-height:1.55;
+    background:var(--surface-2); border:1px solid var(--border-2); border-radius:9px; padding:11px 12px; }
+  .ev-item .esnip.nullsnip { font-style:normal; color:var(--muted); }
+  .redtok { font-style:normal; font-family:var(--mono); font-size:10.5px; font-weight:700; color:var(--good-ink);
+    background:var(--good-weak); border:1px solid color-mix(in srgb, var(--good) 35%, var(--border)); border-radius:5px; padding:0 4px; vertical-align:1px; }
+  .ev-item .redflag { margin-top:9px; font-size:10.5px; color:var(--good-ink); font-family:var(--mono);
+    display:flex; gap:5px; align-items:center; line-height:1.4; }
+  .evidence-dock .ehead .close { display:none; }
+
+  /* evidence as bottom sheet on narrow screens */
+  .sheet-backdrop { display:none; }
+  @media (max-width:1080px){
+    .evidence-dock.sheet { display:block; position:fixed; inset:auto 0 0 0; z-index:40; border-radius:16px 16px 0 0;
+      max-height:72vh; overflow:auto; margin:0; box-shadow:0 -12px 40px rgba(0,0,0,.3); }
+    .evidence-dock.sheet .ehead .close { display:inline-flex; margin-left:auto; appearance:none; cursor:pointer;
+      background:var(--surface-2); border:1px solid var(--border); border-radius:999px; width:26px; height:26px; color:var(--fg-2); align-items:center; justify-content:center; }
+    .sheet-backdrop.on { display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:39; }
+  }
+
+  /* phone history drawer */
+  .drawer-backdrop { display:none; }
+  @media (max-width:760px){
+    .histtoggle { display:inline-flex; align-items:center; gap:6px; appearance:none; cursor:pointer; font:inherit;
+      font-size:12.5px; font-weight:700; color:var(--fg-2); background:var(--surface-2); border:1px solid var(--border);
+      border-radius:9px; padding:8px 11px; margin-top:10px; width:100%; justify-content:center; }
+    .history.card { position:fixed; inset:0 auto 0 0; z-index:45; width:286px; max-width:86vw; overflow:auto;
+      border-radius:0 16px 16px 0; transform:translateX(-102%); transition:transform .2s ease; }
+    body.drawer-open .history.card { transform:none; }
+    body.drawer-open .drawer-backdrop { display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:44; }
+  }
+  @media (max-width:760px) and (prefers-reduced-motion: reduce){ .history.card{ transition:none; } }
+
+  .foot { margin-top:18px; font-size:11px; color:var(--muted); font-family:var(--mono); text-align:center; line-height:1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MOCKUP CONTROL BAR (explicitly a demo control, not product chrome) ============ -->
+  <div class="mockbar" role="region" aria-label="Mockup controls">
+    <span class="tag">Mockup · canned data</span>
+    <span class="cap">iteration 4 — decluttered + trust redesign</span>
+    <span class="sp"></span>
+    <span class="states">
+      <span class="sl">Preview a state:</span>
+      <button class="statebtn" data-state="verbatim">Exact-words answer</button>
+      <button class="statebtn" data-state="calc">Numbers unavailable</button>
+      <button class="statebtn" data-state="notfound">Nothing found</button>
+      <button class="statebtn" data-state="syserr">System error</button>
+    </span>
+    <button class="iconbtn" id="themeBtn" title="Toggle light / dark" aria-label="Toggle light / dark theme">&#9680;</button>
+  </div>
+
+  <!-- ============ SHELL ============ -->
+  <div class="shell">
+
+    <!-- ---- LEFT RAIL ---- -->
+    <aside class="rail">
+      <div class="card">
+        <div class="brand">
+          <div class="logo">R</div>
+          <div>
+            <div class="bn">Retail Intelligence Copilot</div>
+            <div class="bs">grounded &middot; cited</div>   <!-- G3: no $0/query -->
+          </div>
+        </div>
+      </div>
+
+      <!-- demo switcher, set apart as demo-only -->
+      <div class="card demo">
+        <span class="demolabel">&#9881; demo &mdash; not a login</span>
+        <select class="user" id="userSel" aria-label="Demo identity — not a login">
+          <option value="support_1">support_1 (support team)</option>
+          <option value="support_2">support_2 (support team)</option>
+          <option value="marketing_1">marketing_1 (marketing team)</option>
+          <option value="executive_1">executive_1 (executive team)</option>
+        </select>
+        <div class="idnote">A demo control so a reviewer can see who sees what. No password, no account &mdash; not part of what a retail user uses.</div>
+        <button class="histtoggle" id="histToggle" aria-expanded="false" aria-controls="historyCard">&#9776; Your conversations</button>
+      </div>
+
+      <!-- owner-scoped history + new chat -->
+      <div class="card history" id="historyCard" role="navigation" aria-label="Your conversations">
+        <h2>Your conversations</h2>
+        <button class="newchat" id="newChatBtn">&#43; New chat</button>
+        <div class="histlist" id="histList"></div>
+      </div>
+    </aside>
+
+    <!-- ---- CONVERSATION PANEL ---- -->
+    <main class="card panel">
+      <div class="phead">
+        <span class="pt">Retail Intelligence Copilot</span>
+        <!-- G4: reassurance scope line, role only — no intent/routing -->
+        <span class="answeringas"><span class="lk" aria-hidden="true">&#128100;</span>answering as: <b id="asRole">support</b></span>
+      </div>
+      <div class="stream" id="stream" aria-live="polite"></div>
+      <form class="composer" id="composer" onsubmit="return false;">
+        <input id="qInput" placeholder="Ask about reviews, complaints, or policies&hellip;" aria-label="Ask a question">
+        <button type="button" class="send" id="sendBtn">Send</button>
+      </form>
+    </main>
+
+    <!-- ---- EVIDENCE (one source at a time) ---- -->
+    <aside class="card evidence-dock" id="evidenceDock">
+      <div class="ehead">
+        <span class="et">Source</span>
+        <button class="close" id="sheetClose" aria-label="Close source">&times;</button>
+      </div>
+      <div class="ebody" id="evidenceBody">
+        <div class="eempty">Tap a <b>Source</b> on any answer to read the exact words it came from.</div>
+      </div>
+    </aside>
+  </div>
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <div class="foot">
+    Copilot Chat &middot; iteration-4 hi-fi mockup for CHECKPOINT D2<br>
+    No system metrics or internal ids on the user surface &mdash; those live in the audit view and Langfuse. Canned retail data.
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   THEME
+========================================================================= */
+(function () {
+  var btn = document.getElementById('themeBtn');
+  function cur(){ var a = document.documentElement.getAttribute('data-theme');
+    return a || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+  btn.addEventListener('click', function(){
+    document.documentElement.setAttribute('data-theme', cur() === 'dark' ? 'light' : 'dark');
+  });
+})();
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]; }); }
+/* render a redacted snippet: [EMAIL]/[PHONE]/[NAME] tokens get a calm chip style (PII redacted at source) */
+function redact(s){ return esc(s).replace(/\[(EMAIL|PHONE|NAME|ADDRESS)\]/g, '<span class="redtok">[$1]</span>'); }
+
+/* =========================================================================
+   SCOPE (plain, reassurance-worded — derived, never hard-coded in markup)
+   In the build this comes from audit.scope { restricted, categories }.
+========================================================================= */
+var SCOPE = {
+  support:   { restricted:true,  cats:['Electronics','Home & Kitchen','Automotive','Pet Supplies'] },
+  marketing: { restricted:true,  cats:['Beauty & Personal Care','Toys & Games','Books'] },
+  executive: { restricted:false, cats:[] }
+};
+function scopeLine(role){
+  var s = SCOPE[role];
+  if (!s.restricted) return 'You can see all product categories.';
+  var c = s.cats.slice();
+  return 'You can see ' + c.slice(0,-1).join(', ') + ' and ' + c[c.length-1] + '.';
+}
+
+var IDENTITIES = {
+  support_1:{ role:'support' }, support_2:{ role:'support' },
+  marketing_1:{ role:'marketing' }, executive_1:{ role:'executive' }
+};
+
+/* =========================================================================
+   EVIDENCE registry — source chips point here by index. No raw ids shown.
+========================================================================= */
+var EV = [];
+function src(title, snippet){ EV.push({ title:title, snippet:snippet }); return EV.length - 1; }
+
+function openEvidence(i){
+  var s = EV[i];
+  document.querySelectorAll('.srcchip').forEach(function(c){
+    c.classList.toggle('active', c.getAttribute('data-ev') === String(i));
+  });
+  var body = document.getElementById('evidenceBody');
+  var snip = s.snippet
+    ? '<div class="esnip">&ldquo;' + redact(s.snippet) + '&rdquo;</div>' +
+      '<div class="redflag">&#128274; Personal details are removed before you ever see them.</div>'
+    : '<div class="esnip nullsnip">The exact words for this source aren’t available to show.</div>';
+  body.innerHTML = '<div class="ev-item"><div class="eh"><span class="dot"></span>' + esc(s.title) + '</div>' + snip + '</div>';
+  var dock = document.getElementById('evidenceDock');
+  if (window.matchMedia('(max-width:1080px)').matches){
+    dock.classList.add('sheet'); document.getElementById('sheetBackdrop').classList.add('on');
+  }
+}
+function closeSheet(){
+  document.getElementById('evidenceDock').classList.remove('sheet');
+  document.getElementById('sheetBackdrop').classList.remove('on');
+}
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+
+/* chips row from a list of {title, snippet} */
+function sourcesRow(list){
+  if (!list || !list.length) return '';
+  var chips = list.map(function(x){
+    var i = src(x.title, x.snippet);
+    return '<button class="srcchip" data-ev="' + i + '"><span class="dot"></span>' +
+           '<span class="ct">Source: ' + esc(x.title) + '</span></button>';
+  }).join('');
+  return '<div class="sources"><span class="lbl">Where this came from</span>' + chips + '</div>';
+}
+function followupsRow(list){
+  if (!list || !list.length) return '';
+  var items = list.map(function(f){
+    return '<button class="suggest" data-ask="' + esc(f.key) + '"><span class="ar">&rarr;</span>' + esc(f.q) + '</button>';
+  }).join('');
+  return '<div class="followups"><span class="lbl">You might also ask</span>' + items + '</div>';
+}
+
+/* =========================================================================
+   RESPONSES — canned answers (returns / headphones / earbuds).
+   Each: question text, answer HTML, source chips, suggested follow-ups,
+   and NOTHING ELSE. No route/ground/latency/cost/tokens/intent anywhere.
+========================================================================= */
+var R = {
+  ret_policy: {
+    q: "What is the return policy?",
+    answer:
+      '<p class="lead">Most items can be returned within 30 days of delivery for a full refund.</p>' +
+      '<p>Items need to be in their original condition. Opened electronics follow a shorter 14-day window, and anything faulty is covered separately.</p>',
+    sources: [
+      { title:'return & refund policy', snippet:'Items may be returned within 30 days of delivery for a full refund, provided they are in original condition. To start a return, contact us at [EMAIL].' },
+      { title:'electronics warranty guide', snippet:'Opened electronics may be returned within 14 days; faulty units are covered by the manufacturer warranty for 12 months.' }
+    ],
+    followups: [ {key:'opened_elec', q:'And what about opened electronics?'}, {key:'refund_time', q:'How long do refunds take?'} ]
+  },
+  opened_elec: { /* the vague follow-up, resolved from context */
+    q: "And what about opened electronics?",
+    answer:
+      '<p class="lead">Opened electronics can be returned within 14 days, as long as they’re undamaged.</p>' +
+      '<p>If the item is faulty rather than unwanted, it’s covered by the 12-month manufacturer warranty instead of the standard return window.</p>',
+    sources: [
+      { title:'electronics warranty guide', snippet:'Opened electronics may be returned within 14 days; faulty units are covered by the manufacturer warranty for 12 months.' }
+    ],
+    followups: [ {key:'refund_time', q:'How long do refunds take?'} ]
+  },
+  refund_time: {
+    q: "How long do refunds take?",
+    answer:
+      '<p class="lead">Refunds are issued within 5 to 7 business days once the returned item is received.</p>' +
+      '<p>The money goes back to the original payment method; card providers can take a little longer to post it.</p>',
+    sources: [
+      { title:'return & refund policy', snippet:'Approved refunds are processed within 5–7 business days of receipt to the original payment method.' }
+    ],
+    followups: [ {key:'headphone', q:'Are headphone disconnections a known issue?'} ]
+  },
+  headphone: {
+    q: "Is this headphone's disconnection a known issue, and the common fix?",
+    answer:
+      '<div class="kv"><span class="k">ISSUE</span><span class="t">Bluetooth disconnection on this model is a widely reported problem.</span></div>' +
+      '<div class="kv"><span class="k fix">FIX</span><span class="t">Re-pairing the headphones after a firmware update resolves it in most cases.</span></div>' +
+      '<p>If a firmware reset doesn’t fix a confirmed fault, the customer qualifies for a free replacement with no restocking fee.</p>',
+    sources: [
+      { title:'headphone customer reviews', snippet:'keeps disconnecting after about ten minutes; I emailed support at [EMAIL] and they told me to re-pair it after a firmware update — that fixed it.' },
+      { title:'return & refund policy', snippet:'Where a firmware reset does not resolve a confirmed fault, the item qualifies for a free replacement; no restocking fee applies.' }
+    ],
+    followups: [ {key:'verbatim', q:'Does the X200 have a mic mute button?'} ]
+  },
+  earbuds: {
+    q: "What do customers complain about with our wireless earbuds?",
+    answer:
+      '<p class="lead">The most common complaints are intermittent Bluetooth dropouts and short battery life after a few months.</p>' +
+      '<p>A smaller group mention that the case lid feels loose over time.</p>',
+    sources: [
+      { title:'earbuds customer reviews', snippet:'great sound but they cut out on one side during calls; battery also dropped noticeably after three months.' }
+    ],
+    followups: [ {key:'calc', q:'Is sentiment improving this quarter?'}, {key:'notfound', q:'What’s the warranty on boat anchors?'} ]
+  },
+
+  /* ---- honest states, re-worded as reassurance (G5) ---- */
+  verbatim: {
+    q: "Does the X200 have a mic mute button?",
+    kind: 'verbatim',
+    verbatimLead: 'Here are the exact words from the sources:',
+    quote: 'The X200 includes an inline mic with a dedicated mute switch on the cable.',
+    sources: [ { title:'X200 product manual', snippet:'The X200 includes an inline mic with a dedicated mute switch on the cable, located roughly 20cm below the right earcup.' } ],
+    followups: [ {key:'earbuds', q:'What do customers complain about with our wireless earbuds?'} ]
+  },
+  calc: {
+    q: "Is sentiment improving this quarter?",
+    kind: 'calc',
+    calcLead: 'We couldn’t calculate the numbers for this one — here’s what customers actually said:',
+    answer:
+      '<p>Across recent reviews, customers increasingly mention better battery life and faster shipping, though a few still note packaging damage on arrival.</p>',
+    themes: [ {t:'battery life', v:48}, {t:'shipping speed', v:31}, {t:'packaging damage', v:14} ],
+    sources: [ { title:'recent customer reviews', snippet:'battery lasts much longer than my old pair and it arrived next day; box was a little dented though.' } ],
+    followups: []
+  },
+  notfound: {
+    q: "What's the warranty on boat anchors?",
+    kind: 'notfound'
+  },
+  syserr: { q: "", kind: 'syserr' }
+};
+
+/* starter sets per role (empty-state suggestions) */
+var STARTERS = {
+  support:   ['ret_policy','headphone'],
+  marketing: ['earbuds','calc'],
+  executive: ['earbuds','ret_policy']
+};
+
+/* =========================================================================
+   CANNED HISTORY per identity (owner-scoped). Clicking reopens the thread.
+========================================================================= */
+var THREADS = {
+  support_1: [
+    { id:'s1a', label:'Return policy & opened electronics', time:'2h ago', turns:['ret_policy','opened_elec','refund_time'] },
+    { id:'s1b', label:'Headphone disconnection + fix', time:'yesterday', turns:['headphone'] }
+  ],
+  support_2: [
+    { id:'s2a', label:'Wireless earbud complaints', time:'35m ago', turns:['earbuds'] }
+  ],
+  marketing_1: [
+    { id:'m1a', label:'Earbud complaints this quarter', time:'1h ago', turns:['earbuds','calc'] }
+  ],
+  executive_1: []
+};
+
+/* =========================================================================
+   STATE + RENDER
+========================================================================= */
+var current = 'support_1';
+var stream = document.getElementById('stream');
+var qInput = document.getElementById('qInput');
+
+function role(){ return IDENTITIES[current].role; }
+function scrollBottom(){ stream.scrollTop = stream.scrollHeight; }
+
+function renderEmpty(){
+  var r = role();
+  var picks = STARTERS[r].map(function(k){
+    return '<button class="starter" data-ask="' + k + '"><span class="ar">&rarr;</span>' + esc(R[k].q) + '</button>';
+  }).join('');
+  stream.innerHTML =
+    '<div class="empty">' +
+      '<div class="elogo">R</div>' +
+      '<h2>Ask about your reviews, products and policies</h2>' +
+      '<div class="tagline">Every answer comes with the exact sources it’s based on — nothing made up.</div>' +
+      '<div class="scopeline">' + esc(scopeLine(r)) + '</div>' +
+      '<div class="tryh">Try asking</div>' +
+      '<div class="starters">' + picks + '</div>' +
+    '</div>';
+  scrollBottom();
+}
+
+function userTurnHTML(q){
+  return '<div class="turn user"><div class="av">You</div><div class="body">' + esc(q) + '</div></div>';
+}
+
+function botTurnHTML(key){
+  var d = R[key];
+  var inner = '';
+  if (d.kind === 'verbatim'){
+    inner = '<div class="verbatim"><div class="vl"><span class="lk" aria-hidden="true">&#10003;</span>' + esc(d.verbatimLead) + '</div>' +
+            '<blockquote>&ldquo;' + esc(d.quote) + '&rdquo;</blockquote></div>' + sourcesRow(d.sources) + followupsRow(d.followups);
+  } else if (d.kind === 'calc'){
+    var rows = d.themes.map(function(x,i){
+      var col = ['var(--c1)','var(--c2)','var(--c3)'][i%3];
+      return '<div class="theme-row"><div class="tl">' + esc(x.t) + '</div>' +
+             '<div class="track"><div class="fill" style="width:' + x.v + '%;background:' + col + '"></div></div>' +
+             '<div class="tv">' + x.v + '%</div></div>';
+    }).join('');
+    inner = '<div class="calc"><div class="cl"><span class="lk" aria-hidden="true">&#9432;</span>' + esc(d.calcLead) + '</div>' +
+            d.answer + '<div class="themes" role="img" aria-label="Most-mentioned themes in recent reviews">' + rows + '</div></div>' +
+            sourcesRow(d.sources) + followupsRow(d.followups);
+  } else if (d.kind === 'notfound'){
+    inner = '<div class="plainnote"><span class="ic" aria-hidden="true">&#9675;</span><span>' +
+            '<b>I couldn’t find anything about that in the sources you have access to.</b><br>' +
+            'Try rephrasing, or ask about a different product or topic.</span></div>' +
+            followupsRow([{key:'ret_policy', q:'What is the return policy?'}]);
+  } else if (d.kind === 'syserr'){
+    inner = '<div class="plainnote err"><span class="ic" aria-hidden="true">&#9888;</span><span>' +
+            '<b>Something went wrong getting that answer.</b><br>Please try again in a moment.' +
+            '<br><button class="retry" data-ask="ret_policy">Try again</button></span></div>';
+  } else {
+    inner = '<div class="answer">' + d.answer + '</div>' + sourcesRow(d.sources) + followupsRow(d.followups);
+  }
+  return '<div class="turn bot"><div class="av">R</div><div class="body">' + inner + '</div></div>';
+}
+
+/* append a full Q+A turn with a short "thinking" beat */
+function ask(key){
+  var d = R[key];
+  if (document.querySelector('.empty')) stream.innerHTML = '';
+  if (d.q) stream.insertAdjacentHTML('beforeend', userTurnHTML(d.q));
+  var load = document.createElement('div');
+  load.className = 'turn bot';
+  load.innerHTML = '<div class="av">R</div><div class="body"><div class="loading"><span class="spin"></span>Looking through the sources…</div></div>';
+  stream.appendChild(load);
+  scrollBottom();
+  qInput.value = ''; setBusy(true);
+  setTimeout(function(){
+    load.remove();
+    stream.insertAdjacentHTML('beforeend', botTurnHTML(key));
+    bindTurnControls();
+    setBusy(false);
+    scrollBottom();
+  }, 650);
+}
+
+function setBusy(b){
+  document.getElementById('sendBtn').disabled = b;
+  qInput.disabled = b;
+}
+
+/* free-text resolver so the composer always answers deterministically */
+function resolve(text){
+  var t = text.toLowerCase();
+  if (/(boat|anchor|kayak)/.test(t)) return 'notfound';
+  if (/(mute|mic)/.test(t)) return 'verbatim';
+  if (/(sentiment|improv|average|trend|number)/.test(t)) return 'calc';
+  if (/(headphone|disconnect|pair)/.test(t)) return 'headphone';
+  if (/(earbud|complain)/.test(t)) return 'earbuds';
+  if (/(open).*electronic|electronic.*(open)|opened/.test(t)) return 'opened_elec';
+  if (/(how long|refund|days)/.test(t)) return 'refund_time';
+  return 'ret_policy';
+}
+
+/* =========================================================================
+   HISTORY (owner-scoped)
+========================================================================= */
+function renderHistory(){
+  var list = document.getElementById('histList');
+  var threads = THREADS[current] || [];
+  if (!threads.length){
+    list.innerHTML = '<div class="histempty">No conversations yet. Ask something to start one — it’ll appear here.</div>';
+    return;
+  }
+  list.innerHTML = threads.map(function(t){
+    return '<button class="histrow" data-thread="' + t.id + '"><span class="mk"></span>' +
+           '<span class="hb"><span class="hl">' + esc(t.label) + '</span><span class="ht">' + esc(t.time) + '</span></span></button>';
+  }).join('');
+  list.querySelectorAll('.histrow').forEach(function(btn){
+    btn.addEventListener('click', function(){ reopen(btn.getAttribute('data-thread')); });
+  });
+}
+function reopen(id){
+  var t = (THREADS[current] || []).filter(function(x){ return x.id === id; })[0];
+  if (!t) return;
+  document.querySelectorAll('.histrow').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-thread') === id);
+    if (b.getAttribute('data-thread') === id) b.setAttribute('aria-current','true'); else b.removeAttribute('aria-current');
+  });
+  stream.innerHTML = '';
+  t.turns.forEach(function(k){
+    if (R[k].q) stream.insertAdjacentHTML('beforeend', userTurnHTML(R[k].q));
+    stream.insertAdjacentHTML('beforeend', botTurnHTML(k));
+  });
+  bindTurnControls();
+  scrollBottom();
+  document.body.classList.remove('drawer-open');  /* close phone drawer after pick */
+}
+
+/* =========================================================================
+   WIRING (source chips, suggestion buttons) — rebound after each render
+========================================================================= */
+function bindTurnControls(){
+  stream.querySelectorAll('.srcchip').forEach(function(c){
+    c.onclick = function(){ openEvidence(parseInt(c.getAttribute('data-ev'),10)); };
+  });
+  stream.querySelectorAll('[data-ask]').forEach(function(b){
+    b.onclick = function(){ ask(b.getAttribute('data-ask')); };
+  });
+}
+
+/* identity switch — owner-scoped reset */
+document.getElementById('userSel').addEventListener('change', function(e){
+  current = e.target.value;
+  document.getElementById('asRole').textContent = role();
+  renderHistory();
+  renderEmpty();
+  document.querySelectorAll('.histrow').forEach(function(b){ b.classList.remove('active'); });
+  closeSheet();
+});
+
+document.getElementById('newChatBtn').addEventListener('click', function(){
+  document.querySelectorAll('.histrow').forEach(function(b){ b.classList.remove('active'); b.removeAttribute('aria-current'); });
+  renderEmpty();
+  document.body.classList.remove('drawer-open');
+});
+
+document.getElementById('sendBtn').addEventListener('click', function(){
+  var v = qInput.value.trim(); if (!v) return;
+  ask(resolve(v));
+});
+qInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter'){ e.preventDefault(); document.getElementById('sendBtn').click(); }
+});
+
+/* mockup state-preview buttons (demo control) */
+document.querySelectorAll('.statebtn').forEach(function(b){
+  b.addEventListener('click', function(){ ask(b.getAttribute('data-state')); });
+});
+
+/* phone history drawer */
+document.getElementById('histToggle').addEventListener('click', function(){
+  var open = document.body.classList.toggle('drawer-open');
+  this.setAttribute('aria-expanded', String(open));
+});
+document.getElementById('drawerBackdrop').addEventListener('click', function(){
+  document.body.classList.remove('drawer-open');
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){ closeSheet(); document.body.classList.remove('drawer-open'); }
+});
+
+/* boot */
+document.getElementById('asRole').textContent = role();
+renderHistory();
+renderEmpty();
+</script>
+</body>
+</html>
