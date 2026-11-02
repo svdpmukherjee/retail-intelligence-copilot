@@ -26,9 +26,11 @@ coverage/
 
 # ---- Data (large; never commit raw corpus or PII) ----
 data/raw/
+data/raw_meta/
 data/bronze/
 data/silver/
 data/gold/
+data/product/
 *.parquet
 *.delta
 

@@ -3,7 +3,7 @@ from typing import Literal
 
 from app.config import Settings, get_settings
 
-Layer = Literal["bronze", "silver", "gold"]
+Layer = Literal["bronze", "silver", "gold", "product"]
 # Gold is published under this prefix inside AZURE_BLOB_CONTAINER.
 GOLD_BLOB_PREFIX = "gold"
 

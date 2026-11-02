@@ -81,6 +81,29 @@ done
   raise N and re-download that one.
 - **(Win)** run this loop in Git Bash or WSL (it uses `curl`+`head`).
 
+### B.6 — Download the item metadata into `data/raw_meta/` (price, product name, avg rating)
+
+The review feed above carries **no product attributes** — `price`, product name, and the
+product's average rating live only in Amazon's separate item-metadata feed
+(`meta_<Category>.jsonl`, 10-30 GB each). Those feed Gold `structured`'s `price`,
+`product_title`, `product_avg_rating`, `product_rating_count`, and `store` columns; without
+this step `price` is null and product-level text-to-SQL questions can't be answered.
+
+The `head` trick does **not** work here (a product's metadata can sit anywhere in the file),
+so the helper streams each metadata file once and keeps only the products that appear in the
+reviews you downloaded in B.5 — the on-disk result is a few hundred MB, not ~76 GB. Expect
+~45 min on a typical connection; run it **from `backend/`** (same env/PYTHONPATH reason as
+Step 2).
+
+```bash
+cd <REPO>/backend
+source .venv/bin/activate
+PYTHONPATH=.. DATA_LAKE_PATH=../data python -m data.etl.fetch_product_meta   # -> ../data/raw_meta/
+```
+- Run B.5 first — this reads `data/raw/<Category>.jsonl` to know which products to keep.
+- Amazon's metadata is missing `price` for a large share of products; those rows keep a null
+  price (no values are invented). The script prints per-category price coverage.
+
 ---
 
 ## C. Run — every time (in order)

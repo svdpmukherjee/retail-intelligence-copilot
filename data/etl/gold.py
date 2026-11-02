@@ -19,6 +19,13 @@ STRUCTURED_COLUMNS = (
     "verified_purchase",
     "timestamp",
     "helpful_vote",
+    # Product attributes joined from the item-metadata feed (absent for the sample, so
+    # _select_present drops them there); see data/etl/product_meta.py.
+    "product_title",
+    "product_avg_rating",
+    "product_rating_count",
+    "store",
+    "main_category",
 )
 # Only redacted free text plus metadata; no reviewer identifiers reach the RAG index.
 REVIEW_TEXT_COLUMNS = ("asin", "title", "text", "description", "category", "year")
