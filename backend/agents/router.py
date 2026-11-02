@@ -59,7 +59,9 @@ _RULES: tuple[tuple[Intent, re.Pattern[str], str], ...] = (
         "sql",
         re.compile(
             r"\b(how many|count|number of|average|avg|mean|median|total|sum|trend\w*|top \d+"
-            r"|top[- ]?(?:rated|selling)|bottom \d+|highest|lowest|per month|per year)\b",
+            r"|top[- ]?(?:rated|selling)|most[- ]?reviewed|best[- ]?rated|worst[- ]?rated"
+            r"|highest[- ]?rated|lowest[- ]?rated|most[- ]?rated|bottom \d+|highest|lowest"
+            r"|per month|per year)\b",
             re.IGNORECASE,
         ),
         "aggregate question over structured data",
@@ -128,12 +130,19 @@ async def route(
     *,
     context: MemoryContext | None = None,
     llm: LLM | None = None,
+    resolving: bool = False,
 ) -> RouteDecision:
-    """Classify intent (rules first; LLM only for queries no rule matches) and attach the scope."""
+    """Classify intent (rules first; LLM only for queries no rule matches) and attach the scope.
+
+    `resolving` is set when this turn is the user's reply to a clarifying question we just asked:
+    we must not clarify again (that is the loop in the transcript) — we commit to a concrete tool.
+    """
     scope = derive_scope(role)
     # Deterministic honesty gate, ahead of the aggregate rules: a question for sales/revenue data
     # the dataset does not hold is answered with a clarifying question, never a dump of nulls.
-    if _MISSING_MEASURE.search(query):
+    # Skipped when resolving: the user has already been asked and has replied, so re-asking it
+    # (the reply still carries the original "revenue" subject) would loop forever.
+    if not resolving and _MISSING_MEASURE.search(query):
         return RouteDecision(
             intent="clarify",
             scope=scope,
@@ -158,7 +167,10 @@ async def route(
             pass  # classification is best-effort; the default keeps the route deterministic
         else:
             if parsed := _parse_llm_intent(raw):
-                return RouteDecision(
-                    intent=parsed[0], scope=scope, rationale=parsed[1], question=parsed[2]
-                )
+                # When resolving a clarification, a second clarify is not allowed: fall through to
+                # the concrete default so the reply gets a real answer, not another question.
+                if not (resolving and parsed[0] == "clarify"):
+                    return RouteDecision(
+                        intent=parsed[0], scope=scope, rationale=parsed[1], question=parsed[2]
+                    )
     return RouteDecision(intent="review_rag", scope=scope, rationale=DEFAULT_RATIONALE)

@@ -23,12 +23,32 @@ export function scopeLine(scope: { restricted: boolean; categories: string[] } |
   return `You can see: ${names.join(", ")}`;
 }
 
+// One starter per retrieval path, so a reviewer who has never seen the data can check each in a
+// click: a plain SQL number, customer-voice review RAG, a policy/doc lookup, and a complex
+// question that needs numbers + reviews together. Scoped roles stay inside what they can see.
 const STARTERS: Record<string, string[]> = {
-  support: ["What is the return policy?", "What do customers complain about most?"],
-  marketing: ["What do customers praise most about our products?", "Which products have the best ratings?"],
-  executive: ["Summarise overall customer sentiment.", "Which products have the highest revenue?"],
+  support: [
+    "What's the average customer rating for Electronics?",
+    "What do customers complain about most in their reviews?",
+    "What does our return policy say about damaged items?",
+  ],
+  marketing: [
+    "What's the average customer rating by category?",
+    "What do customers praise most about our Beauty products?",
+    "Why are customers unhappy with our lowest-rated toys?",
+  ],
+  executive: [
+    "What's the average customer rating by category?",
+    "What do customers complain about most in their reviews?",
+    "What does our return policy say about damaged items?",
+    "Why are our lowest-rated electronics disappointing customers?",
+  ],
 };
-const DEFAULT_STARTERS = ["What can you tell me about customer reviews?", "Summarise our return policy."];
+const DEFAULT_STARTERS = [
+  "What's the average customer rating by category?",
+  "What do customers complain about most in their reviews?",
+  "What does our return policy say about damaged items?",
+];
 
 export function startersFor(role: string): string[] {
   return STARTERS[role] ?? DEFAULT_STARTERS;

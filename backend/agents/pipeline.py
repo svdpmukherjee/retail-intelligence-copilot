@@ -164,6 +164,7 @@ async def answer(
             log.warning("memory load failed: %s", type(exc).__name__)
             memory["error"] = f"load: {type(exc).__name__}"
     retrieval_query = effective_query(query, context) if context else query
+    resolving = bool(context and context.pending_clarification)
     if memory is not None:
         memory["followup_augmented"] = retrieval_query != query
     ctx = {"context": context} if context else {}  # no memory: M4 call shape unchanged
@@ -176,7 +177,7 @@ async def answer(
     trace = _start_trace(role, query)
     try:
         with _stage(trace, "route", ledger, task="route") as meta:
-            decision = await route(retrieval_query, role, ledger, **ctx)
+            decision = await route(retrieval_query, role, ledger, resolving=resolving, **ctx)
             meta["intent"] = decision.intent
             meta["scope_restricted"] = bool(decision.scope.get("category"))
             meta["_output"] = f"{decision.intent}: {decision.rationale}"
@@ -191,7 +192,9 @@ async def answer(
                 tool_path.append("sql_agent")
                 try:
                     with _stage(trace, "sql_agent", ledger, task="sql") as meta:
-                        sql_result = await sql_agent(query, decision.scope, ledger)
+                        # retrieval_query, not query: a follow-up reply ("most-reviewed products")
+                        # carries no subject on its own — text-to-SQL needs the resolved question.
+                        sql_result = await sql_agent(retrieval_query, decision.scope, ledger)
                         meta["rows"] = len(sql_result["rows"])
                         meta["_output"] = sql_result.get("sql")
                 except SQLComputeError as exc:  # degrade to whatever evidence remains, not a 502
@@ -208,7 +211,9 @@ async def answer(
                     hits = await asyncio.to_thread(docs_rag, retrieval_query, decision.scope)
                     _record_retrieval(meta, hits)
             with _stage(trace, "compose", ledger, task="compose") as meta:
-                result = await compose(query, sql_result, hits, ledger, **ctx)
+                # Answer the resolved question so a follow-up reply reads coherently, not as if the
+                # bare "most-reviewed products" were the whole ask.
+                result = await compose(retrieval_query, sql_result, hits, ledger, **ctx)
                 meta["grounding"] = result.audit.get("grounding", {}).get("path")
                 meta["citations"] = len(result.citations)
                 meta["_input"] = redact(query)

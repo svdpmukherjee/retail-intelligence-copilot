@@ -51,6 +51,11 @@ class MemoryContext(BaseModel):
     history: list[Turn] = []
     preferences: list[str] = []
     prior_findings: list[str] = []
+    # Set when the last assistant turn was a clarifying question: this turn is its answer, so the
+    # router must resolve it (and not clarify again). `clarify_subject` is the user question that
+    # the clarification was about, folded back in so the reply is understood against what was asked.
+    pending_clarification: bool = False
+    clarify_subject: str | None = None
 
     def render(self) -> str:
         """Short bounded text block; empty string when there is nothing to show."""
@@ -81,8 +86,14 @@ def _is_vague_followup(query: str) -> bool:
 
 
 def effective_query(query: str, context: MemoryContext) -> str:
-    """Query used for routing + retrieval: a vague follow-up inherits the last user turn's
-    subject (deterministic, $0). Anything else is returned unchanged."""
+    """Query used for routing + retrieval: a reply to a clarifying question is folded back onto
+    the question it answers; a vague follow-up inherits the last user turn's subject (both
+    deterministic, $0). Anything else is returned unchanged."""
+    # A reply to a clarification ("most-reviewed products", "electronics") means nothing on its
+    # own — resolve it against the subject that was clarified, not as a fresh query.
+    if context.pending_clarification and context.clarify_subject:
+        subject = " ".join(context.clarify_subject.split())[:MAX_TURN_CHARS]
+        return f"{subject} {query}"
     if not _is_vague_followup(query):
         return query
     prior = next((t.content for t in reversed(context.history) if t.role_kind == "user"), None)
@@ -101,9 +112,12 @@ class MemoryManager:
         role_scope = scope_for_role(role)
         n = min(limit, get_settings().memory_history_turns)
         messages = self._store.recent_messages(thread_id, n, user_id=user_id) if n > 0 else []
+        pending, subject = self._pending_clarification(messages)
         return MemoryContext(
             thread_id=thread_id,
             history=[Turn(role_kind=m.role_kind, content=m.content) for m in messages],
+            pending_clarification=pending,
+            clarify_subject=subject,
             preferences=[
                 r.content for r in self._store.list_memory(user_id, kind="preference", limit=n)
             ],
@@ -112,6 +126,20 @@ class MemoryManager:
                 for r in self._store.list_memory(user_id, kind="finding", limit=n, scope=role_scope)
             ],
         )
+
+    @staticmethod
+    def _pending_clarification(messages: list) -> tuple[bool, str | None]:
+        """(pending, subject) — whether the last assistant turn was a clarifying question, and the
+        user question it was about. The assistant turn's payload carries kind=="clarification"
+        (see _render_payload); the subject is the last user turn before it."""
+        if not messages or messages[-1].role_kind != "assistant":
+            return False, None
+        if (messages[-1].payload or {}).get("kind") != "clarification":
+            return False, None
+        subject = next(
+            (m.content for m in reversed(messages[:-1]) if m.role_kind == "user"), None
+        )
+        return True, subject
 
     async def persist(
         self,
