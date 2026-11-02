@@ -38,14 +38,14 @@ export default function HistoryRail({ threads, error, activeId, onSelect, onNewC
   return (
     <section className="card history" aria-label="Your conversations">
       <h2>
-        History <span className="yours">(yours)</span>
+        Your Chat History
       </h2>
       <button type="button" className="newchat" onClick={onNewChat}>
         &#43; new chat
       </button>
       {error && (
         <div className="histerr" role="alert">
-          Could not load conversations: {error}
+          We couldn&rsquo;t load your conversations right now.
         </div>
       )}
       <div className="histlist">

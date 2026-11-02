@@ -821,3 +821,40 @@ Durable design decisions (newest at the bottom). Decision → why.
   audit.py`, `frontend/src/admin/` (new), `frontend/src/identities.ts` (+admin identity),
   `frontend/src/api/{client,types}.ts` (+audit calls/types), and `frontend/src/App.tsx` (routing
   seam only). No audit schema change, no chat-shape change.
+
+- **M8 v4 (2026-11-02): one new backend field `citations[].display_label` (D-30), everything
+  else binds to the shipped contract — frontend-and-copy declutter + trust redesign.** The
+  iteration-4 design pass (`design/iteration-4/`, approved D1/D2) called for the chat surface to
+  stop showing operator internals and to render citations as human-readable source chips.
+  **Decision:** add exactly one additive field, `display_label: str`, to the `Citation` model in
+  `composer.py`, derived server-side by source type (review → `customer review · <Category>`;
+  doc → `<Title> · <Section>` from the real heading; SQL → `Calculated from your data`) and
+  PII-safe by construction (category/title/section only — no raw ASIN or user text), distinct from
+  the existing `label` (kept unchanged for the LLM prompt + extractive answer text, so answer
+  composition is byte-stable). `main.py` needed no edit — `QueryResponse(AnswerResult)` passes the
+  field through. The chip binds to `display_label` only; raw ids/`source_id`/`n` stay internal.
+  **Why one field, not a surface-only change:** the chip needed a readable, PII-safe string that
+  the pipeline alone can derive from source metadata; synthesising it client-side from raw ids/ASINs
+  would leak exactly what `ux-surface.md` forbids and could not be PII-safe. **Why not also a
+  product-title form for reviews:** the `Chunk` model carries no product title, so review labels use
+  the category form; a title form would need a retrieval/schema change — logged as an open item, out
+  of scope. Everything else (removing SessionCard/TrustStrip/ScopeCard/ScopeRibbon, the re-worded
+  honest states, `answering as: <role>`, the derived plain scope line, the demo-framed switcher)
+  is a pure frontend-and-copy change on the unchanged pipeline/retrieval/governance/memory and the
+  `GET /threads` endpoints. B-15 (vague-follow-up routing) and B-16 (audit enrichment) explicitly
+  untouched. Governance invariant held and verified live: scope enforced server-side at retrieval,
+  UI never widens, category names never hard-coded, charts gated on `"sql" ∈ audit.sources[]`;
+  module gate showed executive `{restricted:false}` vs marketing `{restricted:true, 3 cats}` and the
+  ASIN hidden on marketing review chips. Spec `.claude/specs/M8v4_serving_ui.md`; note
+  `docs/modules/M8v4_serving_ui.md`.
+
+- **M8 v4 UAT fixes (2026-11-02, human review in the running app):** (1) **Bounded history rail.**
+  The left-rail conversation-history list grew unbounded and stretched the whole page (the approved
+  D2 mockup never exercised it — its canned list was short). Fixed with CSS only: at `min-width:761px`
+  the sticky `.rail` is capped to `max-height: calc(100vh - 24px)`, the history card (`.rail > .history`,
+  a direct-child selector so it cannot reach the phone drawer) flexes to fill the leftover height, and
+  `.histlist` gets `overflow-y:auto` with a ~120px floor — the list scrolls within its card and ends at
+  the screen bottom, no page growth; the phone drawer keeps its own full-height `overflow:auto`.
+  (2) **Rename** the sidebar heading "History (yours)" → "Your Chat History" (the user then edited it to
+  plain text, so the now-dead `.history h2 .yours` accent rule was swept). Both CSS/markup only, no
+  behaviour change, `npm run build` clean.

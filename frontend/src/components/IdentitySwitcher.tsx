@@ -1,4 +1,4 @@
-import { IDENTITIES, Identity } from "../identities";
+import { IDENTITIES, Identity, identityLabel } from "../identities";
 
 interface Props {
   identity: Identity;
@@ -6,20 +6,15 @@ interface Props {
   selectRef: React.Ref<HTMLSelectElement>;
 }
 
+// Demo scaffolding, not product: the tag is text (not colour-only) and the card is dashed.
 export default function IdentitySwitcher({ identity, onIdentity, selectRef }: Props) {
   return (
-    <>
-      <label htmlFor="identity-select">
-        <h2>Demo identity</h2>
-      </label>
+    <div className="demo">
       <span className="demolabel">&#9881; demo &mdash; not a login</span>
-      <div className="idrow">
-        <span className="k">role</span>
-        <span className="v">{identity.role}</span>
-      </div>
       <select
         id="identity-select"
-        className="role"
+        className="user"
+        aria-label="Demo identity — not a login"
         ref={selectRef}
         value={identity.userId}
         onChange={(e) => {
@@ -29,13 +24,14 @@ export default function IdentitySwitcher({ identity, onIdentity, selectRef }: Pr
       >
         {IDENTITIES.map((i) => (
           <option key={i.userId} value={i.userId}>
-            {i.userId} &mdash; {i.role}
+            {identityLabel(i)}
           </option>
         ))}
       </select>
       <div className="idnote">
-        Switches the demo owner so owner-scoping is visible. No password, no session trust.
+        A demo control so a reviewer can see who sees what. No password, no account &mdash; not part of what a retail
+        user uses.
       </div>
-    </>
+    </div>
   );
 }

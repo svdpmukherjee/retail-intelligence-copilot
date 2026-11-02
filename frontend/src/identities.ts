@@ -13,6 +13,10 @@ export const IDENTITIES: Identity[] = [
   { userId: "admin_1", role: "admin" },
 ];
 
+export function identityLabel(i: Identity): string {
+  return `${i.userId} (${i.role} team)`;
+}
+
 export const DEFAULT_IDENTITY = IDENTITIES[0];
 
 export function relativeTime(iso: string, now: number = Date.now()): string {

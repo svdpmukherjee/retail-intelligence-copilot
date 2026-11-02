@@ -871,6 +871,101 @@ flowchart TB
 
 ---
 
+## Snapshot 11 — After M8 v4 (Serving & UI, user-centred declutter + trust redesign)
+
+Iteration 4 is a frontend-and-copy declutter + trust redesign on the **unchanged
+pipeline**, plus **exactly one** additive backend field: `citations[].display_label`
+(readable source-chip label derived server-side by source type, PII-safe). The chat
+surface loses all operator instrumentation (SessionCard · TrustStrip · ScopeCard ·
+ScopeRibbon deleted → audit view + Langfuse), gains re-worded honest states, an
+`answering as: <role>` header, a derived plain scope line, a demo-framed identity
+switcher, and a bounded scrollable history rail.
+
+```mermaid
+flowchart TB
+    ROOT["retail-intelligence-copilot/<br/>PRD.md · CLAUDE.md · README.md · .gitignore · .claudeignore"]
+    CLA[".claude/<br/>settings.json"]
+    AG[".claude/agents/<br/>planner · developer · tester · documenter · designer · solution-architect"]
+    CM[".claude/commands/<br/>module.md"]
+    RU[".claude/rules/<br/>code_style · security · testing · ux-surface"]
+    CX["context/<br/>PROJECT · CURRENT_TASK · WORKLOG · DECISIONS"]
+    DC["docs/<br/>architecture/ · img/ · repo-evolution.md"]
+    DM["docs/modules/<br/>README · M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui · M8v3_serving_ui · M8v4_serving_ui"]
+    DDES["design/<br/>README · iteration-2/ · iteration-3/ · iteration-4/ (brief · wireframes · decisions · handoff · mockups/m8-chat.html)"]
+
+    SPEC[".claude/specs/<br/>M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui · M8v3_serving_ui · M8v4_serving_ui"]
+    COST["COST.md"]
+    GH[".github/workflows/<br/>ci.yml (backend · eval · frontend)"]
+    BE["backend/<br/>pyproject.toml · .env.example · Dockerfile · .dockerignore"]
+    BEAPP["app/<br/>config.py · cost.py · main.py (GET /threads · /threads/{id} · /audit)"]
+    BEAGT["agents/<br/>llm · router · sql_agent · review_rag · docs_rag · _rag · composer (+display_label) · pipeline"]
+    BEGOV["governance/<br/>policy · pii · grounding · audit"]
+    BEMEM["memory/<br/>schema · store · manager"]
+    BERET["retrieval/<br/>embeddings · schema · vector_store · chunking · index_reviews · index_docs · hybrid · rerank"]
+    BEEVAL["eval/<br/>metrics · retrieval_eval · answer_eval · run_eval · thresholds.json · ground_truth/"]
+    BET["tests/<br/>+ test_composer_display_label"]
+    FE["frontend/<br/>index.html · package.json · tsconfig.json · vite.config.ts · .env.example · Dockerfile · .dockerignore"]
+    FES["src/<br/>App.tsx · main.tsx · App.css (declutter + bounded rail) · vite-env.d.ts · panelState · answer · copy (re-worded + SYSTEM_ERROR) · identities · turns"]
+    FEAPI["src/api/<br/>types (+display_label) · client (getThreads/getThread/audit)"]
+    FECMP["src/components/<br/>RoleRail · BrandCard (grounded·cited) · ThemeToggle · IdentitySwitcher (demo-framed) · HistoryRail (bounded scroll) · HistoryDrawer · ConversationPanel (answering as:) · StackedTurns · UserTurn · AssistantTurn · ClaimLine · CitationChips (Source: display_label) · EvidencePanel · ErrorBanner · EmptyState (scope line) · LoadingState (no stages)  ✗SessionCard ✗TrustStrip ✗ScopeCard ✗ScopeRibbon"]
+    FESHP["src/components/shapes/<br/>Support · Marketing · Executive · Default · Bars · Trend · SqlTable · types"]
+    ADM["src/admin/<br/>AuditView · AuditDetail · admin.css"]
+    INF["infra/<br/>main.bicep · budget.bicep · main.bicepparam · teardown.sh · docker-compose.yml · webapp.bicep · README.md"]
+    DATA["data/<br/>pyproject.toml"]
+    DETL["data/etl/<br/>spark_session · storage · bronze · silver · gold · pipeline"]
+    DSAMP["data/sample/<br/>amazon_reviews_sample.jsonl"]
+    DDOCS["data/docs/<br/>authored/ (18 md) · manuals/ (4 pdf) · make_manual_pdfs.py"]
+    DTST["data/tests/<br/>test_storage · test_bronze · test_silver · test_gold"]
+    DT["docs/testing/<br/>unit-testing.md · sit.md"]
+
+    ROOT --> CLA
+    CLA --> AG
+    CLA --> CM
+    CLA --> RU
+    CLA --> SPEC
+    ROOT --> CX
+    ROOT --> DC
+    DC --> DM
+    DC --> DDES
+    DC --> DT
+    ROOT --> COST
+    ROOT --> GH
+    ROOT --> BE
+    BE --> BEAPP
+    BE --> BEAGT
+    BE --> BEGOV
+    BE --> BEMEM
+    BE --> BERET
+    BE --> BEEVAL
+    BE --> BET
+    ROOT --> FE
+    FE --> FES
+    FES --> FEAPI
+    FES --> FECMP
+    FECMP --> FESHP
+    FES --> ADM
+    ROOT --> INF
+    ROOT --> DATA
+    DATA --> DETL
+    DATA --> DSAMP
+    DATA --> DDOCS
+    DATA --> DTST
+
+    classDef new fill:#fff3bf,stroke:#f08c00,stroke-width:3px,color:#000;
+    class SPEC,DM,DDES,BEAGT,BET,FEAPI,FECMP,FES new;
+```
+
+**Added/changed this module:**
+- `.claude/specs/M8v4_serving_ui.md` · `docs/modules/M8v4_serving_ui.md`
+- `backend/agents/composer.py` — new `display_label: str` on `Citation` (distinct from the unchanged `label`), derived by source type via `_display_label`/`_humanize` + `SQL_DISPLAY_LABEL`; `build_sources()` sets it on every citation. PII-safe (category/title/section only). `main.py` unchanged (`QueryResponse(AnswerResult)` passthrough).
+- `backend/tests/test_composer_display_label.py` (per-source-type derivation, no raw id/ASIN, `label`/`snippet` unchanged)
+- `frontend/src/api/types.ts` (`Citation.display_label`)
+- **Deleted** `frontend/src/components/` — `SessionCard` · `TrustStrip` · `ScopeCard` · `ScopeRibbon` (operator instrumentation → audit view + Langfuse)
+- Re-worked `CitationChips` (`Source: <display_label>`) · `EvidencePanel` (readable title + redacted snippet) · `BrandCard` (`grounded · cited`) · `ConversationPanel` (`answering as: <role>`) · `IdentitySwitcher` (demo-framed) · `HistoryRail` (bounded scroll + "Your Chat History") · `EmptyState` (derived scope line) · `LoadingState` (no stages) · `copy.ts` (re-worded honest states + `SYSTEM_ERROR`) · `App.css` (declutter + mockup pass + bounded rail)
+- Pipeline, retrieval, governance, memory, and the `GET /threads` endpoints **unchanged** — one additive backend field only
+
+---
+
 <!--
 Template for each new snapshot:
 1. Copy the previous snapshot's Mermaid block.

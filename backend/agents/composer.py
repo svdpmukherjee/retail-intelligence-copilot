@@ -13,6 +13,7 @@ from retrieval.embeddings import GoAheadRequired
 from retrieval.schema import SearchHit
 
 SQL_SOURCE = "sql"
+SQL_DISPLAY_LABEL = "Calculated from your data"
 MAX_QUOTE_CHARS = 240
 # Match the SQL query's own row bound (sql_agent.MAX_ROWS): the result set is already capped
 # there, so the display must never drop a row the query kept. SqlBlock.total_rows lets the UI
@@ -31,6 +32,7 @@ class Citation(BaseModel):
     n: int
     source_id: str  # chunk id, or "sql" for the SQL result
     label: str
+    display_label: str  # plain-language chip text for the UI; built from titles/category only
     snippet: str | None = None  # redacted excerpt of the source text, for the UI
 
 
@@ -57,6 +59,22 @@ def _label(hit: SearchHit) -> str:
     if c.source_type == "doc":
         return f"{c.doc_title or c.doc_id} / {c.section}" if c.section else str(c.doc_title)
     return f"review {c.asin} ({c.category})"
+
+
+def _humanize(text: str) -> str:
+    """Underscores/hyphens to spaces, title-cased only when the text is a raw slug."""
+    spaced = text.replace("_", " ").replace("-", " ").strip()
+    return spaced.title() if spaced.islower() or spaced != text else spaced
+
+
+def _display_label(hit: SearchHit) -> str:
+    """Reader-facing source name: never an ASIN, chunk id, slug or filename, nor review text."""
+    c = hit.chunk
+    if c.source_type == "doc":
+        title = _humanize(c.doc_title or c.doc_id or "Policy document")
+        return f"{title} · {_humanize(c.section)}" if c.section else title
+    category = _humanize(c.category).replace(" And ", " and ") if c.category else ""
+    return f"customer review · {category}" if category else "customer review"
 
 
 def _sql_text(sql_result: dict) -> str:
@@ -109,13 +127,20 @@ def build_sources(sql_result: dict | None, hits: list[SearchHit]) -> list[tuple[
     sources: list[tuple[Citation, str]] = []
     if sql_result is not None:
         text = _sql_text(sql_result)
-        cite = Citation(n=1, source_id=SQL_SOURCE, label="SQL result", snippet=_snippet(text))
+        cite = Citation(
+            n=1,
+            source_id=SQL_SOURCE,
+            label="SQL result",
+            display_label=SQL_DISPLAY_LABEL,
+            snippet=_snippet(text),
+        )
         sources.append((cite, text))
     for hit in hits:
         cite = Citation(
             n=len(sources) + 1,
             source_id=hit.chunk.id,
             label=_label(hit),
+            display_label=_display_label(hit),
             snippet=_snippet(hit.chunk.text),
         )
         sources.append((cite, hit.chunk.text))

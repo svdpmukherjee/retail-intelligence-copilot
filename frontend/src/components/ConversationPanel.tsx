@@ -2,7 +2,7 @@ import { FormEvent, ReactNode, useEffect, useRef } from "react";
 
 interface Props {
   title: string;
-  meta: string;
+  answeringAs: string;
   role: string;
   question: string;
   inFlight: boolean;
@@ -13,7 +13,7 @@ interface Props {
   scrollKey: number;
 }
 
-export default function ConversationPanel({ title, meta, role, question, inFlight, onQuestion, onSubmit, children, panelState, scrollKey }: Props) {
+export default function ConversationPanel({ title, answeringAs, role, question, inFlight, onQuestion, onSubmit, children, panelState, scrollKey }: Props) {
   const streamRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = streamRef.current;
@@ -24,7 +24,10 @@ export default function ConversationPanel({ title, meta, role, question, inFligh
     <main className="card panel" data-panel-state={panelState}>
       <header className="phead">
         <h1 className="pt">{title}</h1>
-        <span className="pm">{meta}</span>
+        <span className="answeringas">
+          <span aria-hidden="true">&#128100;</span>
+          {answeringAs ? <>answering as: <b>{answeringAs}</b></> : "choose a role to start"}
+        </span>
       </header>
       <div ref={streamRef} className="stream" aria-live="polite">
         {children}

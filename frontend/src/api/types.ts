@@ -10,6 +10,7 @@ export interface Citation {
   n: number;
   source_id: string; // chunk id, or "sql" for the SQL result
   label: string;
+  display_label: string; // plain-language source name for the chip
   snippet: string | null; // redacted source excerpt
 }
 

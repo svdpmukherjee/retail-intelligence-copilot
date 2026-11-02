@@ -1,4 +1,4 @@
-import { STAGES } from "../copy";
+import { LOADING } from "../copy";
 import UserTurn from "./UserTurn";
 
 interface Props {
@@ -16,17 +16,9 @@ export default function LoadingState({ query, onCancel }: Props) {
           R
         </div>
         <div className="body">
-          <div className="load">
-            <div className="stages">
-              {STAGES.map((s, i) => (
-                <span key={s} className={`stage${i < 2 ? " on" : ""}`}>
-                  {s}
-                </span>
-              ))}
-            </div>
-            <div className="skel w1" aria-hidden="true" />
-            <div className="skel w2" aria-hidden="true" />
-            <div className="skel w3" aria-hidden="true" />
+          <div className="loading">
+            <span className="spin" aria-hidden="true" />
+            {LOADING}
             <button type="button" className="cancel" onClick={onCancel}>
               Cancel
             </button>

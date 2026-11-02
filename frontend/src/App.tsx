@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ApiError, getThread, getThreads, postQuery } from "./api/client";
-import type { ThreadListItem } from "./api/types";
+import type { Scope, ThreadListItem } from "./api/types";
 import type { Turn } from "./turns";
 import ConversationPanel from "./components/ConversationPanel";
 import EmptyState from "./components/EmptyState";
@@ -21,7 +21,6 @@ interface CenterActions {
   onStarter: (q: string) => void;
   onCancel: () => void;
   onRetry: () => void;
-  onReselectRole: () => void;
 }
 
 function renderCenter(
@@ -30,10 +29,11 @@ function renderCenter(
   err: unknown,
   query: string,
   role: string,
+  scope: Scope | null,
   a: CenterActions,
   active: { turnId: string | null; n: number | null },
 ): ReactNode {
-  if (turns.length === 0 && !inFlight && !err) return <EmptyState role={role} onStarter={a.onStarter} />;
+  if (turns.length === 0 && !inFlight && !err) return <EmptyState role={role} scope={scope} onStarter={a.onStarter} />;
   return (
     <>
       <StackedTurns turns={turns} activeTurnId={active.turnId} activeN={active.n} onCiteClick={a.onCiteClick} />
@@ -41,7 +41,7 @@ function renderCenter(
       {!inFlight && !!err && (
         <>
           {query && <UserTurn query={query} />}
-          <ErrorBanner error={err} onReselectRole={a.onReselectRole} onRetry={a.onRetry} />
+          <ErrorBanner onRetry={a.onRetry} />
         </>
       )}
     </>
@@ -61,6 +61,8 @@ export default function App() {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [threads, setThreads] = useState<ThreadListItem[]>([]);
   const [threadsError, setThreadsError] = useState<string | null>(null);
+  // Last scope the server reported per role; never defaulted or widened client-side.
+  const [scopes, setScopes] = useState<Record<string, Scope>>({});
   const railSeq = useRef(0);
   const turnSeq = useRef(0);
   const resumeSeq = useRef(0);
@@ -164,7 +166,7 @@ export default function App() {
           ? derivePanelState({ inFlight, response: latestRes, error: null })
           : "restored";
   const canSend = role !== "" && question.trim() !== "" && !inFlight;
-  const meta = latestRes ? `${latestRes.audit.role} · ${latestRes.audit.intent}` : role || "no role selected";
+  const answeringAs = latestRes ? latestRes.audit.role : role;
 
   async function send(q: string) {
     setLastQuery(q);
@@ -181,6 +183,7 @@ export default function App() {
       const id = `live:${++turnSeq.current}`;
       setTurns((prev) => [...prev, { kind: "live", id, query: q, res }]);
       setActiveTurnId(null);
+      setScopes((prev) => ({ ...prev, [role]: res.audit.scope }));
       setThreadId(res.thread_id);
       void refreshThreads(identity);
     } catch (err) {
@@ -220,7 +223,6 @@ export default function App() {
     onStarter: setQuestion,
     onCancel: () => abortRef.current?.abort(),
     onRetry: () => (failedResumeId ? void onSelectThread(failedResumeId) : lastQuery && void send(lastQuery)),
-    onReselectRole: () => identitySelectRef.current?.focus(),
   };
 
   if (role === "admin") return <AuditView identity={identity} onIdentity={onIdentity} />;
@@ -231,7 +233,6 @@ export default function App() {
         <RoleRail
           identity={identity}
           onIdentity={onIdentity}
-          audit={latestRes?.audit ?? null}
           threadId={threadId}
           threads={threads}
           threadsError={threadsError}
@@ -251,7 +252,7 @@ export default function App() {
         />
         <ConversationPanel
           title="Retail Intelligence Copilot"
-          meta={meta}
+          answeringAs={answeringAs}
           role={role}
           question={question}
           inFlight={inFlight}
@@ -260,7 +261,7 @@ export default function App() {
           panelState={state}
           scrollKey={turns.length + (inFlight ? 1 : 0)}
         >
-          {renderCenter(turns, inFlight, currentError, lastQuery, role, actions, { turnId: activeTurnId, n: activeCiteN })}
+          {renderCenter(turns, inFlight, currentError, lastQuery, role, scopes[role] ?? null, actions, { turnId: activeTurnId, n: activeCiteN })}
         </ConversationPanel>
         <EvidencePanel
           citations={evidenceRes?.citations ?? []}

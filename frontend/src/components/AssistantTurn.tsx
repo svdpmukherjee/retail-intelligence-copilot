@@ -3,8 +3,6 @@ import type { PanelState } from "../panelState";
 import { splitClaims, stripCites } from "../answer";
 import { FALLBACK_NOTE, HISTORICAL_NOTE, NO_EVIDENCE, SQL_DEGRADED } from "../copy";
 import CitationChips from "./CitationChips";
-import ScopeRibbon from "./ScopeRibbon";
-import TrustStrip from "./TrustStrip";
 import DefaultShape from "./shapes/DefaultShape";
 import ExecutiveShape from "./shapes/ExecutiveShape";
 import MarketingShape from "./shapes/MarketingShape";
@@ -18,7 +16,7 @@ interface LiveProps {
   historical?: undefined;
 }
 
-// A restored turn: stored redacted text only. No res, so no strip, chips or evidence.
+// A restored turn: stored redacted text only. No res, so no chips or evidence.
 interface HistoricalProps {
   historical: { role: string; content: string };
   res?: undefined;
@@ -70,7 +68,6 @@ export default function AssistantTurn(props: Props) {
       </div>
       <div className="body">
         <div className="answer">
-          <ScopeRibbon scope={audit.scope} />
           {state === "degraded-SQL" && (
             <div className="warnline" role="status">
               <span className="ic" aria-hidden="true">
@@ -88,7 +85,7 @@ export default function AssistantTurn(props: Props) {
             </div>
           )}
           {state === "no-evidence" ? (
-            <div className="noevid">
+            <div className="plainnote">
               <span className="ic" aria-hidden="true">
                 &#9675;
               </span>
@@ -100,7 +97,6 @@ export default function AssistantTurn(props: Props) {
               <CitationChips citations={citations} activeN={activeN} onCiteClick={onCiteClick} />
             </>
           )}
-          <TrustStrip audit={audit} fallback={state === "fallback"} />
         </div>
       </div>
     </div>

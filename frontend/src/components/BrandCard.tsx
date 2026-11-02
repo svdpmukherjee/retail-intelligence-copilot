@@ -6,7 +6,7 @@ export default function BrandCard() {
       </div>
       <div>
         <div className="bn">Retail Intelligence Copilot</div>
-        <div className="bs">grounded · cited · $0/query</div>
+        <div className="bs">grounded · cited</div>
       </div>
     </div>
   );

@@ -1,7 +1,5 @@
 # Current task
 
-**B-14 — Audit admin view** (spec: `.claude/specs/B14_audit_admin.md`)
-
-- B14.1 (backend read path + `GET /audit`, `GET /audit/{id}`): **built**, awaiting Tester
-  (files: `backend/governance/audit.py`, `backend/app/main.py`).
-- B14.2 (frontend admin view): **built** (`npm run build` clean), awaiting Tester. Files: `frontend/src/admin/*`, `identities.ts`, `api/types.ts`, `api/client.ts`, `App.tsx` (routing seam).
+_No active task._ M8 v4 (Serving & UI — user-centred declutter + trust redesign) was approved and
+closed on 2026-11-02. Open a new session for the next piece of work (e.g. module M9 Documentation,
+or a backlog item via `/change`).

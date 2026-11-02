@@ -36,3 +36,16 @@ and a live browser visual-QA gate (free mode, $0). Spec `.claude/specs/M8v3_serv
 `docs/modules/M8v3_serving_ui.md`. Open items (human): phone layout reflow spot-check on a real
 device (env viewport floor ~1353px), 4 error-state banners not force-driven, and the pending
 per-turn audit/citations persistence (§2 option c) for full-fidelity resume.
+
+**Design Track iteration 4 (M8 v4) — DONE (2026-11-02).** User-centred declutter + trust redesign of
+the M8 chat surface for a non-technical retail user, on the **unchanged** pipeline, plus **exactly one**
+additive backend field (`citations[].display_label`, D-30 — readable source-chip label derived server-side
+by source type, PII-safe). Removed all operator instrumentation (SessionCard/TrustStrip/ScopeCard/ScopeRibbon)
+to the audit + Langfuse planes; re-worded honest states as plain reassurance; `answering as: <role>` header;
+derived plain scope line; demo switcher set apart; bounded scrollable history rail. Built from
+`design/iteration-4/03_handoff.md` + the approved D2 mockup in 5 sub-modules (0 build-backs); module gate PASS
+incl. live e2e (free mode, $0) + forbidden-surface count 0 + governance intact. Two UAT fixes applied in review
+(bounded history scroll; "Your Chat History" rename). Spec `.claude/specs/M8v4_serving_ui.md`; note
+`docs/modules/M8v4_serving_ui.md`. Open items (human): review `display_label` always category form (no
+product-title field in `Chunk`); inherited `HISTORICAL_NOTE` wording; no browser visual-QA this pass +
+per-persona screenshots; restored-turn per-turn citations persistence (handoff §3.1).

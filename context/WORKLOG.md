@@ -288,3 +288,44 @@ Dated log of what got done each session, one line each. Newest at the bottom.
 - 2026-11-01 — **Wave 2 backlog (B-11, B-12, B-8, B-10) committed, merged to `main`, pushed.** **B-11 + B-12** committed (`6497a3f`) and merged via PR #1 (`7c525af`). **B-8** (model-comparison study) and **B-10** (structured SQL passthrough) were built in parallel git worktrees (`ric-b8`, `ric-b10`), each committed as tested-state + a follow-up `fix:` commit after live/browser verification, then merged to `main` (B-10 `5f78349`, B-8 `f12af36`; one mechanical `composer.py` conflict — both branches touched it: B-8 added an additive `llm` param to `compose()`, B-10 restructured for `SqlBlock` — resolved keep-both; `CURRENT_TASK.md`/`DECISIONS.md` keep-both). **B-8 fixes:** two invalid OpenRouter Ministral slugs (`ministral-3-3b/14b-instruct-2512` → `ministral-3b/14b-2512`) + guessed prices, both corrected & confirmed against the live OpenRouter models API; `_sql_rows` hardened to catch `httpx.HTTPStatusError` (one dead model no longer aborts the study). **B-8 live run (gated, authorized):** 6 models × 22 calls (10 answer + 8 routing + 4 SQL), actual spend **$0.0054** (est. $0.0266) logged to `COST.md`; report `docs/model-comparison.md`. Takeaway: answer quality is saturated/model-independent (grounded-path & citation-validity 1.00 across all six — governance does the work); models differ on routing accuracy (scales with size, `gemma-3-27b` 1.00), latency (Mistral faster), $/query (Gemma cheaper), and license (Mistral Apache-2.0 vs Gemma Terms). **B-10 fix:** `MAX_SQL_ROWS_SHOWN` was a hard 10 that silently dropped rows (10 of 15 categories); tied to `sql_agent.MAX_ROWS` (200) + `SqlBlock.total_rows` for an "X of Y" label. Merged tree verified (23 backend tests, frontend build green). Worktrees removed, all four backlog branches deleted; OpenRouter config + key migrated into main `.env` gated off (`PROVIDER_MODE=free`, `GO_AHEAD=false`). `main` = `f12af36`, synced with `origin/main`. Next: Wave-3 backlog (B-2 HIGH, then B-3/B-4, B-9 optional) via `/change`, or module M9 (Documentation).
 
 - 2026-11-02 — **B-13 (Observability plane / Langfuse tracing) DONE via `/change`.** Approved **Option A** (central span seam in `pipeline.answer()`, **no agent file edited**) over the backlog's per-agent plan — the pipeline already orchestrates every stage, measures latency, and threads one `CostLedger`, so per-stage token/cost falls out as a ledger delta with the smallest blast radius; divergence from `BACKLOG_PLAN.md`'s file domain logged in the ADR. Two sub-modules, scoped tester PASS on each. **B13.1:** provider seam `backend/observability/tracing.py` (`Tracer`/`NoOpTracer`/`LangfuseTracer`, lazy `langfuse` import, `get_tracer()` lru_cached, non-PII `_safe()` guard) + 4 `config.py` settings (all off/None) + `.env.example` + optional `observability` dep group. **B13.2:** `pipeline.answer()` opens one trace/turn and wraps each executed stage (`route`→`sql_agent`/`review_rag`/`docs_rag`→`compose`) with per-stage `latency_ms` + ledger token/cost deltas; `main.py` gains a guarded `lifespan` shutdown flush. Guarantees independently confirmed: off by default = true no-op off the latency path; raw query text never reaches a span; a tracer failure degrades to the untraced path with the `audit` dict + `/query` payload byte-identical. **8 observability tests pass + flag-off pipeline smoke (3) pass; ruff/black clean; $0.** Honest gaps: live Langfuse v3 export unexercised (pkg not installed, flag off — verify before enabling); LLM-call-granular generation spans deferred; no committed test for the `lifespan` flush (verified once via ad-hoc script). Spec `.claude/specs/B13_observability.md`, ADR in `DECISIONS.md`, doc `docs/modules/B13_observability.md`. Next unblocked: **B-14** (audit admin view — shares `main.py`, run after this), then the chat UI persona redesign as `/design` iteration-4.
+
+- 2026-11-02 — **M8 v4 — Serving & UI (user-centred declutter + trust redesign) DONE.** SDLC
+  iteration 4: a frontend-and-copy declutter + trust redesign of the M8 chat surface for a
+  non-technical retail user, on the **unchanged** pipeline, plus **exactly one** additive backend
+  field. Fed by `design/iteration-4/03_handoff.md` (authoritative) + the approved D2 mockup
+  `design/iteration-4/mockups/m8-chat.html`; governed by `.claude/rules/ux-surface.md`. Built in 5
+  sub-modules, all first-pass, **zero build-backs**. **M8v4.1** the one backend edge —
+  `citations[].display_label` on the `Citation` model (`composer.py`), derived server-side by source
+  type (review → `customer review · <Category>`; doc → `<Title> · <Section>` from the real heading,
+  never the slug; SQL → `Calculated from your data`), PII-safe by construction (category/title/section
+  only, no ASIN/user text); `label`/`snippet` unchanged; `main.py` untouched (`QueryResponse(AnswerResult)`
+  passthrough); mirrored in TS. **M8v4.2** removed operator instrumentation — deleted `SessionCard`,
+  `TrustStrip`, `ScopeCard`, **and** `ScopeRibbon` (leaked "Retrieval was filtered server-side");
+  operator data now only in the role-gated audit view + Langfuse. **M8v4.3** tagline → `grounded · cited`
+  (dropped `$0/query`), header → `answering as: <role>` (intent gone, `audit.intent` no longer read),
+  honest-state strings re-authored as plain reassurance, `STAGES` removed, `SYSTEM_ERROR` added, dead CSS
+  swept. **M8v4.4** source chips `Source: <display_label>` as real buttons, one active at a time,
+  active state non-colour-only (`aria-pressed`+weight+"viewing"); EvidencePanel = readable title + verbatim
+  redacted snippet, no raw ids/type-tag, correct empty/null copy, phone-sheet focus/Escape/backdrop/return
+  contract kept. **M8v4.5** demo switcher reframed (`user_id (<team> team)`, dashed "⚙ demo — not a login"
+  card, accessible `<select>`); empty state + derived plain scope line ("You can see: …" / "all categories" /
+  neutral pre-query); loading without stages; plain nothing-found; system-error with Try-again and **no**
+  HTTP/detail/provider leak (also fixed a `HistoryRail` raw-error leak); bounded `aria-live` auto-scroll
+  `.stream`; full `App.css` pass to the mockup. **Module gate PASS (live, free mode, pgvector up, $0):**
+  `POST /query` "What is the return policy?" (executive) → 200, grounded, 6 citations, `display_label`s like
+  `Return and Refund Policy · Return window` (readable, no underscore/ASIN/filename/id); vague follow-up
+  "And what about opened electronics?" on the same thread → 200 cited; forbidden-surface grep (frontend/src
+  minus `admin/*`+`api/types.ts`) = 0 rendered hits; governance intact (executive `{restricted:false}` vs
+  marketing `{restricted:true, 3 cats}` strict subset, ASIN hidden on marketing review chips); regression
+  `test_composer_display_label.py` 6/6; ruff/black clean; `npm run build` clean (62 modules); `cost_usd` 0.0
+  throughout (live `grounding.path` was `"llm"`, free-tier, still $0). **Two UAT fixes** (human review in the
+  running app): (1) the left-rail history list grew unbounded and stretched the page → now a bounded,
+  independently scrollable region (`.rail` capped `max-height: calc(100vh - 24px)` at ≥761px, `.rail > .history`
+  flexes, `.histlist` `overflow-y:auto` min 120px; phone drawer untouched via direct-child selector);
+  (2) sidebar heading renamed "History (yours)" → "Your Chat History". 15 sub-agent calls (1 planner + 6
+  developer + 6 tester + 1 module tester + 1 documenter), ~15 min, $0. Spec `.claude/specs/M8v4_serving_ui.md`;
+  note `docs/modules/M8v4_serving_ui.md`. Open items (human): review `display_label` always the category form
+  (no product-title field in `Chunk` — would need a retrieval/schema change); inherited `HISTORICAL_NOTE`
+  restored-turn wording slightly technical (candidate copy pass); no browser visual-QA this pass
+  (static + live-API only) + per-persona screenshots under `docs/img/`; restored-turn source chips still need
+  per-turn `citations` persisted (handoff §3.1); B-15 and B-16 untouched as instructed.

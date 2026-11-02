@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Citation } from "../api/types";
-import { evidenceType } from "../copy";
 
 interface Props {
   citations: Citation[];
@@ -28,8 +27,13 @@ export default function EvidencePanel({ citations, activeN, open, onClose }: Pro
   const asSheet = open && isSheet;
   // Exactly one citation at a time; a new [n] replaces it in place.
   const shown = citations.find((c) => c.n === activeN) ?? null;
+  const closeRef = useRef<HTMLButtonElement>(null);
 
-  // No focus trap and no focus move: focus stays on the clicked [n] marker, so
+  // Opening the phone sheet moves focus in; App returns it to the chip on close.
+  useEffect(() => {
+    if (asSheet) closeRef.current?.focus();
+  }, [asSheet]);
+
   // Escape is listened for on the document while the sheet is open.
   useEffect(() => {
     if (!asSheet) return;
@@ -46,29 +50,26 @@ export default function EvidencePanel({ citations, activeN, open, onClose }: Pro
       <aside className={`card evidence-dock${asSheet ? " sheet" : ""}`} aria-label="Evidence">
         <div className="ehead">
           <span className="et">Evidence</span>
-          <button type="button" className="close" onClick={onClose} aria-label="Close evidence">
+          <button ref={closeRef} type="button" className="close" onClick={onClose} aria-label="Close evidence">
             &times;
           </button>
         </div>
         {shown === null ? (
           <div className="ebody">
-            <div className="eempty">
-              Click a citation chip or a <code style={{ fontFamily: "var(--mono)" }}>[n]</code> marker in an answer &mdash; the
-              evidence it rests on appears here.
-            </div>
+            <div className="eempty">Tap a Source on any answer to read the exact words it came from.</div>
           </div>
         ) : (
           <div className="ebody" aria-live="polite">
-            <div className="ev-item active">
+            <div className="ev-item">
               <div className="eh">
-                <span className="n">[{shown.n}]</span>
-                <span className="el">{shown.label}</span>
-                <span className="etag">{evidenceType(shown.source_id, shown.label)}</span>
+                <span className="dot" aria-hidden="true" />
+                {shown.display_label}
               </div>
-              <div className="eid">source_id: {shown.source_id}</div>
-              <div className="esnip">
-                {shown.snippet ? <>&ldquo;{shown.snippet}&rdquo;</> : <em>snippet unavailable</em>}
-              </div>
+              {shown.snippet ? (
+                <div className="esnip">&ldquo;{shown.snippet}&rdquo;</div>
+              ) : (
+                <div className="esnip nullsnip">the exact words aren&rsquo;t available to show.</div>
+              )}
             </div>
           </div>
         )}
