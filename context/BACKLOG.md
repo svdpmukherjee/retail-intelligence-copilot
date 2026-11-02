@@ -224,7 +224,7 @@ the chat UI persona redesign — that redesign is **iteration-4 of the Design Tr
 are stripped out of the chat. Intended order: **B-13 → B-14 → chat UI redesign.** Each
 runs as its own `/change`.
 
-## B-13 — Observability plane (Langfuse tracing) — HIGH
+## B-13 — Observability plane (Langfuse tracing) — HIGH — ✅ DONE 2026-11-02 (`/change`, Option A: central span seam in `pipeline.answer()`, agents untouched; off by default, $0)
 
 - **Symptom:** there is no span-level view of a turn as it moves through the pipeline
   (router → retrieval → composer → LLM). `audit_log` records per-answer governance facts,

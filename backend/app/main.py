@@ -1,4 +1,7 @@
 import asyncio
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,8 +13,21 @@ from app.config import get_settings
 from governance.policy import ACCESS_POLICY, AccessDenied
 from memory.schema import RoleKind, ThreadListRow
 from memory.store import get_memory_store
+from observability.tracing import get_tracer
 
-app = FastAPI(title="Retail Customer Intelligence Copilot")
+log = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    yield
+    try:  # flush buffered spans so a clean shutdown does not drop them
+        await asyncio.to_thread(get_tracer().flush)
+    except Exception as exc:
+        log.warning("tracer flush failed: %s", type(exc).__name__)
+
+
+app = FastAPI(title="Retail Customer Intelligence Copilot", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_allow_origins,

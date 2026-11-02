@@ -147,6 +147,12 @@ class Settings(BaseSettings):
     # and so stays behind azure_llm_go_ahead in azure mode.
     eval_judge: Literal["deterministic", "llm"] = "deterministic"
 
+    # Observability (B-13): Langfuse tracing is off by default and needs keys to activate.
+    observability_enabled: bool = False
+    langfuse_host: str | None = None
+    langfuse_public_key: SecretStr | None = None
+    langfuse_secret_key: SecretStr | None = None
+
     # Cost caps, consumed by the cost ledger
     max_cost_usd: float = 1.0
     max_tokens_per_query: int = 8000

@@ -25,9 +25,11 @@ dependencies = [
 [project.optional-dependencies]
 # Only to regenerate data/docs/manuals/*.pdf (committed); not needed at runtime.
 docs-gen = ["reportlab"]
+# Operator tracing (B-13); off by default, the no-op path imports without it.
+observability = ["langfuse"]
 
 [tool.setuptools]
-packages = ["app", "agents", "retrieval", "memory", "governance", "eval"]
+packages = ["app", "agents", "retrieval", "memory", "governance", "eval", "observability"]
 
 [tool.black]
 line-length = 100

@@ -765,3 +765,34 @@ Durable design decisions (newest at the bottom). Decision → why.
   `/change`. Localized to `.claude/specs/M8v2_serving_ui.md` (where the role shapes + SupportShape
   were specified; M8v3 only reuses them); touches `frontend/src/components/shapes/SupportShape.tsx`
   only (+ CSS cleanup for the dropped label column). No backend/API/governance change.
+
+- **B-13 (2026-11-02): observability plane = a central span seam in `pipeline.answer()`,
+  not per-agent instrumentation.** The backlog named the agent files (`router/_rag/sql_agent/
+  composer/llm`) as the span sites, but the pipeline already centralizes every cross-cutting
+  concern this needs: it orchestrates all four stages sequentially, already measures per-turn
+  latency, threads a single `CostLedger` through every stage, and emits the audit row centrally.
+  **Decision (Option A):** add a provider-seam module `backend/observability/tracing.py` — a
+  `Tracer` protocol with a `NoOpTracer` default and a lazily-imported `LangfuseTracer` chosen only
+  when `observability_enabled` **and** keys are set (off by default, gated like Azure/OpenRouter;
+  self-hosted/local Langfuse is $0). `pipeline.answer()` opens one trace per turn and wraps each
+  stage (route / sql / retrieval / compose) in a span, recording timing + **ledger-delta**
+  tokens/cost (snapshot `ledger.tokens`/`.usd` before and after each stage — the delta is that
+  stage's spend, because all stages share one ledger) + the existing `tool_path`. Agents are **not**
+  edited. Metadata is non-PII only (role, intent, tool_path, counts, timings, cost — never the raw
+  query text); export is async/best-effort and a tracing failure never fails the turn (same posture
+  as audit). `main.py` only gains a shutdown flush so buffered spans aren't lost; the trace lifecycle
+  itself lives in the pipeline. **Why not per-agent spans (the literal backlog "where", Option B):**
+  it threads the observability provider through five agent files, enlarges the blast radius, and
+  makes the "off = true no-op, never on the latency path" guarantee harder — for the same operator
+  value, since per-stage ledger deltas already give token/cost attribution. **Why not `@observe`/
+  OTel auto-instrument (Option C):** decorators sit in the call path even when off, and context
+  propagation must cross the `asyncio.to_thread` retrieval boundaries — least transparent, highest
+  risk. **Deferred:** LLM-call-granular generation spans (model name, prompt/completion split) would
+  need one thin span inside `llm.py`; left out of A to keep agents untouched — a clean later add-on
+  if per-call granularity is wanted. **Divergence from BACKLOG_PLAN** (which listed the agent files
+  as the file domain) is intentional and is the reason this ran as a `/change`. Localized to a new
+  `.claude/specs/B13_observability.md`; touches `backend/observability/tracing.py` (new),
+  `backend/agents/pipeline.py`, `backend/app/main.py` (shutdown flush), `backend/app/config.py`
+  (flag + keys), `backend/.env.example`, and `backend/pyproject.toml` (langfuse as an optional dep —
+  the no-op path must work without it installed). No change to the audit schema, the chat payload,
+  or any agent signature.

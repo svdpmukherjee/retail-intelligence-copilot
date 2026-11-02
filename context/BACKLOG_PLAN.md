@@ -17,10 +17,11 @@ dropped:
 - **B-5..B-8, B-10..B-12** — ✅ DONE+merged (prior waves).
 - **B-1** vague "why?" false-route — ❌ DROPPED (root cause no longer exists).
 
-**Three items are open.** Two NEW **productionization-plane** items (B-13, B-14) give the
-operator-facing internals their proper homes, per `.claude/rules/ux-surface.md` (internal
-metrics/ids/cost/routing live in the audit + observability planes, never the chat). One carried
-item remains: the optional, DB-mutating **B-9** (embedder bake-off).
+**B-13 shipped 2026-11-02** (observability plane, `/change`, Option A). **Two items remain open.**
+**B-14** (audit admin view) is now the next unblocked item — it shares `backend/app/main.py` with
+B-13, so it was correctly held until B-13 landed. One carried item remains: the optional,
+DB-mutating **B-9** (embedder bake-off). Both productionization-plane items (B-13 ✅, B-14) give
+the operator-facing internals their proper homes, per `.claude/rules/ux-surface.md`.
 
 **Downstream dependent (NOT a backlog item, NOT ranked here):** the **chat UI persona redesign**
 runs as **Design Track `/design` iteration-4**, not a `/change`. B-13 and B-14 unblock it — they
@@ -32,7 +33,7 @@ only as a dependent, never as a ranked row.
 
 | Rank | Item | Severity | Value | Effort | Risk | Depends on | Wave | Track | File domain | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | B-13 Observability plane (Langfuse tracing) | HIGH | HIGH | M–L | MED | — | 1 | solo | `backend/agents/` spans (`router.py`, `_rag.py`, `sql_agent.py`, `composer.py`, `llm.py`), `backend/agents/pipeline.py` (trace lifecycle), `backend/app/main.py` (per-request trace), `backend/app/config.py` (flag + keys), `backend/.env.example` | **TODO — run first** |
+| 1 | B-13 Observability plane (Langfuse tracing) | HIGH | HIGH | M–L | MED | — | 1 | solo | **Built via Option A (ADR 2026-11-02): central seam in `backend/observability/tracing.py` + `backend/agents/pipeline.py` + `backend/app/main.py` (lifespan flush) + `backend/app/config.py` + `backend/.env.example` + `backend/pyproject.toml`. Agent files NOT edited** (diverges from the per-agent file domain first assumed here) | **✅ DONE 2026-11-02** |
 | 2 | B-14 Audit admin view (read-only over `audit_log`) | MED | MED–HIGH | M | LOW–MED | — (soft: after B-13 for `main.py`) | 2 | solo | `backend/app/main.py` (new read endpoint), `backend/governance/audit.py` (read method on `AuditStore`), new admin view under `frontend/src/` (apart from chat shapes) | **TODO — run after B-13** |
 | 3 | B-9 Embedder bake-off (optional) | MED | MED (flagged) | L | MED | — | 3 | solo | `backend/retrieval/embeddings.py`, `backend/retrieval/schema.py` (vector dim), `backend/app/config.py` (`EMBEDDING_MODEL_FREE`), `backend/eval/` | **Optional / cost-gated / DB-mutating — run alone, only on human go-ahead** |
 | — | B-2 / B-3 / B-4 | H/M/L | — | — | — | — | — | — | (shipped) | ✅ DONE+merged |
