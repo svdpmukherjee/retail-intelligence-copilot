@@ -15,9 +15,16 @@ def test_gate_blocks_dangling_citation() -> None:
     assert enforce_grounding("Great [1]. Wild [5].", {1}) == ["dangling citation [5]"]
 
 
-def test_gate_blocks_uncited_claim_line() -> None:
-    issues = enforce_grounding("Cited [1].\nNo source for this.", {1})
-    assert issues == ["uncited claim: No source for this."]
+def test_gate_allows_summary_lead_with_cited_evidence() -> None:
+    # Summary-first: an uncited takeaway line is fine while the evidence line carries a citation.
+    draft = "Battery life is the top complaint.\nMany cite slow charging [1]."
+    assert enforce_grounding(draft, {1}) == []
+
+
+def test_gate_blocks_mostly_uncited_draft() -> None:
+    # One citation buried in a free-written answer means the model ignored the sources.
+    issues = enforce_grounding("Claim one.\nClaim two.\nClaim three [1].\nClaim four.", {1})
+    assert any(i.startswith("mostly uncited") for i in issues)
 
 
 def test_gate_blocks_citation_free_draft() -> None:
@@ -36,7 +43,7 @@ def test_composer_discards_failing_draft_and_records_issues(monkeypatch) -> None
         async def complete(self, system, user, *, ledger, max_tokens=None):
             return "Unsourced praise."
 
-    monkeypatch.setattr("agents.composer.get_llm", lambda: BadLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: BadLLM())
     result = asyncio.run(compose("q", None, [_hit()], CostLedger()))
 
     grounding = result.audit["grounding"]

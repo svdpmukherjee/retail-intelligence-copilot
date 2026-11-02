@@ -40,8 +40,53 @@ export default function AuditDetail({ role, id, onClose }: Props) {
         <>
           <h2>{row.query}</h2>
           <p className="adm-muted">
-            {row.id} · {row.created_at} · {row.role} · {row.intent}
+            #{row.id} · {row.created_at} · user {row.user_id ?? "—"} · {row.role} · {row.intent}
           </p>
+
+          <div className="adm-metrics">
+            <div className="adm-metric">
+              <span className="adm-metric-k">Model</span>
+              <span className="adm-metric-v">{row.model ?? "—"}</span>
+            </div>
+            <div className="adm-metric">
+              <span className="adm-metric-k">Tokens (LLM)</span>
+              <span className="adm-metric-v">{row.tokens.toLocaleString()}</span>
+            </div>
+            <div className="adm-metric">
+              <span className="adm-metric-k">Cost</span>
+              <span className="adm-metric-v">${row.cost_usd.toFixed(5)}</span>
+            </div>
+            <div className="adm-metric">
+              <span className="adm-metric-k">Latency</span>
+              <span className="adm-metric-v">{Math.round(row.latency_ms).toLocaleString()} ms</span>
+            </div>
+          </div>
+
+          <h3>Answer</h3>
+          <div className="adm-answer">{row.answer ?? <span className="adm-muted">not stored</span>}</div>
+
+          <h3>LLM calls</h3>
+          {row.llm_calls && row.llm_calls.length > 0 ? (
+            <table className="adm-subtable">
+              <thead>
+                <tr><th>Model</th><th>Prompt</th><th>Completion</th><th>Total</th><th>Cost</th></tr>
+              </thead>
+              <tbody>
+                {row.llm_calls.map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.model}</td>
+                    <td className="adm-num">{c.prompt_tokens.toLocaleString()}</td>
+                    <td className="adm-num">{c.completion_tokens.toLocaleString()}</td>
+                    <td className="adm-num">{c.total_tokens.toLocaleString()}</td>
+                    <td className="adm-num">${c.usd.toFixed(5)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="adm-muted">No LLM call recorded (rule-routed or no provider configured).</p>
+          )}
+
           <h3>Tool path</h3>
           <Json value={row.tool_path} />
           <h3>Sources</h3>

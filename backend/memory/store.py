@@ -76,20 +76,32 @@ class MemoryStore:
         return [ThreadListRow(**r) for r in rows]
 
     def append_message(
-        self, thread_id: str, role_kind: RoleKind, content: str, *, user_id: str
+        self,
+        thread_id: str,
+        role_kind: RoleKind,
+        content: str,
+        *,
+        user_id: str,
+        payload: dict | None = None,
     ) -> MessageRow:
-        """Append only if `user_id` owns the thread; a non-owner (or unknown thread) raises."""
+        """Append only if `user_id` owns the thread; a non-owner (or unknown thread) raises.
+
+        `payload` is the assistant turn's full render snapshot (None for user turns); it is
+        replayed verbatim when the chat is reopened.
+        """
         # turn is assigned in the INSERT; the (thread_id, turn) index keeps reads ordered.
         sql = (
-            f"INSERT INTO {MESSAGES_TABLE} (thread_id, turn, role_kind, content) "
-            f"SELECT %s, COALESCE(MAX(turn), 0) + 1, %s, %s FROM {MESSAGES_TABLE} "
+            f"INSERT INTO {MESSAGES_TABLE} (thread_id, turn, role_kind, content, payload) "
+            f"SELECT %s, COALESCE(MAX(turn), 0) + 1, %s, %s, %s FROM {MESSAGES_TABLE} "
             f"WHERE thread_id = %s HAVING EXISTS "
             f"(SELECT 1 FROM {THREADS_TABLE} WHERE id = %s AND user_id = %s) "
             "RETURNING " + ", ".join(MESSAGE_COLUMNS)
         )
+        payload_param = Jsonb(payload) if payload is not None else None
         with self._connect() as conn:
             row = conn.execute(
-                sql, [thread_id, role_kind, content, thread_id, thread_id, user_id]
+                sql,
+                [thread_id, role_kind, content, payload_param, thread_id, thread_id, user_id],
             ).fetchone()
         if row is None:
             raise PermissionError(f"thread {thread_id!r} is not owned by this user")

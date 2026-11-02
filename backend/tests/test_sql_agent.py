@@ -62,7 +62,7 @@ def test_scope_category_limits_rows():
 
 
 def test_generation_refuses_cleanly_without_llm(monkeypatch):
-    monkeypatch.setattr(mod, "get_llm", lambda: type("L", (), {"available": False})())
+    monkeypatch.setattr(mod, "get_llm", lambda **_: type("L", (), {"available": False})())
     with pytest.raises(SQLGenerationUnavailable, match="needs an LLM"):
         asyncio.run(sql_agent("average rating?", None, CostLedger()))
 
@@ -74,7 +74,7 @@ def test_sql_agent_runs_generated_sql_through_guard(monkeypatch):
         async def complete(self, system, user, *, ledger, max_tokens=None):
             return "```sql\nSELECT count(*) AS n FROM structured\n```"
 
-    monkeypatch.setattr(mod, "get_llm", lambda: FakeLLM())
+    monkeypatch.setattr(mod, "get_llm", lambda **_: FakeLLM())
     out = asyncio.run(sql_agent("how many rows?", None, CostLedger()))
     assert out["columns"] == ["n"] and out["sql"] == "SELECT count(*) AS n FROM structured"
 
@@ -95,7 +95,7 @@ def _scripted_llm(monkeypatch, replies):
             calls.append(user)
             return replies[len(calls) - 1]
 
-    monkeypatch.setattr(mod, "get_llm", lambda: FakeLLM())
+    monkeypatch.setattr(mod, "get_llm", lambda **_: FakeLLM())
     return calls
 
 

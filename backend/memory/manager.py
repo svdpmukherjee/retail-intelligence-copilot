@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel
 
 from agents.llm import get_llm
+from agents.model_policy import model_for
 from app.config import get_settings
 from app.cost import CostLedger
 from governance.pii import redact
@@ -131,7 +132,11 @@ class MemoryManager:
         scope_for_role(role)  # deny-by-default: an unknown role writes nothing
         self._store.append_message(thread_id, "user", self._redact(query), user_id=user_id)
         self._store.append_message(
-            thread_id, "assistant", self._redact(result.answer), user_id=user_id
+            thread_id,
+            "assistant",
+            self._redact(result.answer),
+            user_id=user_id,
+            payload=self._render_payload(result),
         )
         persisted = 0
         if result.answer.strip() and result.citations:
@@ -149,7 +154,8 @@ class MemoryManager:
         return persisted
 
     async def _summarise(self, query: str, result: AnswerResult, ledger: CostLedger) -> str:
-        llm = get_llm()
+        # Summarising a turn for memory is a lightweight task: use the fast tier when configured.
+        llm = get_llm(model=model_for("summary"))
         if llm.available:
             try:
                 text = await llm.complete(
@@ -174,6 +180,30 @@ class MemoryManager:
     @staticmethod
     def _preferences(query: str) -> list[str]:
         return [m.group(0).strip() for m in PREFERENCE_RE.finditer(query)][:1]
+
+    @staticmethod
+    def _render_payload(result: AnswerResult) -> dict:
+        """The assistant turn's render snapshot for replay: the same answer, citations, SQL block
+        and render-relevant audit the chat drew live. Every part is already PII-redacted by the
+        composer; operator-only fields (raw query, user_id, tokens, cost) are deliberately left
+        out — the chat never renders them (see rules/ux-surface)."""
+        audit = result.audit
+        render_audit: dict = {
+            "role": audit.get("role"),
+            "intent": audit.get("intent"),
+            "tool_path": audit.get("tool_path", []),
+            "sources": audit.get("sources", []),
+            "grounding": audit.get("grounding", {"path": "extractive", "issues": []}),
+            "scope": audit.get("scope", {"restricted": False, "categories": []}),
+        }
+        if "sql_error" in audit:
+            render_audit["sql_error"] = audit["sql_error"]
+        return {
+            "answer": result.answer,
+            "citations": [c.model_dump() for c in result.citations],
+            "sql": result.sql.model_dump() if result.sql else None,
+            "audit": render_audit,
+        }
 
     @staticmethod
     def _redact(text: str) -> str:

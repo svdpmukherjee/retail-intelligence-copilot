@@ -23,7 +23,7 @@ class FakeLLM:
 
 @pytest.fixture
 def no_llm(monkeypatch):
-    monkeypatch.setattr(mod, "get_llm", lambda: NoLLM())
+    monkeypatch.setattr(mod, "get_llm", lambda **_: NoLLM())
 
 
 @pytest.mark.parametrize(
@@ -61,14 +61,14 @@ def test_scope_is_open_and_passes_through_to_filters(no_llm):
 
 def test_llm_decides_an_ambiguous_query(monkeypatch):
     reply = 'Sure: {"intent": "docs_rag", "rationale": "policy"}'
-    monkeypatch.setattr(mod, "get_llm", lambda: FakeLLM(reply))
+    monkeypatch.setattr(mod, "get_llm", lambda **_: FakeLLM(reply))
     decision = asyncio.run(route("Tell me about the headphones", "analyst"))
     assert (decision.intent, decision.rationale) == ("docs_rag", "policy")
 
 
 @pytest.mark.parametrize("reply", ["not json", '{"intent": "bogus"}', "[1]"])
 def test_malformed_llm_reply_on_ambiguous_query_defaults_to_review_rag(monkeypatch, reply):
-    monkeypatch.setattr(mod, "get_llm", lambda: FakeLLM(reply))
+    monkeypatch.setattr(mod, "get_llm", lambda **_: FakeLLM(reply))
     decision = asyncio.run(route("Tell me about the headphones", "analyst"))
     assert (decision.intent, decision.rationale) == ("review_rag", mod.DEFAULT_RATIONALE)
 
@@ -82,7 +82,7 @@ def test_rule_hit_wins_and_llm_is_not_called(monkeypatch):
         return llm.reply
 
     llm.complete = spy
-    monkeypatch.setattr(mod, "get_llm", lambda: llm)
+    monkeypatch.setattr(mod, "get_llm", lambda **_: llm)
     decision = asyncio.run(route("how many reviews per category", "analyst"))
     assert decision.intent == "sql"
     assert calls == []

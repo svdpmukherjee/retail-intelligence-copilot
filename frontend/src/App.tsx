@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { ApiError, getThread, getThreads, postQuery } from "./api/client";
-import type { Scope, ThreadListItem } from "./api/types";
+import type { QueryResponse, RestoredPayload, Scope, ThreadListItem } from "./api/types";
 import type { Turn } from "./turns";
 import ConversationPanel from "./components/ConversationPanel";
 import EmptyState from "./components/EmptyState";
@@ -114,7 +114,34 @@ export default function App() {
     setIdentity(next);
   }
 
-  // Restored turns are stored redacted text only; audit/citations are never rebuilt.
+  // Rebuild a full QueryResponse from a stored render snapshot so a reopened assistant turn
+  // replays exactly as it drew live (charts + evidence). Operator-only audit fields the snapshot
+  // omits (raw query, tokens, cost, latency) are filled with zeros; the chat never renders them.
+  function restoredRes(p: RestoredPayload): QueryResponse {
+    return {
+      answer: p.answer,
+      citations: p.citations,
+      sql: p.sql,
+      audit: {
+        query: "",
+        role: p.audit.role,
+        intent: p.audit.intent,
+        tool_path: p.audit.tool_path,
+        sources: p.audit.sources,
+        tokens: 0,
+        cost_usd: 0,
+        latency_ms: 0,
+        grounding: p.audit.grounding,
+        scope: p.audit.scope,
+        ...(p.audit.sql_error ? { sql_error: p.audit.sql_error } : {}),
+      },
+      thread_id: null,
+      user_id: null,
+    };
+  }
+
+  // Restored assistant turns replay in full when a render snapshot was stored; older turns
+  // without one fall back to redacted text.
   async function onSelectThread(id: string) {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -138,6 +165,7 @@ export default function App() {
             roleKind: t.role_kind,
             content: t.content,
             threadRole: detail.role,
+            res: t.payload ? restoredRes(t.payload) : undefined,
           })),
       );
       setThreadId(id);
@@ -155,7 +183,9 @@ export default function App() {
   const latestLive = [...turns].reverse().find((t) => t.kind === "live");
   const latestRes = latestLive?.kind === "live" ? latestLive.res : null;
   const activeTurn = turns.find((t) => t.id === activeTurnId);
-  const evidenceRes = activeTurn?.kind === "live" ? activeTurn.res : null;
+  // Evidence opens for live turns and for restored turns that replayed with a snapshot.
+  const evidenceRes =
+    activeTurn?.kind === "live" ? activeTurn.res : (activeTurn?.res ?? null);
   const state = inFlight
     ? "loading"
     : currentError

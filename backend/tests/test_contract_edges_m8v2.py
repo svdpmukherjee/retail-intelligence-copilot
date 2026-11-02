@@ -15,7 +15,7 @@ class NoLLM:
 
 @pytest.fixture(autouse=True)
 def offline(monkeypatch):
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
     monkeypatch.setattr(
         pipeline,
         "get_settings",

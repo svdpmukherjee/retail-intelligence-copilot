@@ -20,7 +20,7 @@ class NoLLM:
 
 @pytest.fixture(autouse=True)
 def no_llm(monkeypatch):
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
 
 
 def _route(intent):
@@ -79,7 +79,7 @@ def seeded_store():
 
 
 def test_end_to_end_free_mode_grounded_cited_answer(seeded_store, monkeypatch) -> None:
-    monkeypatch.setattr("agents.router.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.router.get_llm", lambda **_: NoLLM())
     index_reviews(50)  # first-N includes read_gold_reviews(1), the category queried below
     category = read_gold_reviews(1)[0]["category"]
 

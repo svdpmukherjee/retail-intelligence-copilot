@@ -6,6 +6,7 @@ import httpx
 from pydantic import BaseModel
 
 from agents.llm import LLM, get_llm
+from agents.model_policy import model_for
 from app.cost import CostLedger
 from governance.policy import scope_for_role
 from memory.manager import MemoryContext
@@ -106,7 +107,8 @@ async def route(
     # Rules are high-confidence and deterministic; a nondeterministic LLM must not override them.
     if hit := _rule_intent(query):
         return RouteDecision(intent=hit[0], scope=scope, rationale=hit[1])
-    llm = llm or get_llm()
+    # Classification is a cheap task: route it to the fast tier when one is configured.
+    llm = llm or get_llm(model=model_for("route"))
     if llm.available:
         user = query
         if context is not None and (block := context.render()):

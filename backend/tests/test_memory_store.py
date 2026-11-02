@@ -33,7 +33,20 @@ def test_recent_messages_are_capped_newest_n_oldest_first(store: MemoryStore) ->
     assert rows[0].role_kind == "user" and rows[1].role_kind == "assistant"
 
 
-def test_recent_messages_enforces_thread_ownership(store: MemoryStore) -> None:
+def test_assistant_payload_round_trips_for_replay(store: MemoryStore) -> None:
+    """An assistant turn's render snapshot survives a write/read so the chat replays in full."""
+    thread = store.create_thread("alice", "analyst")
+    snapshot = {
+        "answer": "Batteries draw the most complaints [1]",
+        "citations": [{"n": 1, "source_id": "c1"}],
+        "sql": {"columns": ["category", "n"], "rows": [["battery", 42]], "total_rows": 1},
+        "audit": {"role": "analyst", "sources": ["sql", "c1"]},
+    }
+    store.append_message(thread.id, "user", "what do customers complain about?", user_id="alice")
+    store.append_message(thread.id, "assistant", "redacted text", user_id="alice", payload=snapshot)
+    rows = store.recent_messages(thread.id, 5, user_id="alice")
+    assert rows[0].payload is None  # user turn carries no snapshot
+    assert rows[1].payload == snapshot  # assistant snapshot round-trips verbatim
     thread = store.create_thread("alice", "analyst")
     store.append_message(thread.id, "user", "hi", user_id="alice")
     assert len(store.recent_messages(thread.id, 5, user_id="alice")) == 1

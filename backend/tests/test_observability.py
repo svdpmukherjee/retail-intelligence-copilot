@@ -122,7 +122,7 @@ def test_answer_traces_each_stage_without_leaking_query(monkeypatch):
     monkeypatch.setattr(pipeline, "get_tracer", lambda: tracer)
     monkeypatch.setattr(pipeline, "route", fake_route)
     monkeypatch.setattr(pipeline, "review_rag", lambda q, scope: [hit])
-    monkeypatch.setattr("agents.composer.get_llm", lambda: _NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: _NoLLM())
     monkeypatch.setenv("AUDIT_ENABLED", "false")
     get_settings.cache_clear()
 
@@ -133,7 +133,13 @@ def test_answer_traces_each_stage_without_leaking_query(monkeypatch):
     assert [s.name for s in trace.spans] == ["route", "review_rag", "compose"]
     assert trace.spans[0].meta["tokens"] == 7 and trace.spans[0].meta["cost_usd"] == 0.25
     assert all("latency_ms" in s.meta for s in trace.spans)
-    assert trace.ended == {"intent": "review_rag", "tool_path": "review_rag"}
+    # Enriched trace summary: route + grounding outcome + real totals, still text-free.
+    assert trace.ended["intent"] == "review_rag" and trace.ended["tool_path"] == "review_rag"
+    assert trace.ended["grounding"] == "extractive" and trace.ended["n_sources"] == 1
+    assert "tokens" in trace.ended and "cost_usd" in trace.ended
+    # Retrieval observability is recorded on the span, not just counted globally.
+    review_span = next(s for s in trace.spans if s.name == "review_rag")
+    assert review_span.meta["hits"] == 1 and review_span.meta["top_score"] == 1.0
     seen = [trace.metadata, trace.ended, *(s.meta for s in trace.spans)]
     assert secret not in repr(seen)
     assert result.audit["query"] == secret and result.audit["tool_path"] == ["review_rag"]
@@ -153,7 +159,7 @@ def test_answer_survives_tracer_failure(monkeypatch):
     monkeypatch.setattr(pipeline, "get_tracer", lambda: Boom())
     monkeypatch.setattr(pipeline, "route", fake_route)
     monkeypatch.setattr(pipeline, "review_rag", lambda q, scope: [])
-    monkeypatch.setattr("agents.composer.get_llm", lambda: _NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: _NoLLM())
     monkeypatch.setenv("AUDIT_ENABLED", "false")
     get_settings.cache_clear()
 

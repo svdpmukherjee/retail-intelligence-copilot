@@ -6,6 +6,7 @@ import duckdb
 from deltalake import DeltaTable
 
 from agents.llm import LLM, get_llm
+from agents.model_policy import model_for
 from app.config import get_settings
 from app.cost import CostLedger
 from retrieval.vector_store import Filters
@@ -100,7 +101,8 @@ def _columns() -> list[str]:
 
 
 async def generate_sql(query: str, ledger: CostLedger, *, llm: LLM | None = None) -> str:
-    llm = llm or get_llm()
+    # Text-to-SQL must be exact: the strong default model (model_for -> None).
+    llm = llm or get_llm(model=model_for("sql"))
     if not llm.available:
         raise SQLGenerationUnavailable(
             "SQL generation needs an LLM; set FREE_LLM_BASE_URL/FREE_LLM_MODEL or use azure mode."

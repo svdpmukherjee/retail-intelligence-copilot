@@ -52,7 +52,7 @@ class _Chunky:
 
 
 def test_llm_draft_pii_is_scrubbed_from_served_answer(monkeypatch) -> None:
-    monkeypatch.setattr("agents.composer.get_llm", lambda: _Chunky())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: _Chunky())
     chunk = Chunk(id="c1", source_type="review", text="battery", asin="B01", category="E")
     result = asyncio.run(compose("q", None, [SearchHit(chunk=chunk, score=1.0)], CostLedger()))
 
@@ -65,7 +65,7 @@ def test_extractive_answer_pii_is_scrubbed(monkeypatch) -> None:
     class NoLLM:
         available = False
 
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
     chunk = Chunk(id="c1", source_type="review", text="call 555-123-4567", asin="B01", category="E")
     result = asyncio.run(compose("q", None, [SearchHit(chunk=chunk, score=1.0)], CostLedger()))
 

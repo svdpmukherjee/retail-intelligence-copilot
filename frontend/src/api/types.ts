@@ -74,10 +74,41 @@ export interface ThreadListItem {
   turn_count: number;
 }
 
+// Full render snapshot stored for an assistant turn, so a reopened chat replays its charts and
+// evidence instead of stripped text. Absent on user turns and on turns saved before this existed.
+export interface RestoredPayload {
+  answer: string;
+  citations: Citation[];
+  sql: SqlBlock | null;
+  audit: {
+    role: string;
+    intent: Audit["intent"];
+    tool_path: string[];
+    sources: string[];
+    grounding: Grounding;
+    scope: Scope;
+    sql_error?: string;
+  };
+}
+
 export interface ThreadDetail {
   thread_id: string;
   role: string;
-  turns: { turn: number; role_kind: "user" | "assistant"; content: string }[];
+  turns: {
+    turn: number;
+    role_kind: "user" | "assistant";
+    content: string;
+    payload?: RestoredPayload | null;
+  }[];
+}
+
+// One chat completion's actual usage (prompt+completion tokens from the provider).
+export interface LlmCall {
+  model: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  usd: number;
 }
 
 // Mirrors GET /audit (admin-only operator view; never rendered in the chat).
@@ -86,9 +117,13 @@ export interface AuditRow {
   created_at: string;
   query: string;
   role: string;
+  user_id: string | null;
   intent: string;
+  model: string | null;
+  answer: string | null;
   tool_path: string[];
   sources: string[];
+  llm_calls: LlmCall[];
   tokens: number;
   cost_usd: number;
   latency_ms: number;

@@ -4,6 +4,7 @@ import httpx
 from pydantic import BaseModel
 
 from agents.llm import LLM, get_llm
+from agents.model_policy import model_for
 from agents.sql_agent import MAX_ROWS
 from app.cost import CostLedger
 from governance.grounding import CITE, enforce_grounding
@@ -22,9 +23,14 @@ MAX_SQL_ROWS_SHOWN = MAX_ROWS
 SQL_FLOAT_DECIMALS = 2
 
 SYSTEM_PROMPT = (
-    "Answer the question using ONLY the numbered sources. Write one claim per line; every line "
-    "must end with an inline citation like [1] naming the source(s) it relies on. Do not cite "
-    "numbers that are not listed. If the sources do not answer the question, say so."
+    "You are answering a retail manager who is not technical. Use ONLY the numbered sources below. "
+    "Lead with a one- or two-sentence plain-language answer to the question — the key takeaway in "
+    "the reader's words, with no jargon, no raw IDs and no verbatim quotes. Then give a few short "
+    "supporting points, grouping what customers say into themes rather than listing individual "
+    "reviews. End every point that states a specific fact, number or customer claim with an inline "
+    "citation like [1] (use [1][2] for several) naming the source(s) it comes from. Never cite a "
+    "number that is not listed and never invent a figure. If the sources do not answer the "
+    "question, say so plainly in one sentence."
 )
 
 
@@ -148,10 +154,12 @@ def build_sources(sql_result: dict | None, hits: list[SearchHit]) -> list[tuple[
 
 
 def _extractive(sources: list[tuple[Citation, str]]) -> str:
+    """Last-resort answer when no LLM can synthesise: the sources' own words, cited. Uses the
+    reader-facing display label (never a raw ASIN/chunk id), so even the fallback stays readable."""
     lines = []
     for cite, text in sources:
         quote = _truncate(text)
-        lines.append(f"{cite.label}: {quote} [{cite.n}]")
+        lines.append(f"{cite.display_label}: {quote} [{cite.n}]")
     return "\n".join(lines)
 
 
@@ -174,7 +182,8 @@ async def compose(
         return AnswerResult(answer=answer, citations=[], audit={"grounding": grounding})
 
     answer = _extractive(sources)
-    llm = llm or get_llm()
+    # Synthesis is the answer the user reads: the strong default model (model_for -> None).
+    llm = llm or get_llm(model=model_for("compose"))
     if llm.available:
         listing = "\n".join(f"[{c.n}] ({c.label}) {' '.join(t.split())}" for c, t in sources)
         user = f"Question: {query}\n\nSources:\n{listing}"

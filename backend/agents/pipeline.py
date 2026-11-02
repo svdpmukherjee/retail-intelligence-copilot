@@ -52,6 +52,13 @@ def _start_trace(role: str) -> TraceHandle | None:
         return None
 
 
+def _record_retrieval(meta: dict, hits: list[SearchHit]) -> None:
+    """Retrieval observability: how many chunks came back and how relevant the best one was.
+    Scores and counts are non-PII; the chunk ids live in the audit plane (audit["sources"])."""
+    meta["hits"] = len(hits)
+    meta["top_score"] = round(hits[0].score, 4) if hits else 0.0
+
+
 def _end_trace(trace: TraceHandle | None, metadata: dict) -> None:
     if trace is None:
         return
@@ -62,8 +69,10 @@ def _end_trace(trace: TraceHandle | None, metadata: dict) -> None:
 
 
 @contextmanager
-def _stage(trace: TraceHandle | None, name: str, ledger: CostLedger) -> Iterator[None]:
-    """Span one stage, recording latency and the ledger delta. Numeric metadata only, never text."""
+def _stage(trace: TraceHandle | None, name: str, ledger: CostLedger) -> Iterator[dict]:
+    """Span one stage. Records its latency, ledger delta and the model(s) that served any LLM call
+    made inside it, and merges whatever scalar metadata the body writes into the yielded dict (hit
+    counts, grounding path, …). Scalar, non-text metadata only — the tracer drops anything else."""
     cm = span = None
     if trace is not None:
         try:
@@ -72,17 +81,23 @@ def _stage(trace: TraceHandle | None, name: str, ledger: CostLedger) -> Iterator
         except Exception as exc:
             log.warning("trace span failed: %s", type(exc).__name__)
             cm = span = None
-    tokens, usd, t0 = ledger.tokens, ledger.usd, time.perf_counter()
+    meta: dict = {}
+    tokens, usd, calls0, t0 = ledger.tokens, ledger.usd, len(ledger.llm_calls), time.perf_counter()
     try:
-        yield
+        yield meta
     finally:
         if cm is not None:
             try:
+                stage_calls = ledger.llm_calls[calls0:]
+                if stage_calls:
+                    meta.setdefault("model", ", ".join(dict.fromkeys(c.model for c in stage_calls)))
+                    meta.setdefault("llm_calls", len(stage_calls))
                 span.update(
                     {
                         "latency_ms": round((time.perf_counter() - t0) * 1000, 1),
                         "tokens": ledger.tokens - tokens,
                         "cost_usd": ledger.usd - usd,
+                        **meta,
                     }
                 )
                 cm.__exit__(None, None, None)
@@ -121,26 +136,33 @@ async def answer(
     hits: list[SearchHit] = []
     trace = _start_trace(role)
     try:
-        with _stage(trace, "route", ledger):
+        with _stage(trace, "route", ledger) as meta:
             decision = await route(retrieval_query, role, ledger, **ctx)
+            meta["intent"] = decision.intent
+            meta["scope_restricted"] = bool(decision.scope.get("category"))
         if decision.intent in ("sql", "sql_rag"):
             tool_path.append("sql_agent")
             try:
-                with _stage(trace, "sql_agent", ledger):
+                with _stage(trace, "sql_agent", ledger) as meta:
                     sql_result = await sql_agent(query, decision.scope, ledger)
+                    meta["rows"] = len(sql_result["rows"])
             except SQLComputeError as exc:  # degrade to whatever evidence remains, not a 502
                 log.warning("sql_agent could not compute: %s", exc)
                 sql_error = "could not compute"
         if decision.intent in ("review_rag", "sql_rag"):
             tool_path.append("review_rag")
-            with _stage(trace, "review_rag", ledger):
+            with _stage(trace, "review_rag", ledger) as meta:
                 hits = await asyncio.to_thread(review_rag, retrieval_query, decision.scope)
+                _record_retrieval(meta, hits)
         if decision.intent == "docs_rag":
             tool_path.append("docs_rag")
-            with _stage(trace, "docs_rag", ledger):
+            with _stage(trace, "docs_rag", ledger) as meta:
                 hits = await asyncio.to_thread(docs_rag, retrieval_query, decision.scope)
-        with _stage(trace, "compose", ledger):
+                _record_retrieval(meta, hits)
+        with _stage(trace, "compose", ledger) as meta:
             result = await compose(query, sql_result, hits, ledger, **ctx)
+            meta["grounding"] = result.audit.get("grounding", {}).get("path")
+            meta["citations"] = len(result.citations)
     except PipelineError:
         raise
     except AccessDenied as exc:
@@ -148,7 +170,23 @@ async def answer(
     except Exception as exc:  # DuckDB/DB/HTTP errors are all upstream failures to the caller
         raise PipelineError(f"{type(exc).__name__}: {exc}") from exc
 
-    _end_trace(trace, {"intent": decision.intent, "tool_path": ",".join(tool_path)})
+    # Trace-level summary: the whole-query view an operator debugging the RAG app needs — route,
+    # models, grounding outcome, evidence count, and the real token/cost/latency totals.
+    _end_trace(
+        trace,
+        {
+            "intent": decision.intent,
+            "tool_path": ",".join(tool_path),
+            "models": ", ".join(ledger.models),
+            "llm_calls": len(ledger.llm_calls),
+            "grounding": result.audit.get("grounding", {}).get("path"),
+            "n_sources": len(result.citations),
+            "tokens": ledger.tokens,
+            "cost_usd": ledger.usd,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 1),
+            "sql_error": bool(sql_error),
+        },
+    )
     result.audit.update(
         query=query,
         role=role,
@@ -174,6 +212,13 @@ async def answer(
                 memory["error"] = f"persist: {type(exc).__name__}"
         result.audit["memory"] = memory
         result.audit.update(tokens=ledger.tokens, cost_usd=ledger.usd)
+    # Traceability (set after every LLM call, incl. memory summarisation): who asked, which
+    # model(s) answered, the per-call token/cost breakdown, and the answer itself — so one
+    # audit row reconstructs a query -> output end to end. Operator plane only (see ux-surface).
+    result.audit["user_id"] = user_id
+    result.audit["answer"] = result.answer
+    result.audit["model"] = ", ".join(ledger.models) or None
+    result.audit["llm_calls"] = [c.as_dict() for c in ledger.llm_calls]
     if get_settings().audit_enabled:
         try:
             await asyncio.to_thread(record_audit, result.audit)

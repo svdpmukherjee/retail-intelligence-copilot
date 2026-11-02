@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_api_key: SecretStr | None = None
     openrouter_model: str | None = None
+    # Complexity-based routing: a cheaper/faster model for lightweight tasks (intent
+    # classification, memory summarisation). Falls back to openrouter_model when unset, so
+    # routing is an opt-in optimisation, never a hard dependency.
+    openrouter_model_fast: str | None = None
     openrouter_go_ahead: bool = False
     # Rough blended price used only to estimate spend in the ledger.
     openrouter_usd_per_1m_tokens: float = 1.0

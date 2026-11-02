@@ -51,8 +51,8 @@ def test_record_round_trips_an_audit_dict(store) -> None:
 
 
 def test_failing_audit_store_does_not_break_the_turn(monkeypatch) -> None:
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
-    monkeypatch.setattr("agents.router.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
+    monkeypatch.setattr("agents.router.get_llm", lambda **_: NoLLM())
     monkeypatch.setattr(pipeline, "review_rag", lambda q, scope: [])
 
     def boom(_: dict) -> None:

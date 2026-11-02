@@ -8,7 +8,7 @@ MESSAGES_TABLE = "messages"
 MEMORY_TABLE = "user_memory"
 
 THREAD_COLUMNS = ("id", "user_id", "role", "created_at")
-MESSAGE_COLUMNS = ("id", "thread_id", "turn", "role_kind", "content", "created_at")
+MESSAGE_COLUMNS = ("id", "thread_id", "turn", "role_kind", "content", "payload", "created_at")
 MEMORY_COLUMNS = ("id", "user_id", "kind", "content", "scope", "created_at")
 
 RoleKind = Literal["user", "assistant"]
@@ -35,6 +35,10 @@ class MessageRow(BaseModel):
     turn: int
     role_kind: RoleKind
     content: str
+    # Full render snapshot for an assistant turn (answer, citations, sql block, render audit),
+    # so reopening a chat replays its charts and evidence, not just stripped text. None for user
+    # turns and for turns written before this column existed.
+    payload: dict | None = None
     created_at: datetime
 
 
@@ -62,8 +66,11 @@ def memory_ddl() -> list[str]:
             turn INTEGER NOT NULL,
             role_kind TEXT NOT NULL CHECK (role_kind IN ('user', 'assistant')),
             content TEXT NOT NULL,
+            payload JSONB,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )""",
+        # Migrate message tables created before replay snapshots existed (idempotent).
+        f"ALTER TABLE {MESSAGES_TABLE} ADD COLUMN IF NOT EXISTS payload JSONB",
         "CREATE INDEX IF NOT EXISTS messages_thread_turn_idx "
         f"ON {MESSAGES_TABLE} (thread_id, turn)",
         f"""CREATE TABLE IF NOT EXISTS {MEMORY_TABLE} (

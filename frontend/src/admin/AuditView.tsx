@@ -58,6 +58,11 @@ export default function AuditView({ identity, onIdentity }: Props) {
           ))}
         </select>
       </header>
+      <p className="adm-sub">
+        Per-answer governance trail. Tokens/cost are the LLM's actual prompt + completion usage
+        (summed across the calls each answer makes); local embeddings run at $0. Click a row to
+        reconstruct the full query&nbsp;&rarr;&nbsp;output.
+      </p>
       {error && (
         <div role="alert" className="adm-error">
           {error} <button type="button" onClick={() => setReload((n) => n + 1)}>Retry</button>
@@ -69,8 +74,11 @@ export default function AuditView({ identity, onIdentity }: Props) {
         <table className="adm-table">
           <thead>
             <tr>
-              <th>When</th><th>Role</th><th>Intent</th><th>Tokens</th><th>Cost (USD)</th>
-              <th>Latency (ms)</th><th>Tool path</th>
+              <th>When</th><th>User</th><th>Role</th><th>Intent</th><th>Model</th>
+              <th title="LLM prompt + completion tokens, summed over the calls this answer made (router, synthesis, memory). Local embeddings are $0 and not token-billed.">
+                Tokens
+              </th>
+              <th>Cost (USD)</th><th>Latency (ms)</th><th>Tool path</th>
             </tr>
           </thead>
           <tbody>
@@ -83,14 +91,19 @@ export default function AuditView({ identity, onIdentity }: Props) {
                 onKeyDown={(e) => e.key === "Enter" && setSelected(r.id)}
               >
                 <td title={r.created_at}>
-                  {relativeTime(r.created_at)} <span className="adm-muted">{r.created_at}</span>
+                  <span className="adm-when">{relativeTime(r.created_at)}</span>
+                  <span className="adm-muted">{r.created_at}</span>
                 </td>
-                <td>{r.role}</td>
+                <td>{r.user_id ?? <span className="adm-muted">—</span>}</td>
+                <td><span className={`adm-pill role-${r.role}`}>{r.role}</span></td>
                 <td>{r.intent}</td>
-                <td>{r.tokens}</td>
-                <td>{r.cost_usd.toFixed(5)}</td>
-                <td>{r.latency_ms}</td>
-                <td>{r.tool_path.join(" → ")}</td>
+                <td className="adm-model" title={r.model ?? ""}>
+                  {r.model ?? <span className="adm-muted">—</span>}
+                </td>
+                <td className="adm-num">{r.tokens.toLocaleString()}</td>
+                <td className="adm-num">${r.cost_usd.toFixed(5)}</td>
+                <td className="adm-num">{Math.round(r.latency_ms).toLocaleString()}</td>
+                <td className="adm-path">{r.tool_path.join(" → ")}</td>
               </tr>
             ))}
           </tbody>

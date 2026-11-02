@@ -14,7 +14,7 @@ class NoLLM:
 
 @pytest.fixture(autouse=True)
 def extractive(monkeypatch):
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
 
 
 def _hit(cid: str, text: str) -> SearchHit:
@@ -39,10 +39,10 @@ def test_no_evidence_yields_no_citations() -> None:
     assert "No supporting evidence" in result.answer
 
 
-def test_dangling_and_uncited_claims_are_flagged() -> None:
-    issues = enforce_grounding("Good battery [1].\nMade up claim.\nAnother [7].", {1})
-    assert "dangling citation [7]" in issues
-    assert any(i.startswith("uncited claim") for i in issues)
+def test_dangling_and_mostly_uncited_claims_are_flagged() -> None:
+    issues = enforce_grounding("Made up claim.\nAnother guess.\nOne cited [7].", {1})
+    assert "dangling citation [7]" in issues  # [7] is not a provided source
+    assert any(i.startswith("mostly uncited") for i in issues)  # 1 of 3 lines cited
 
 
 def test_uncited_llm_draft_is_blocked_and_falls_back(monkeypatch) -> None:
@@ -52,7 +52,7 @@ def test_uncited_llm_draft_is_blocked_and_falls_back(monkeypatch) -> None:
         async def complete(self, system, user, *, ledger, max_tokens=None):
             return "Customers love it [9]."
 
-    monkeypatch.setattr("agents.composer.get_llm", lambda: BadLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: BadLLM())
     result = asyncio.run(compose("q", None, [_hit("c1", "battery dies fast")], CostLedger()))
 
     assert result.audit["grounding"]["path"] == "extractive"
@@ -91,7 +91,7 @@ def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) 
         async def complete(self, system, user, *, ledger):
             return "Only the review says it is loud [2]"
 
-    monkeypatch.setattr("agents.composer.get_llm", lambda: Llm())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: Llm())
     sql = {"sql": "select 1", "columns": ["n"], "rows": [[3]]}
     result = asyncio.run(compose("q", sql, [_hit("c1", "loud")], CostLedger()))
     assert [c.n for c in result.citations] == [2]

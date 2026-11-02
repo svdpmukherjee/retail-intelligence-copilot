@@ -38,9 +38,9 @@ def _stub_retrieval(monkeypatch) -> None:
 
 @pytest.fixture(autouse=True)
 def no_llm(monkeypatch):
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
-    monkeypatch.setattr("agents.router.get_llm", lambda: NoLLM())
-    monkeypatch.setattr("memory.manager.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
+    monkeypatch.setattr("agents.router.get_llm", lambda **_: NoLLM())
+    monkeypatch.setattr("memory.manager.get_llm", lambda **_: NoLLM())
 
 
 # `support` is category-scoped and gold is category-sorted, so the first-N rows (which hold

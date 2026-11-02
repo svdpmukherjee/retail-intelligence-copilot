@@ -42,6 +42,10 @@ export interface Metric {
 
 const YEAR_NAME = /(^|_)(year|yr|month|date|period)($|_)/i;
 
+// A chart earns its place only when there is something to compare: fewer rows read better as a
+// sentence or a small table, so a 1-2 row result is never charted (the over-visualisation fix).
+const MIN_CHART_ROWS = 3;
+
 const isNum = (v: unknown): v is number => typeof v === "number";
 
 // A year-like column (named so, or all integers in 1900-2100) is a label, not a measure.
@@ -56,7 +60,7 @@ function isYearLike(name: string, cells: unknown[]): boolean {
 // only when unambiguous: exactly one all-numeric, non-year-like column is the measure, and
 // another column (first non-measure) labels each row. Anything else returns [] -> table only.
 export function sqlBlockMetrics(block: SqlBlock | null): Metric[] {
-  if (!block || block.rows.length === 0) return [];
+  if (!block || block.rows.length < MIN_CHART_ROWS) return [];
   const col = (i: number) => block.rows.map((r) => r[i]);
   const numeric = block.columns
     .map((name, i) => ({ name, i, cells: col(i) }))
@@ -64,10 +68,13 @@ export function sqlBlockMetrics(block: SqlBlock | null): Metric[] {
   const measures = numeric.filter(({ name, cells }) => !isYearLike(name, cells));
   if (measures.length !== 1 || block.columns.length < 2) return [];
   const measure = measures[0].i;
+  const values = block.rows.map((r) => r[measure] as number);
+  // All-equal measures (e.g. every category returned the same count) have nothing to compare.
+  if (new Set(values).size < 2) return [];
   const label = block.columns.findIndex((_, i) => i !== measure);
-  return block.rows.map((r) => ({
+  return block.rows.map((r, i) => ({
     label: String(r[label] ?? ""),
-    value: r[measure] as number,
+    value: values[i],
     n: 1, // the SQL block is always citation [1]
   }));
 }

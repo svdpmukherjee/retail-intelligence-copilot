@@ -13,6 +13,8 @@ interface LiveProps {
   state: PanelState;
   activeN?: number | null;
   onCiteClick: (n: number) => void;
+  // A turn reopened from history but replayed in full from its stored snapshot.
+  restored?: boolean;
   historical?: undefined;
 }
 
@@ -56,13 +58,13 @@ function HistoricalTurn({ role, content }: { role: string; content: string }) {
 
 export default function AssistantTurn(props: Props) {
   if (props.historical) return <HistoricalTurn {...props.historical} />;
-  const { res, state, activeN = null, onCiteClick } = props;
+  const { res, state, activeN = null, onCiteClick, restored = false } = props;
   const { audit, citations } = res;
   const lines = splitClaims(res.answer);
   const Shape = SHAPES[audit.role as keyof typeof SHAPES] ?? DefaultShape;
   const suppressCharts = state === "degraded-SQL" || !audit.sources.includes("sql");
   return (
-    <div className="turn bot" data-state={state}>
+    <div className="turn bot" data-state={state} data-restored={restored || undefined}>
       <div className="av" aria-hidden="true">
         R
       </div>
@@ -95,6 +97,11 @@ export default function AssistantTurn(props: Props) {
             <>
               <Shape res={res} lines={lines} suppressCharts={suppressCharts} onCiteClick={onCiteClick} />
               <CitationChips citations={citations} activeN={activeN} onCiteClick={onCiteClick} />
+              {restored && (
+                <div className="hist-note" role="note">
+                  Replayed from history
+                </div>
+              )}
             </>
           )}
         </div>

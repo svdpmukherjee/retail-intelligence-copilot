@@ -17,8 +17,17 @@ export default function StackedTurns({ turns, activeTurnId, activeN, onCiteClick
     <>
       {turns.map((t) => {
         if (t.kind === "restored") {
-          return t.roleKind === "user" ? (
-            <UserTurn key={t.id} query={t.content} />
+          if (t.roleKind === "user") return <UserTurn key={t.id} query={t.content} />;
+          // A stored snapshot replays in full (charts + evidence); otherwise, stripped text only.
+          return t.res ? (
+            <AssistantTurn
+              key={t.id}
+              res={t.res}
+              restored
+              state={derivePanelState({ inFlight: false, response: t.res, error: null })}
+              activeN={t.id === activeTurnId ? activeN : null}
+              onCiteClick={(n) => onCiteClick(t.id, n)}
+            />
           ) : (
             <AssistantTurn key={t.id} historical={{ role: t.threadRole, content: t.content }} />
           );

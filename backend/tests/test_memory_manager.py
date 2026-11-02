@@ -90,7 +90,7 @@ def test_render_is_capped_to_history_turns() -> None:
 
 def test_route_context_none_is_unchanged_and_context_reaches_llm(monkeypatch) -> None:
     llm = FakeLLM('{"intent": "docs_rag", "rationale": "r"}')
-    monkeypatch.setattr("agents.router.get_llm", lambda: llm)
+    monkeypatch.setattr("agents.router.get_llm", lambda **_: llm)
 
     asyncio.run(router.route("returns policy?", "analyst"))
     asyncio.run(router.route("returns policy?", "analyst", context=_ctx()))
@@ -99,7 +99,7 @@ def test_route_context_none_is_unchanged_and_context_reaches_llm(monkeypatch) ->
     assert llm.users[1].startswith(_ctx().render())
     assert llm.users[1].endswith("Question: returns policy?")
 
-    monkeypatch.setattr("agents.router.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.router.get_llm", lambda **_: NoLLM())
     plain = asyncio.run(router.route("average rating?", "analyst"))
     with_ctx = asyncio.run(router.route("average rating?", "analyst", context=_ctx()))
     assert plain == with_ctx
@@ -107,7 +107,7 @@ def test_route_context_none_is_unchanged_and_context_reaches_llm(monkeypatch) ->
 
 def test_compose_context_reaches_llm_but_is_never_cited(monkeypatch) -> None:
     llm = FakeLLM("Batteries die fast [1].")
-    monkeypatch.setattr("agents.composer.get_llm", lambda: llm)
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: llm)
 
     plain = asyncio.run(composer.compose("q", None, [_hit()], CostLedger()))
     with_ctx = asyncio.run(composer.compose("q", None, [_hit()], CostLedger(), context=_ctx()))
@@ -120,7 +120,7 @@ def test_compose_context_reaches_llm_but_is_never_cited(monkeypatch) -> None:
 
 
 def test_compose_extractive_ignores_context(monkeypatch) -> None:
-    monkeypatch.setattr("agents.composer.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("agents.composer.get_llm", lambda **_: NoLLM())
     plain = asyncio.run(composer.compose("q", None, [_hit()], CostLedger()))
     with_ctx = asyncio.run(composer.compose("q", None, [_hit()], CostLedger(), context=_ctx()))
     assert plain == with_ctx
@@ -137,7 +137,7 @@ def _result(answer: str = "Batteries die fast [1]. Returns are free [2].") -> An
 def test_persist_appends_two_messages_and_one_finding_at_zero_cost(
     store: MemoryStore, monkeypatch
 ) -> None:
-    monkeypatch.setattr("memory.manager.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("memory.manager.get_llm", lambda **_: NoLLM())
     thread = store.create_thread("alice", "analyst")
     ledger = CostLedger()
 
@@ -158,7 +158,7 @@ def test_persist_appends_two_messages_and_one_finding_at_zero_cost(
 
 
 def test_persist_redacts_pii_and_stores_preference(store: MemoryStore, monkeypatch) -> None:
-    monkeypatch.setattr("memory.manager.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("memory.manager.get_llm", lambda **_: NoLLM())
     thread = store.create_thread("alice", "analyst")
     answer = "Contact bob@example.com or 555-123-4567 for refunds [1]."
 
@@ -188,7 +188,7 @@ def test_persist_uses_llm_summary_through_ledger_when_available(
     store: MemoryStore, monkeypatch
 ) -> None:
     llm = FakeLLM("LLM summary.")
-    monkeypatch.setattr("memory.manager.get_llm", lambda: llm)
+    monkeypatch.setattr("memory.manager.get_llm", lambda **_: llm)
     thread = store.create_thread("alice", "analyst")
 
     asyncio.run(
@@ -201,7 +201,7 @@ def test_persist_uses_llm_summary_through_ledger_when_available(
 
 
 def test_persist_trims_oldest_beyond_memory_max_items(store: MemoryStore, monkeypatch) -> None:
-    monkeypatch.setattr("memory.manager.get_llm", lambda: NoLLM())
+    monkeypatch.setattr("memory.manager.get_llm", lambda **_: NoLLM())
     monkeypatch.setenv("MEMORY_MAX_ITEMS", "3")
     from app.config import get_settings
 

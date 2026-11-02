@@ -94,6 +94,7 @@ class TurnOut(BaseModel):
     turn: int
     role_kind: RoleKind
     content: str
+    payload: dict[str, Any] | None = None  # assistant render snapshot for full replay
 
 
 class ThreadDetailResponse(BaseModel):
@@ -129,7 +130,10 @@ async def thread_detail(thread_id: str, user_id: str = Query(min_length=1)) -> T
         return ThreadDetailResponse(
             thread_id=thread.id,
             role=thread.role,
-            turns=[TurnOut(turn=r.turn, role_kind=r.role_kind, content=r.content) for r in rows],
+            turns=[
+                TurnOut(turn=r.turn, role_kind=r.role_kind, content=r.content, payload=r.payload)
+                for r in rows
+            ],
         )
 
     try:
@@ -146,9 +150,13 @@ class AuditRow(BaseModel):
     created_at: datetime
     query: str
     role: str
+    user_id: str | None = None
     intent: str | None
+    model: str | None = None
+    answer: str | None = None
     tool_path: list[Any]
     sources: list[Any]
+    llm_calls: list[Any] = []
     tokens: int
     cost_usd: float
     latency_ms: float

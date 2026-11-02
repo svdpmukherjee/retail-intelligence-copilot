@@ -18,15 +18,25 @@ def audit_ddl() -> list[str]:
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             query TEXT NOT NULL,
             role TEXT NOT NULL,
+            user_id TEXT,
             intent TEXT,
+            model TEXT,
+            answer TEXT,
             tool_path JSONB NOT NULL DEFAULT '[]'::jsonb,
             sources JSONB NOT NULL DEFAULT '[]'::jsonb,
+            llm_calls JSONB NOT NULL DEFAULT '[]'::jsonb,
             tokens INTEGER NOT NULL DEFAULT 0,
             cost_usd DOUBLE PRECISION NOT NULL DEFAULT 0,
             latency_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
             grounding JSONB,
             memory JSONB
         )""",
+        # Migrate tables created before the traceability columns were added (idempotent).
+        f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS user_id TEXT",
+        f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS model TEXT",
+        f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS answer TEXT",
+        f"ALTER TABLE {AUDIT_TABLE} ADD COLUMN IF NOT EXISTS llm_calls JSONB "
+        "NOT NULL DEFAULT '[]'::jsonb",
         f"CREATE INDEX IF NOT EXISTS audit_log_created_idx ON {AUDIT_TABLE} (created_at)",
     ]
 
@@ -48,17 +58,22 @@ class AuditStore:
 
     def record(self, audit: dict) -> None:
         sql = (
-            f"INSERT INTO {AUDIT_TABLE} (query, role, intent, tool_path, sources, tokens, "
-            "cost_usd, latency_ms, grounding, memory) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            f"INSERT INTO {AUDIT_TABLE} (query, role, user_id, intent, model, answer, tool_path, "
+            "sources, llm_calls, tokens, cost_usd, latency_ms, grounding, memory) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         )
         grounding, memory = audit.get("grounding"), audit.get("memory")
+        answer = audit.get("answer")
         params = [
             redact(audit["query"]),  # user text may carry PII; the audit log keeps it redacted
             audit["role"],
+            audit.get("user_id"),
             audit.get("intent"),
+            audit.get("model"),
+            None if answer is None else redact(answer),  # belt-and-braces; composer also redacts
             Jsonb(audit.get("tool_path", [])),
             Jsonb(audit.get("sources", [])),
+            Jsonb(audit.get("llm_calls", [])),
             audit.get("tokens", 0),
             audit.get("cost_usd", 0),
             audit.get("latency_ms", 0),
