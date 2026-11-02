@@ -10,6 +10,7 @@ export const IDENTITIES: Identity[] = [
   { userId: "support_2", role: "support" },
   { userId: "marketing_1", role: "marketing" },
   { userId: "executive_1", role: "executive" },
+  { userId: "admin_1", role: "admin" },
 ];
 
 export const DEFAULT_IDENTITY = IDENTITIES[0];

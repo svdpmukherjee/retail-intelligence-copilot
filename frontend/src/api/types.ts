@@ -78,3 +78,27 @@ export interface ThreadDetail {
   role: string;
   turns: { turn: number; role_kind: "user" | "assistant"; content: string }[];
 }
+
+// Mirrors GET /audit (admin-only operator view; never rendered in the chat).
+export interface AuditRow {
+  id: string;
+  created_at: string;
+  query: string;
+  role: string;
+  intent: string;
+  tool_path: string[];
+  sources: string[];
+  tokens: number;
+  cost_usd: number;
+  latency_ms: number;
+  grounding: Record<string, unknown> | null;
+  memory: Record<string, unknown> | null;
+  sql_error?: string | null;
+}
+
+export interface AuditListResponse {
+  items: AuditRow[];
+  total: number;
+  limit: number;
+  offset: number;
+}

@@ -796,3 +796,28 @@ Durable design decisions (newest at the bottom). Decision → why.
   (flag + keys), `backend/.env.example`, and `backend/pyproject.toml` (langfuse as an optional dep —
   the no-op path must work without it installed). No change to the audit schema, the chat payload,
   or any agent signature.
+
+- **B-14 (2026-11-02): audit admin view = in-app React route in its own `admin/` subtree,
+  over a role-gated read endpoint — Option A.** The chat UI deliberately hides operator
+  internals (ids, cost, routing, tokens — `ux-surface` rule); `audit_log` already stores them
+  but nothing reads them back. **Decision (Option A):** add `GET /audit` (+ `GET /audit/{id}`)
+  in `main.py`, gated server-side on the existing `admin` role (reject any other role with a
+  typed `HTTPException`, same posture as retrieval — never prompt-asked); add a read method to
+  `AuditStore` (`list_recent(limit, offset)` + `get(id)`), the store's first read path (it was
+  write-only: `record`/`ensure_schema`); and build a small admin surface in its **own**
+  `frontend/src/admin/` subtree (list → row detail), reached by selecting a new `admin` demo
+  identity, with the chat shapes left untouched. Paginated `limit`/`offset`, newest-first.
+  Two sub-modules: **B14.1** backend endpoint + store read; **B14.2** admin view. **Why not a
+  standalone operator page (Option B):** a second frontend artifact with no shared API client
+  or theming to maintain, for no gain over an isolated in-app subtree — the `ux-surface`
+  boundary is honored by code separation (`admin/` ≠ chat shapes), not by a separate deploy.
+  **Why not backend-only, defer the UI (Option C):** leaves B-14's "admin surface" half-built
+  and pushes UI work into the iteration-4 design pass, which is about the chat persona, not the
+  operator plane. **Governance note:** the admin view is the sanctioned home for exactly the
+  fields the chat must not show — it does not widen retrieval scope; `admin` already has an
+  unrestricted `ACCESS_POLICY` entry, and the endpoint only reads `audit_log` (no corpus, no
+  DDL, no writes). Shares `main.py` with B-13, which is merged, so no contention. Localized to a
+  new `.claude/specs/B14_audit_admin.md`; touches `backend/app/main.py`, `backend/governance/
+  audit.py`, `frontend/src/admin/` (new), `frontend/src/identities.ts` (+admin identity),
+  `frontend/src/api/{client,types}.ts` (+audit calls/types), and `frontend/src/App.tsx` (routing
+  seam only). No audit schema change, no chat-shape change.

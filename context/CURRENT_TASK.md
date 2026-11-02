@@ -1,9 +1,7 @@
 # Current task
 
-_None in progress._
+**B-14 — Audit admin view** (spec: `.claude/specs/B14_audit_admin.md`)
 
-Last completed: **B-13 — Observability plane (Langfuse tracing)**, shipped 2026-11-02 via `/change`
-(Option A). See `context/WORKLOG.md` and `docs/modules/B13_observability.md`.
-
-Next unblocked backlog item: **B-14** (audit admin view) — shares `backend/app/main.py` with B-13,
-so run it after B-13 is merged. See `context/BACKLOG_PLAN.md`.
+- B14.1 (backend read path + `GET /audit`, `GET /audit/{id}`): **built**, awaiting Tester
+  (files: `backend/governance/audit.py`, `backend/app/main.py`).
+- B14.2 (frontend admin view): **built** (`npm run build` clean), awaiting Tester. Files: `frontend/src/admin/*`, `identities.ts`, `api/types.ts`, `api/client.ts`, `App.tsx` (routing seam).

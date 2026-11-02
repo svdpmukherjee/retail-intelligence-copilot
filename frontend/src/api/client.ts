@@ -1,4 +1,4 @@
-import type { QueryRequest, QueryResponse, ThreadDetail, ThreadListItem } from "./types";
+import type { AuditListResponse, AuditRow, QueryRequest, QueryResponse, ThreadDetail, ThreadListItem } from "./types";
 
 const BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -53,4 +53,14 @@ export function getThread(id: string, userId: string): Promise<ThreadDetail> {
   return request<ThreadDetail>(
     `/threads/${encodeURIComponent(id)}?user_id=${encodeURIComponent(userId)}`,
   );
+}
+
+export function getAudit(role: string, limit: number, offset: number): Promise<AuditListResponse> {
+  return request<AuditListResponse>(
+    `/audit?role=${encodeURIComponent(role)}&limit=${limit}&offset=${offset}`,
+  );
+}
+
+export function getAuditRow(role: string, id: string): Promise<AuditRow> {
+  return request<AuditRow>(`/audit/${encodeURIComponent(id)}?role=${encodeURIComponent(role)}`);
 }

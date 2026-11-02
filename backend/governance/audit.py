@@ -6,6 +6,8 @@ from app.config import get_settings
 from governance.pii import redact
 
 AUDIT_TABLE = "audit_log"
+DEFAULT_LIMIT = 50
+MAX_LIMIT = 200
 _schema_ready = False
 
 
@@ -65,6 +67,21 @@ class AuditStore:
         ]
         with self._connect() as conn:
             conn.execute(sql, params)
+
+    def list_recent(self, limit: int = DEFAULT_LIMIT, offset: int = 0) -> list[dict]:
+        limit = max(1, min(limit, MAX_LIMIT))
+        sql = f"SELECT * FROM {AUDIT_TABLE} ORDER BY created_at DESC, id DESC LIMIT %s OFFSET %s"
+        with self._connect() as conn:
+            return conn.execute(sql, [limit, max(0, offset)]).fetchall()
+
+    def get(self, audit_id: int) -> dict | None:
+        with self._connect() as conn:
+            return conn.execute(f"SELECT * FROM {AUDIT_TABLE} WHERE id = %s", [audit_id]).fetchone()
+
+    def count(self) -> int:
+        with self._connect() as conn:
+            row = conn.execute(f"SELECT count(*) AS n FROM {AUDIT_TABLE}").fetchone()
+        return int(row["n"])
 
 
 def get_audit_store() -> AuditStore:

@@ -2,6 +2,8 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +12,7 @@ from pydantic import BaseModel
 from agents.composer import AnswerResult
 from agents.pipeline import PipelineError, answer, new_thread
 from app.config import get_settings
+from governance.audit import DEFAULT_LIMIT, MAX_LIMIT, get_audit_store
 from governance.policy import ACCESS_POLICY, AccessDenied
 from memory.schema import RoleKind, ThreadListRow
 from memory.store import get_memory_store
@@ -136,3 +139,68 @@ async def thread_detail(thread_id: str, user_id: str = Query(min_length=1)) -> T
     if detail is None:
         raise HTTPException(status_code=404, detail="Thread not found")
     return detail
+
+
+class AuditRow(BaseModel):
+    id: int
+    created_at: datetime
+    query: str
+    role: str
+    intent: str | None
+    tool_path: list[Any]
+    sources: list[Any]
+    tokens: int
+    cost_usd: float
+    latency_ms: float
+    grounding: dict[str, Any] | None
+    memory: dict[str, Any] | None
+
+
+class AuditListResponse(BaseModel):
+    items: list[AuditRow]
+    total: int
+    limit: int
+    offset: int
+
+
+def _require_admin(role: str) -> None:
+    """Server-side gate for the operator plane; runs before any audit data is read."""
+    if role not in ACCESS_POLICY:
+        raise HTTPException(status_code=400, detail=f"Unknown role: {role!r}")
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Audit log is admin-only")
+
+
+@app.get("/audit")
+async def list_audit(
+    role: str = Query(min_length=1),
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+    offset: int = Query(0, ge=0),
+) -> AuditListResponse:
+    _require_admin(role)
+
+    def load() -> AuditListResponse:
+        store = get_audit_store()
+        return AuditListResponse(
+            items=[AuditRow(**r) for r in store.list_recent(limit, offset)],
+            total=store.count(),
+            limit=limit,
+            offset=offset,
+        )
+
+    try:
+        return await asyncio.to_thread(load)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Audit log unavailable") from exc
+
+
+@app.get("/audit/{audit_id}")
+async def audit_detail(audit_id: int, role: str = Query(min_length=1)) -> AuditRow:
+    _require_admin(role)
+    try:
+        row = await asyncio.to_thread(get_audit_store().get, audit_id)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Audit log unavailable") from exc
+    if row is None:
+        raise HTTPException(status_code=404, detail="Audit record not found")
+    return AuditRow(**row)

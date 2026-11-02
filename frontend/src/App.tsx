@@ -13,6 +13,7 @@ import UserTurn from "./components/UserTurn";
 import RoleRail from "./components/RoleRail";
 import { DEFAULT_IDENTITY, Identity } from "./identities";
 import { PanelState, derivePanelState, errorMessage } from "./panelState";
+import AuditView from "./admin/AuditView";
 import "./App.css";
 
 interface CenterActions {
@@ -221,6 +222,8 @@ export default function App() {
     onRetry: () => (failedResumeId ? void onSelectThread(failedResumeId) : lastQuery && void send(lastQuery)),
     onReselectRole: () => identitySelectRef.current?.focus(),
   };
+
+  if (role === "admin") return <AuditView identity={identity} onIdentity={onIdentity} />;
 
   return (
     <div className="wrap">
