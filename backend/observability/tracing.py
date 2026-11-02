@@ -88,7 +88,7 @@ class _LangfuseTrace:
 
     @contextmanager
     def span(self, name: str, *, metadata: dict[str, Scalar] | None = None) -> Iterator[SpanHandle]:
-        child = self._root.start_span(name=name, metadata=_safe(metadata))
+        child = self._root.start_observation(name=name, as_type="span", metadata=_safe(metadata))
         try:
             yield _LangfuseSpan(child)
         finally:
@@ -108,7 +108,9 @@ class LangfuseTracer:
         self._client = Langfuse(host=host, public_key=public_key, secret_key=secret_key)
 
     def start_trace(self, name: str, *, metadata: dict[str, Scalar] | None = None) -> TraceHandle:
-        return _LangfuseTrace(self._client.start_span(name=name, metadata=_safe(metadata)))
+        return _LangfuseTrace(
+            self._client.start_observation(name=name, as_type="span", metadata=_safe(metadata))
+        )
 
     def flush(self) -> None:
         self._client.flush()
