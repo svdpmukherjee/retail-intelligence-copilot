@@ -18,3 +18,46 @@
 - This is a **surface-boundary rule, not a styling preference**: it keeps the user
   surface honest for a non-technical persona and keeps operator data where it is
   governed and auditable.
+
+## Honest messages must speak the user's language
+
+The grounding/fallback behaviour is a feature and MUST stay visible — but worded for
+a non-technical reader, never in system terms.
+
+- Never surface pipeline tokens in the UI: `extractive`, `llm draft blocked`,
+  `sql_rag`, `grounded (llm)`, `query failed`, `not filtered`, `no session trust`.
+- Re-author each honest state as plain reassurance, e.g.:
+  - verbatim fallback → "Here are the exact words from the sources" (not "verbatim
+    extract because the written answer could not be fully verified").
+  - SQL/compute failure → "We couldn't calculate the numbers for this one — here's
+    what customers actually said" (not "The data query failed, so metrics … hidden").
+- A cited, grounded answer needs no warning at all. Only *departures* from the ideal
+  (showing raw evidence instead of a synthesised answer) get a short, plain note.
+
+## Demo scaffolding is not product
+
+- The identity switcher is **demo-only** (it exists to show owner-scoping). Visually
+  mark it as a demo control, separate from the product chrome — never styled as a
+  feature the retail user "uses".
+- Phrase access/scope in user terms: "You can see all categories" — not "Retrieval is
+  not filtered for this role" or "no session trust".
+
+## Layout: a bounded, scrollable transcript
+
+- The conversation lives in a **fixed-height, scrollable region**, newest message at
+  the bottom, auto-scrolled on each new answer — never an infinitely growing page.
+- Older turns are reached by scrolling within that region and via the History sidebar.
+
+## Worked example — the iteration-3 build violates this rule
+
+Concrete inventory to remove/relocate (checkable against the live UI, 2026-11-02):
+
+- **Remove the whole SESSION panel** (Cost, Tokens, Latency, Thread id, User id,
+  Provider) → it already lives in the audit view and Langfuse.
+- **Remove per-answer footer chips**: tool/routing tag, `grounded (extractive)`,
+  latency, cost, the `why ▾` expander, `fallback: llm draft blocked`.
+- **Header tagline**: drop `$0/query`; keep a plain product line (e.g. "grounded · cited").
+- **Conversation header**: drop the `· <intent>` half (`executive · sql_rag` → role/scope only).
+- **Per answer, the user sees only**: the answer in plain language, citations as
+  human-readable **source chips**, and — where it builds trust — a short scope line.
+  Nothing else.

@@ -255,3 +255,34 @@ runs as its own `/change`.
   Access control enforced server-side, same posture as retrieval.
 - **Where:** `backend/app/main.py` (read endpoint over `audit_log`), the audit store in
   `backend/`, a small admin view under `frontend/src/` (kept apart from the chat shapes).
+
+## B-15 — Vague follow-ups mis-route and dump irrelevant evidence — MEDIUM (quality)
+
+- **Symptom:** a vague follow-up ("why?") after a SQL/`sql_rag` answer re-routes to
+  `sql_rag`, the SQL step fails, and the extractive fallback returns **unrelated** reviews
+  (e.g. cat-food / flavor snippets) instead of explaining the prior result. Observed
+  2026-11-02, executive role: "which category is least popular?" → "why?".
+- **Root cause:** the follow-up is routed on its own weak signal; even with B-2's free-path
+  augmentation the router still lands on `sql_rag`, SQL generation fails for the vague query,
+  and the fallback pulls generic review hits with no relation to the prior subject.
+- **Fix:** vague follow-ups must inherit the prior turn's **subject and result context** so
+  routing + retrieval stay on-topic; when the SQL leg fails, the fallback must be scoped to
+  the prior question's subject (or say plainly it can't answer) — never dump unrelated
+  evidence. Interacts with B-2 (free-path follow-up augmentation).
+- **Where:** `backend/agents/router.py` (routing of augmented follow-ups),
+  `backend/agents/pipeline.py` (fallback scope), memory context wiring.
+
+## B-16 — Audit record too thin for governance (no `user_id`, evidence stored as bare ids) — MEDIUM
+
+- **Symptom:** the audit log answers "*an* executive asked X" but not "*executive_1* asked X"
+  (no `user_id`), and its `sources` are just chunk **ids**, so an auditor can't see the
+  evidence text without a DB join — and the ids may not resolve after a re-embed.
+- **Root cause:** `audit_log` has no `user_id` column and `record()` never stores it;
+  `pipeline.answer()` saves `sources` as `[h.chunk.id …]` only (no label or snippet).
+- **Fix:** add a `user_id` column (thread it from `pipeline.answer()` into the audit dict)
+  and show it in the admin list/detail; enrich `sources` to store citation **label +
+  redacted snippet**, not just the id. Optionally add `user_id` to Langfuse trace metadata
+  (demo pseudo-id, not PII) so operators can filter traces by user.
+- **Where:** `backend/governance/audit.py` (schema + `record()`), `backend/agents/pipeline.py`
+  (audit dict), `frontend/src/admin/` (show `user_id`), optionally
+  `backend/observability/tracing.py`.
