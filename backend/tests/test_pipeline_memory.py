@@ -221,7 +221,8 @@ def test_pending_clarification_detected_from_assistant_payload_kind() -> None:
     msgs = [
         SimpleNamespace(role_kind="user", content="highest revenue?", payload=None),
         SimpleNamespace(
-            role_kind="assistant", content="best-rated or most-reviewed?",
+            role_kind="assistant",
+            content="best-rated or most-reviewed?",
             payload={"kind": "clarification"},
         ),
     ]

@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -101,6 +101,11 @@ class Settings(BaseSettings):
     ]
     # Per-category row caps keep Gold bounded and the M3 embed spend capped.
     sql_rows_per_category: int = 100000
+    sql_min_product_reviews: int = 2
+    source_review_fallback: bool = True
+    source_review_max_rows: int = Field(default=5000, ge=1, le=20000)
+    source_reviews_per_product: int = Field(default=3, ge=1, le=5)
+    source_review_max_chars: int = Field(default=12000, ge=500, le=20000)
     rag_rows_per_category: int = 15000
     # Salt for hashing reviewer ids at Silver (M2.3); never commit a real value.
     pii_hash_salt: SecretStr | None = None
@@ -120,6 +125,12 @@ class Settings(BaseSettings):
     embedding_model_free: str = "sentence-transformers/all-MiniLM-L6-v2"
     # text-embedding-3-small supports Matryoshka reduction; 512 shrinks the index.
     azure_embedding_dim: int = 512
+    embedding_model_revision: str | None = None
+    embedding_local_files_only: bool = False
+    azure_embedding_revision: str | None = None
+    # Opt-in immutable evidence bundle; unset preserves legacy serving behavior.
+    evidence_bundle_path: str | None = None
+    evidence_min_similarity: float = Field(default=0.35, ge=-1, le=1, allow_inf_nan=False)
     embedding_batch_size: int = 64
     max_embedding_usd: float = 5.0
     # Tiny slice indexed into the AI Search free tier (demo only; bulk lives in pgvector).

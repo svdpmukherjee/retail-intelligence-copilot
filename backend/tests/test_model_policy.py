@@ -16,10 +16,11 @@ def test_each_task_maps_to_its_tier_model(monkeypatch: pytest.MonkeyPatch) -> No
         openrouter_model_medium="medium/model",
         openrouter_model_large="large/model",
     )
-    # summary -> small, route/compose -> medium, sql -> large (see docs/model-comparison.md).
+    # Conversational correction: understand/compose/sql -> configured large; route -> medium.
     assert model_policy.model_for("summary") == "small/model"
     assert model_policy.model_for("route") == "medium/model"
-    assert model_policy.model_for("compose") == "medium/model"
+    assert model_policy.model_for("compose") == "large/model"
+    assert model_policy.model_for("understand") == "large/model"
     assert model_policy.model_for("sql") == "large/model"
 
 

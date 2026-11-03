@@ -1,8 +1,11 @@
-from typing import Protocol
+import json
+from pathlib import Path
+from typing import Any, Protocol
 
 import httpx
 
 from app.config import Settings, get_settings
+from retrieval.provenance import EmbeddingIdentity
 
 Vector = list[float]
 
@@ -27,14 +30,63 @@ class FreeEmbedder:
     def __init__(self, settings: Settings) -> None:
         self._model_name = settings.embedding_model_free
         self._batch_size = settings.embedding_batch_size
+        self._revision = settings.embedding_model_revision
+        self._offline = settings.embedding_local_files_only
         self._model = None
+        self._resolved_revision: str | None = None
 
     def _load(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer
 
-            self._model = SentenceTransformer(self._model_name)
+            model_path = self._model_name
+            if self._offline:
+                from huggingface_hub import snapshot_download
+
+                snapshot = Path(
+                    snapshot_download(
+                        self._model_name, revision=self._revision, local_files_only=True
+                    )
+                )
+                model_path = str(snapshot)
+                self._resolved_revision = snapshot.name
+            self._model = SentenceTransformer(
+                model_path,
+                revision=self._revision if not self._offline else None,
+                local_files_only=self._offline,
+            )
         return self._model
+
+    @property
+    def identity(self) -> EmbeddingIdentity:
+        from retrieval.provenance import EvidenceCompatibilityError, content_hash
+
+        # Load the exact cached path whose revision is recorded, rather than
+        # re-resolving a mutable cache ref after a model was loaded.
+        if not self._offline:
+            raise EvidenceCompatibilityError("Verified local identity requires an offline snapshot")
+        model = self._load()
+        tokenizer_config = json.loads(model.tokenizer.backend_tokenizer.to_str())
+        # encode() changes runtime padding/truncation state, not tokenizer identity.
+        tokenizer_config.pop("padding", None)
+        tokenizer_config.pop("truncation", None)
+        tokenizer_hash = content_hash(json.dumps(tokenizer_config, sort_keys=True))
+        return EmbeddingIdentity(
+            provider="local",
+            model=self._model_name,
+            revision=self._resolved_revision,
+            dimensions=self.dim,
+            tokenizer=tokenizer_hash,
+            preprocessing=f"sentence-transformers-normalized-v1:max_tokens={self.max_tokens}",
+        )
+
+    @property
+    def tokenizer(self) -> Any:
+        return self._load().tokenizer
+
+    @property
+    def max_tokens(self) -> int:
+        return self._load().max_seq_length
 
     @property
     def dim(self) -> int:
@@ -57,6 +109,21 @@ class AzureEmbedder:
     @property
     def dim(self) -> int:
         return self._dim
+
+    @property
+    def identity(self) -> EmbeddingIdentity:
+        from retrieval.provenance import EvidenceCompatibilityError
+
+        if not self._settings.azure_embedding_revision:
+            raise EvidenceCompatibilityError("Azure embedding deployment revision is unverified")
+        return EmbeddingIdentity(
+            provider="azure",
+            model=AZURE_EMBEDDING_MODEL,
+            revision=self._settings.azure_embedding_revision,
+            dimensions=self.dim,
+            tokenizer="azure-managed",
+            preprocessing="azure-default-v1",
+        )
 
     def _require_go_ahead(self) -> tuple[str, str, str]:
         s = self._settings
@@ -102,4 +169,6 @@ def get_embedder() -> Embedder:
     settings = get_settings()
     if settings.provider_mode == "azure":
         return AzureEmbedder(settings)
+    if settings.evidence_bundle_path:
+        settings = settings.model_copy(update={"embedding_local_files_only": True})
     return FreeEmbedder(settings)

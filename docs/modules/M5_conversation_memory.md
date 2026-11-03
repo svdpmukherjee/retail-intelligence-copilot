@@ -1,5 +1,9 @@
 # M5 — Conversation & memory
 
+> Historical baseline note. Later answer-quality changes supersede affected
+> contracts; see [current status](../answer-quality-status.md) and
+> [module index](README.md) for implementation, tests and review boundaries.
+
 Date: 2026-10-27. Spec: `.claude/specs/M5_conversation_memory.md`. Cloud spend: $0.
 
 ## What was built

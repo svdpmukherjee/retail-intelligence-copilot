@@ -12,10 +12,11 @@ export interface Citation {
   label: string;
   display_label: string; // plain-language source name for the chip
   snippet: string | null; // redacted source excerpt
+  passage?: string | null; // full redacted context; absent on old snapshots
 }
 
 export interface Grounding {
-  path: "llm" | "extractive" | "none";
+  path: "llm" | "extractive" | "none" | "selection_only" | "calculated" | "composite" | "conversation" | "clarification";
   issues: string[];
 }
 
@@ -34,7 +35,7 @@ export interface Scope {
 export interface Audit {
   query: string;
   role: string;
-  intent: "sql" | "review_rag" | "docs_rag" | "sql_rag" | "clarify";
+  intent: "sql" | "review_rag" | "docs_rag" | "sql_rag" | "compound" | "conversation" | "clarify";
   tool_path: string[];
   sources: string[];
   tokens: number;
@@ -51,13 +52,17 @@ export interface SqlBlock {
   sql: string;
   columns: string[];
   rows: (string | number | null)[][];
-  total_rows: number; // rows the query returned; show "X of Y" when > rows.length
+  total_rows: number; // fetched rows before display truncation
+  has_more?: boolean; // legacy snapshots omit it; true means the matching total is unknown
 }
 
 export interface AnswerResult {
   // "clarification" is a turn where the copilot asks the user a question instead of answering;
   // the UI renders it as a question with no sources.
   kind: "answer" | "clarification";
+  suggestions?: string[];
+  conversation_state?: Record<string, unknown> | null;
+  clarification_state?: Record<string, unknown> | null;
   answer: string;
   citations: Citation[];
   audit: Audit;
@@ -80,6 +85,9 @@ export interface ThreadListItem {
 // Full render snapshot stored for an assistant turn, so a reopened chat replays its charts and
 // evidence instead of stripped text. Absent on user turns and on turns saved before this existed.
 export interface RestoredPayload {
+  suggestions?: string[];
+  conversation_state?: Record<string, unknown> | null;
+  clarification_state?: Record<string, unknown> | null;
   kind?: "answer" | "clarification"; // absent on turns saved before clarifications existed
   answer: string;
   citations: Citation[];

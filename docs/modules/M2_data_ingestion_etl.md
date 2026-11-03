@@ -1,5 +1,9 @@
 # M2 — Data ingestion & ETL
 
+> Historical baseline note. Later answer-quality changes supersede affected
+> contracts; see [current status](../answer-quality-status.md) and
+> [module index](README.md) for implementation, tests and review boundaries.
+
 Date: 2026-10-27 (amended 2026-10-27, see Change log). Spec: `.claude/specs/M2_data_ingestion_etl.md`. Cloud spend: $0.
 
 ## What was built

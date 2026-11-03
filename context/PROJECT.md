@@ -1,7 +1,8 @@
 # PROJECT.md — module status
 
-Session-continuity file. The orchestrator reads this at session start and
-updates it at session end. One row per module (see `PRD.md §10`).
+Session-continuity file. Read this with CURRENT_TASK.md and RESUME_NEXT_SESSION.md.
+The table records the original module baseline, not acceptance of later answer-quality
+remediation. Current details: [consolidated status](../docs/answer-quality-status.md).
 
 | ID | Module | Status |
 |----|--------|--------|
@@ -37,7 +38,7 @@ and a live browser visual-QA gate (free mode, $0). Spec `.claude/specs/M8v3_serv
 device (env viewport floor ~1353px), 4 error-state banners not force-driven, and the pending
 per-turn audit/citations persistence (§2 option c) for full-fidelity resume.
 
-**Design Track iteration 4 (M8 v4) — DONE (2026-11-02).** User-centred declutter + trust redesign of
+**Design Track iteration 4 (M8 v4 baseline) — DONE (2026-11-02).** User-centred declutter + trust redesign of
 the M8 chat surface for a non-technical retail user, on the **unchanged** pipeline, plus **exactly one**
 additive backend field (`citations[].display_label`, D-30 — readable source-chip label derived server-side
 by source type, PII-safe). Removed all operator instrumentation (SessionCard/TrustStrip/ScopeCard/ScopeRibbon)
@@ -49,3 +50,22 @@ incl. live e2e (free mode, $0) + forbidden-surface count 0 + governance intact. 
 `docs/modules/M8v4_serving_ui.md`. Open items (human): review `display_label` always category form (no
 product-title field in `Chunk`); inherited `HISTORICAL_NOTE` wording; no browser visual-QA this pass +
 per-persona screenshots; restored-turn per-turn citations persistence (handoff §3.1).
+
+## Current answer-quality remediation (2026-11-03)
+
+| Scope | Implementation / acceptance |
+|---|---|
+| Stage 1 before-baseline | Accepted; frozen synthetic artifacts retain observed failures |
+| Stage 2 routing/SQL/access | Bounded implementation accepted; not an overall quality pass |
+| Stage 3 evidence foundations | Built + isolated fixture verification; review pending; no serving backfill/cutover |
+| Practical Stage 4 workaround | Source-first selected-product evidence and presentation fixes built; review pending |
+| Conversational repair | Schema-informed planning, saved criteria, product-grain prices, compound tasks and suggestions built; review pending |
+| Stage 5 tuning / model bake-offs | Not started |
+| Documentation/publication | Audit complete; formatting/implementation/handoff commits on feature branch; see CURRENT_TASK.md and Git refs |
+
+Current implementation and safety/verification limits:
+[docs/answer-quality-status.md](../docs/answer-quality-status.md).
+Every changed path is mapped in [CHANGE_INVENTORY.md](CHANGE_INVENTORY.md).
+The worklog and original module notes retain dated intermediate results; later
+status here and CURRENT_TASK.md supersedes old “unstarted/uncommitted/unmeasured”
+statements. Publishing does not imply quality acceptance, main merge or deployment.

@@ -54,3 +54,26 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def prepare_candidate_docs(
+    docs: list[tuple[str, str]], source_snapshot: str
+) -> tuple[list, list[dict]]:
+    from retrieval.chunking import source_parent, split_sections
+
+    if len(docs) > 3:
+        raise ValueError("Candidate fixture is limited to 3 documents")
+    parents, rejected = [], []
+    for doc_id, text in docs:
+        title, _ = split_sections(text)
+        try:
+            parents.append(
+                source_parent(
+                    {"doc_id": doc_id, "doc_title": title or doc_id, "text": text},
+                    source_snapshot,
+                    source_type="doc",
+                )
+            )
+        except ValueError as exc:
+            rejected.append({"doc_id": doc_id, "reason": str(exc).splitlines()[0]})
+    return parents, rejected

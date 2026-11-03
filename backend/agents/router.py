@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from agents.llm import LLM, get_llm
 from agents.model_policy import model_for
+from agents.query_plan import constrained_scope, product_explanation
 from app.cost import CostLedger
 from governance.policy import scope_for_role
 from memory.manager import MemoryContext
@@ -84,6 +85,7 @@ class RouteDecision(BaseModel):
     scope: Filters
     rationale: str
     question: str | None = None  # set only when intent == "clarify": the question to ask the user
+    filters: Filters | None = None  # requested constraints intersected with permission scope
 
 
 def derive_scope(role: str) -> Filters:
@@ -96,6 +98,8 @@ def derive_scope(role: str) -> Filters:
 
 def _rule_intent(query: str) -> tuple[Intent, str] | None:
     """The first matching rule, or None when the query is ambiguous."""
+    if product_explanation(query):
+        return "sql_rag", "select lowest-rated products, then explain with their reviews"
     for intent, pattern, why in _RULES:
         if pattern.search(query):
             return intent, why
@@ -131,6 +135,7 @@ async def route(
     context: MemoryContext | None = None,
     llm: LLM | None = None,
     resolving: bool = False,
+    intent_hint: Intent | None = None,
 ) -> RouteDecision:
     """Classify intent (rules first; LLM only for queries no rule matches) and attach the scope.
 
@@ -138,6 +143,7 @@ async def route(
     we must not clarify again (that is the loop in the transcript) — we commit to a concrete tool.
     """
     scope = derive_scope(role)
+    filters = constrained_scope(query, scope)
     # Deterministic honesty gate, ahead of the aggregate rules: a question for sales/revenue data
     # the dataset does not hold is answered with a clarifying question, never a dump of nulls.
     # Skipped when resolving: the user has already been asked and has replied, so re-asking it
@@ -149,9 +155,16 @@ async def route(
             rationale="asks for sales/revenue data the review dataset does not contain",
             question=_MISSING_MEASURE_QUESTION,
         )
+    if intent_hint is not None and intent_hint != "clarify":
+        return RouteDecision(
+            intent=intent_hint,
+            scope=scope,
+            filters=filters,
+            rationale="server-validated conversation plan",
+        )
     # Rules are high-confidence and deterministic; a nondeterministic LLM must not override them.
     if hit := _rule_intent(query):
-        return RouteDecision(intent=hit[0], scope=scope, rationale=hit[1])
+        return RouteDecision(intent=hit[0], scope=scope, filters=filters, rationale=hit[1])
     # Classification is routed to its own tier (see model_policy); it can also decide the question
     # is too vague and return a clarify intent with a question.
     llm = llm or get_llm(model=model_for("route"))
@@ -171,6 +184,12 @@ async def route(
                 # the concrete default so the reply gets a real answer, not another question.
                 if not (resolving and parsed[0] == "clarify"):
                     return RouteDecision(
-                        intent=parsed[0], scope=scope, rationale=parsed[1], question=parsed[2]
+                        intent=parsed[0],
+                        scope=scope,
+                        filters=filters,
+                        rationale=parsed[1],
+                        question=parsed[2],
                     )
-    return RouteDecision(intent="review_rag", scope=scope, rationale=DEFAULT_RATIONALE)
+    return RouteDecision(
+        intent="review_rag", scope=scope, filters=filters, rationale=DEFAULT_RATIONALE
+    )

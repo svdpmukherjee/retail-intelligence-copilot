@@ -2,7 +2,7 @@ import type { SqlBlock } from "./api/types";
 
 export type Segment = { kind: "text"; text: string } | { kind: "cite"; n: number };
 
-const CITE = /\[(\d+)\]/g;
+const CITE = /\[\s*(\d+(?:\s*,\s*\d+)*)\s*\]/g;
 
 // One claim per line (composer contract); blank lines carry no claim.
 export function splitClaims(answer: string): string[] {
@@ -19,7 +19,7 @@ export function parseLine(line: string): Segment[] {
   for (const m of line.matchAll(CITE)) {
     const at = m.index ?? 0;
     if (at > last) out.push({ kind: "text", text: line.slice(last, at) });
-    out.push({ kind: "cite", n: Number(m[1]) });
+    for (const n of m[1].split(",")) out.push({ kind: "cite", n: Number(n.trim()) });
     last = at + m[0].length;
   }
   if (last < line.length) out.push({ kind: "text", text: line.slice(last) });
@@ -27,11 +27,11 @@ export function parseLine(line: string): Segment[] {
 }
 
 export function stripCites(line: string): string {
-  return line.replace(CITE, "").replace(/\s+/g, " ").trim();
+  return line.replace(CITE, "").trim();
 }
 
 export function citedNumbers(line: string): number[] {
-  return Array.from(line.matchAll(CITE), (m) => Number(m[1]));
+  return Array.from(line.matchAll(CITE)).flatMap((m) => m[1].split(",").map((n) => Number(n.trim())));
 }
 
 export interface Metric {
@@ -48,33 +48,37 @@ const MIN_CHART_ROWS = 3;
 
 const isNum = (v: unknown): v is number => typeof v === "number";
 
-// A year-like column (named so, or all integers in 1900-2100) is a label, not a measure.
-function isYearLike(name: string, cells: unknown[]): boolean {
-  return (
-    YEAR_NAME.test(name) ||
-    cells.every((v) => isNum(v) && Number.isInteger(v) && v >= 1900 && v <= 2100)
-  );
+export function timeValue(label: string): number {
+  if (/^\d{4}$/.test(label)) return Number(label);
+  if (!/^\d{4}-\d{2}(?:-\d{2})?$/.test(label)) return NaN;
+  const value = Date.parse(label);
+  return Number.isFinite(value) && new Date(value).toISOString().slice(0,label.length) === label ? value : NaN;
 }
 
-// Chart metrics straight from the typed SQL rows (never parsed from prose). Charts are drawn
-// only when unambiguous: exactly one all-numeric, non-year-like column is the measure, and
-// another column (first non-measure) labels each row. Anything else returns [] -> table only.
+export interface SqlChart { kind: "comparison" | "time"; caption: string; metrics: Metric[] }
+
+export function sqlChart(block: SqlBlock | null): SqlChart | null {
+  if (!block || block.has_more || block.total_rows !== block.rows.length ||
+      block.rows.length < MIN_CHART_ROWS || block.columns.length !== 2) return null;
+  const numeric = block.columns.map((_, i) => i).filter((i) =>
+    block.rows.every((row) => isNum(row[i]) && Number.isFinite(row[i])) &&
+    !YEAR_NAME.test(block.columns[i]));
+  if (numeric.length !== 1) return null;
+  const measure = numeric[0], label = 1 - measure;
+  if (!block.rows.every((r) => r[label] !== null) ||
+      new Set(block.rows.map((r) => String(r[label]))).size !== block.rows.length) return null;
+  const metrics = block.rows.map((r) => ({ label: String(r[label]).replaceAll("_", " "), value: r[measure] as number, n: 1 }));
+  const caption = block.columns[measure].replaceAll("_", " ");
+  if (YEAR_NAME.test(block.columns[label])) {
+    if (new Set(metrics.map((m) => m.label.length)).size !== 1) return null;
+    if (metrics.some((m) => !Number.isFinite(timeValue(m.label)))) return null;
+    return { kind: "time", caption, metrics: metrics.sort((a,b) => timeValue(a.label)-timeValue(b.label)) };
+  }
+  if (!/^(category|product_title)$/i.test(block.columns[label]) || metrics.some((m) => m.value < 0)) return null;
+  if (new Set(metrics.map((m) => m.value)).size < 2) return null;
+  return { kind: "comparison", caption, metrics: metrics.sort((a,b) => b.value-a.value || a.label.localeCompare(b.label)) };
+}
+
 export function sqlBlockMetrics(block: SqlBlock | null): Metric[] {
-  if (!block || block.rows.length < MIN_CHART_ROWS) return [];
-  const col = (i: number) => block.rows.map((r) => r[i]);
-  const numeric = block.columns
-    .map((name, i) => ({ name, i, cells: col(i) }))
-    .filter(({ cells }) => cells.every(isNum));
-  const measures = numeric.filter(({ name, cells }) => !isYearLike(name, cells));
-  if (measures.length !== 1 || block.columns.length < 2) return [];
-  const measure = measures[0].i;
-  const values = block.rows.map((r) => r[measure] as number);
-  // All-equal measures (e.g. every category returned the same count) have nothing to compare.
-  if (new Set(values).size < 2) return [];
-  const label = block.columns.findIndex((_, i) => i !== measure);
-  return block.rows.map((r, i) => ({
-    label: String(r[label] ?? ""),
-    value: values[i],
-    n: 1, // the SQL block is always citation [1]
-  }));
+  return sqlChart(block)?.metrics ?? [];
 }

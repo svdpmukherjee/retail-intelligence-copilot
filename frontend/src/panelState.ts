@@ -28,8 +28,11 @@ export function derivePanelState({ inFlight, response, error }: PanelInputs): Pa
   if (error) return error instanceof ApiError && error.status === 400 ? "error-400" : "error-502";
   if (!response) return "empty";
   const { audit, citations } = response;
+  if (audit.grounding.path === "conversation" || audit.grounding.path === "composite") return "grounded";
   if (audit.sql_error) return "degraded-SQL";
   if (audit.grounding.path === "none" || citations.length === 0) return "no-evidence";
+  // A cited product selection plus an explicit evidence limitation is a deliberate answer.
+  if (audit.grounding.path === "selection_only") return "grounded";
   if (audit.grounding.issues.length > 0) return "fallback";
   return "grounded";
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from typing import TYPE_CHECKING, Literal
 
@@ -20,7 +21,6 @@ MAX_TURN_CHARS = 400
 MAX_ITEMS_SHOWN = 5
 MAX_SUMMARY_CHARS = 300
 SUMMARY_SENTENCES = 2
-FOLLOWUP_MAX_WORDS = 3
 
 PREFERENCE_RE = re.compile(
     r"\b(?:i prefer|i like|please always|always (?:show|give|use|answer)|"
@@ -28,7 +28,9 @@ PREFERENCE_RE = re.compile(
     re.IGNORECASE,
 )
 FOLLOWUP_CUE_RE = re.compile(
-    r"^\s*(?:why|how come|what about|and\b|same but\b|really\b)",
+    r"^\s*(?:why\s*[?!.]*$|why\s+(?:(?:is|was)\s+that\b|so\b|"
+    r"(?:are|were|do|did|does)\s+(?:they|those|these|it)\b)|"
+    r"how come\s*[?!.]*$|what about\b|how about\b|and\b|same but\b|really\b)",
     re.IGNORECASE,
 )
 SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
@@ -56,6 +58,8 @@ class MemoryContext(BaseModel):
     # the clarification was about, folded back in so the reply is understood against what was asked.
     pending_clarification: bool = False
     clarify_subject: str | None = None
+    clarification_state: dict | None = None
+    conversation_state: dict | None = None
 
     def render(self) -> str:
         """Short bounded text block; empty string when there is nothing to show."""
@@ -81,8 +85,8 @@ class MemoryContext(BaseModel):
 
 
 def _is_vague_followup(query: str) -> bool:
-    """Too short to retrieve on its own, or opening with a follow-up cue."""
-    return len(query.split()) <= FOLLOWUP_MAX_WORDS or bool(FOLLOWUP_CUE_RE.match(query))
+    """Inherit a subject for reference-dependent cues, not every short/why question."""
+    return bool(FOLLOWUP_CUE_RE.match(query))
 
 
 def effective_query(query: str, context: MemoryContext) -> str:
@@ -91,7 +95,14 @@ def effective_query(query: str, context: MemoryContext) -> str:
     deterministic, $0). Anything else is returned unchanged."""
     # A reply to a clarification ("most-reviewed products", "electronics") means nothing on its
     # own — resolve it against the subject that was clarified, not as a fresh query.
-    if context.pending_clarification and context.clarify_subject:
+    standalone = bool(
+        re.match(
+            r"^\s*(?:what\b|what's\b|which\b|why\b|how\b|where\b|when\b|show\b|give\b|tell\b)",
+            query,
+            re.I,
+        )
+    ) and not _is_vague_followup(query)
+    if context.pending_clarification and context.clarify_subject and not standalone:
         subject = " ".join(context.clarify_subject.split())[:MAX_TURN_CHARS]
         return f"{subject} {query}"
     if not _is_vague_followup(query):
@@ -118,6 +129,14 @@ class MemoryManager:
             history=[Turn(role_kind=m.role_kind, content=m.content) for m in messages],
             pending_clarification=pending,
             clarify_subject=subject,
+            clarification_state=(
+                (messages[-1].payload or {}).get("clarification_state")
+                if pending and messages
+                else None
+            ),
+            conversation_state=(
+                (messages[-1].payload or {}).get("conversation_state") if messages else None
+            ),
             preferences=[
                 r.content for r in self._store.list_memory(user_id, kind="preference", limit=n)
             ],
@@ -136,9 +155,7 @@ class MemoryManager:
             return False, None
         if (messages[-1].payload or {}).get("kind") != "clarification":
             return False, None
-        subject = next(
-            (m.content for m in reversed(messages[:-1]) if m.role_kind == "user"), None
-        )
+        subject = next((m.content for m in reversed(messages[:-1]) if m.role_kind == "user"), None)
         return True, subject
 
     async def persist(
@@ -230,6 +247,17 @@ class MemoryManager:
         return {
             "kind": result.kind,  # "clarification" replays as a question (no sources), like it drew
             "answer": result.answer,
+            "suggestions": result.suggestions,
+            "clarification_state": (
+                json.loads(redact(json.dumps(result.clarification_state)))
+                if result.clarification_state
+                else None
+            ),
+            "conversation_state": (
+                json.loads(redact(json.dumps(result.conversation_state)))
+                if result.conversation_state
+                else None
+            ),
             "citations": [c.model_dump() for c in result.citations],
             "sql": result.sql.model_dump() if result.sql else None,
             "audit": render_audit,

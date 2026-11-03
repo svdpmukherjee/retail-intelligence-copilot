@@ -1,5 +1,9 @@
 # M8 v4 — Serving & UI (user-centred declutter + trust redesign)
 
+> Historical baseline note. Later answer-quality changes supersede affected
+> contracts; see [current status](../answer-quality-status.md) and
+> [module index](README.md) for implementation, tests and review boundaries.
+
 Date: 2026-11-02. Spec: `.claude/specs/M8v4_serving_ui.md`. Cloud spend: $0.
 Design inputs: `design/iteration-4/03_handoff.md` (authoritative build spec), `design/iteration-4/02_decisions.md` (D-22 to D-30), approved D2 mockup `design/iteration-4/mockups/m8-chat.html`. Governing rule: `.claude/rules/ux-surface.md`.
 

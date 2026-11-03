@@ -4,11 +4,19 @@ How to pick up this repository, build it, see how it grows, change it safely, an
 observe its cost and behaviour. Read this once; it points to everything else.
 
 ## 1. Read these first, in order
-1. `README.md` — what the project is.
-2. `PRD.md` — product & architecture backbone (start at §2 users, §10 modules).
-3. `context/PROJECT.md` — module status: what's done, what's next.
-4. `docs/repo-evolution.md` — visual tree of how the repo grew, per module.
-5. `context/DECISIONS.md` — why things are the way they are (ADRs).
+
+1. [AGENTS.md](../AGENTS.md) and [CLAUDE.md](../CLAUDE.md) — repository instructions.
+2. [CURRENT_TASK](../context/CURRENT_TASK.md), [PROJECT](../context/PROJECT.md),
+   [RESUME_NEXT_SESSION](../context/RESUME_NEXT_SESSION.md) — current state.
+3. [Answer-quality status](answer-quality-status.md) and
+   [change inventory](../context/CHANGE_INVENTORY.md) — post-ec0ef26 changes.
+4. Recent WORKLOG/DECISIONS entries and relevant module/spec appendices — evidence
+   and rationale. Older module snapshots are historical, not current acceptance.
+5. README/PRD/repo-evolution for the product and baseline architecture.
+
+The remediation is implemented on `plan/answer-quality-remediation`; publishing
+that branch does not accept quality, merge main, deploy, reindex or authorize a
+new paid run. Tests and data safety are described in [unit-testing](testing/unit-testing.md).
 
 ## 2. Mental model (how work happens)
 - You talk to the **orchestrator** (Claude Code, driven by `CLAUDE.md`). It writes
@@ -83,4 +91,4 @@ and the history stays auditable.
 - **Bicep** — Azure infrastructure-as-code (cloud resources described as text).
 - **ADR** — architecture decision record (one logged decision).
 - **SIT / UAT** — system-integration / user-acceptance testing (see `docs/testing/`).
-- **Provider mode** — the `azure` vs `free` backend switch (`PROVIDER_MODE`).
+- **Provider mode** — `free`, `openrouter` or `azure` (`PROVIDER_MODE`); hosted calls are gated.

@@ -185,3 +185,12 @@ Azure AI Search paths behind the provider seam, gated on explicit go-ahead.
   read boundary.
 - Access-policy enforcement (M6), evaluation gates/recall@k (M7), and richer Docling layout
   parsing (kept to `pypdf`/markdown here for simplicity).
+
+## Approved Stage 3 answer-quality localization (2026-11-03)
+
+`M3_answer_quality_stage3_proposal.md` defines the approved evidence-foundation
+change and operational boundaries. A bounded SQLite fixture adapter exercises
+versioned metadata/parents, token chunks, safe one-pass normalization, model identity,
+source reconciliation and pinned SQL/index rollback. Existing pgvector DDL and legacy
+indexing remain unchanged; Azure rejects unsupported operations. Real backfill and
+adapter/schema migration require the separate measured operational approval.

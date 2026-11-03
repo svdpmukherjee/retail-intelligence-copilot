@@ -4,9 +4,21 @@
 they can't actually query; the insight is trapped, and getting an answer today means
 waiting on a data analyst.
 
-**The idea.** Let anyone, be it support or marketing or an executive — just ask in plain English and get an answer in seconds. Under the hood it's **agentic RAG**: a **router** reads each question and picks the right tool: text-to-SQL for numbers, semantic review search for themes, policy docs for how-to — so you never get a hallucinated statistic. Retrieval is **hybrid** (vector + keyword, fused and reranked), and a **composer** returns one answer where **every claim is cited**.
+**The idea.** Let support, marketing and executives ask about customer reviews,
+product ratings, recorded prices and policy documents in plain language. A
+capability-aware conversation planner resolves the request, then scoped SQL/review/
+document tools supply evidence for the answer. Access filters, calculated summaries,
+citations and draft checks reduce known failures; they do not guarantee that every
+model claim is correct.
 
-**What we aim to get.** Enterprise-grade from day one: **access-controlled** (you only see your scope), fully **auditable**, with **groundedness enforced before the model ever speaks**. It currently runs **fully local at $0**, and the same code can switch to Azure behind one flag — reliable, governable, and scalable from the start.
+**Current status (2026-11-03).** M1–M8 are the historical baseline. Answer-quality
+remediation is implemented on `plan/answer-quality-remediation`, with review and
+full-quality acceptance still pending. Read the
+[consolidated status](docs/answer-quality-status.md),
+[current task](context/CURRENT_TASK.md) and
+[next-session handoff](context/RESUME_NEXT_SESSION.md) before making changes.
+Local free-mode execution is supported; hosted OpenRouter/Azure generation is
+optional and cost-gated. This dataset does not contain sales/revenue transactions.
 
 `Python · FastAPI · React · pgvector · Spark/Delta · Ollama ↔ Azure OpenAI`
  · full spec in **[`PRD.md`](./PRD.md)**
@@ -31,15 +43,23 @@ rebuilds. Nothing passes a gate on its own.
 
 ## 3 · The running system
 
-The agentic-RAG pipeline for one question. Access policy is enforced **before the
-LLM**; retrieval fuses vector + keyword results (RRF, optional rerank); the composer
-**blocks any uncited claim**; and the whole turn is written to an audit log.
+The current flow is **conversation planner → validated scoped tasks → router/tools
+→ calculated summaries + guarded synthesis → contextual follow-up questions**.
+Role permissions are enforced at data access before evidence reaches synthesis;
+retrieval uses vector + keyword fusion and optional reranking. Citation and draft
+checks can reject output and show source excerpts. They are not entailment proofs.
+Per-turn audit/observability records stay on the operator plane.
+
+The diagram below depicts the original pipeline; the
+[current flow](docs/answer-quality-status.md#what-executes-now) includes the planner,
+source-first selected reviews and additive conversation state.
 
 ![Runtime architecture from frontend through governance, router, agents, retrieval, composer and audit](docs/img/end_to_end.svg)
 
 ## 4 · Modules & status
 
-Nine modules, built one per session — eight **done**, documentation in progress.
+Nine original modules: eight baseline milestones **done**, M9 documentation still TODO.
+Later remediation has separate implementation/acceptance status in the handoff.
 Four concerns run across all of them; the roadmap (observability, cloud deployment)
 is marked honestly.
 
@@ -56,12 +76,14 @@ source feeds one of the three retrieval tools:
 
 | Source | Served by | Scale |
 |---|---|---|
-| Reviews → **structured** table | SQL agent — aggregates & trends | 15 categories × up to **100K** = ~**1.5M rows** |
-| Reviews → **review text** | Review-RAG — semantic search | 15 categories × up to **15K** = ~**225K passages** |
-| **Policy & manuals** (authored) | Docs-RAG — policy Q&A | **22 docs** (18 markdown + 4 PDF) |
+| Reviews → **structured** table | SQL — aggregates, prices & discovery | 15-category cap up to1.5M; recorded local snapshot **911,308 reviews /645,448 products** |
+| Reviews → **review text** | Sampled review search; selected products can use verified Silver reviews | **225,000 indexed chunks /191,007 products** in recorded snapshot |
+| **Policy & manuals** (authored) | Docs-RAG — policy Q&A | **22 source docs**, **79 indexed chunks** in recorded snapshot |
 
 Built by a **medallion ETL** (Bronze → Silver → Gold, Delta) in Spark, then embedded
-into pgvector.
+into pgvector. These dated local counts are not included with a fresh clone. The
+sampled index does not cover every SQL product. The remediation changed code, not
+the serving corpus; no rebuild/backfill is needed to inspect it.
 
 ---
 
@@ -69,10 +91,11 @@ into pgvector.
 
 A three-pane chat: a demo **identity switcher** and owner-scoped **history** on the
 left, the grounded, cited conversation in the middle, and a **click-to-inspect
-evidence** panel on the right. Per-turn **cost, tokens and latency** stay in view.
-*(UI is a work in progress — actively being refined.)*
+evidence** panel on the right. Conversation replies include relevant next-question
+buttons; source passages can be inspected. **Cost, tokens and latency belong to the
+audit/admin view**, not the customer-facing chat. The screenshot is historical.
 
-![Chat interface showing the role switcher, suggested queries, evidence panel and live session metrics](docs/img/chat-interface.png)
+![Historical chat interface; current chat hides operator metrics](docs/img/chat-interface.png)
 
 ---
 
@@ -108,6 +131,8 @@ This README is the front door; each doc below has one job, so you never read the
 | You want to… | Read |
 |---|---|
 | Know what this is (you're here) | `README.md` |
+| **Resume the latest work safely** | **[Current task](context/CURRENT_TASK.md)** · [Resume](context/RESUME_NEXT_SESSION.md) |
+| Understand every change since ec0ef26 | **[Status](docs/answer-quality-status.md)** · [File inventory](context/CHANGE_INVENTORY.md) |
 | The full product & architecture spec | **[`PRD.md`](./PRD.md)** |
 | **Run it locally** ($0) | **[`data-pipeline-setup/local/LOCAL_SETUP.md`](./data-pipeline-setup/local/LOCAL_SETUP.md)** |
 | **Run the one-off cloud demo** (cost-gated) | **[`data-pipeline-setup/cloud/CLOUD_SETUP.md`](./data-pipeline-setup/cloud/CLOUD_SETUP.md)** |

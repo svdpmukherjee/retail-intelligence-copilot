@@ -29,14 +29,29 @@ def hybrid_search(
     settings = get_settings()
     k = settings.retrieval_top_k if k is None else k
     store = store or get_vector_store()
-    vector = (embedder or get_embedder()).embed([query])[0]
+    embedder = embedder or get_embedder()
+    compatible = getattr(store, "require_compatible", None)
+    if compatible:
+        compatible(embedder)  # reject before embedding/query, including same-dimension mismatches
+    vector = embedder.embed([query])[0]
     n = settings.hybrid_candidates
-    fused = rrf_fuse(
-        [
-            store.query(vector, n, filters=filters),
-            store.keyword_query(query, n, filters=filters),
-        ],
-        settings.rrf_k,
+    from retrieval.sufficiency import lexical_query, select_evidence
+
+    vectors = store.query(vector, n, filters=filters)
+    keywords = store.keyword_query(
+        lexical_query(query) if compatible else query, n, filters=filters
     )
+    fused = rrf_fuse([vectors, keywords], settings.rrf_k)
     reranked = get_reranker(settings).rerank(query, fused[: settings.rerank_candidates])
+    if compatible:
+        selected = select_evidence(
+            query,
+            reranked,
+            vectors,
+            filters=filters,
+            minimum_similarity=settings.evidence_min_similarity,
+            k=k,
+        )
+        selected.assessment["lexical_candidates"] = len(keywords)
+        return selected
     return reranked[:k]

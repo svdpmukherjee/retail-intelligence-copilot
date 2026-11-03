@@ -858,3 +858,120 @@ Durable design decisions (newest at the bottom). Decision → why.
   (2) **Rename** the sidebar heading "History (yours)" → "Your Chat History" (the user then edited it to
   plain text, so the now-dead `.history h2 .yours` accent rule was swept). Both CSS/markup only, no
   behaviour change, `npm run build` clean.
+
+
+## 2026-11-03 — Answer quality: option B, stage 1 approved
+
+The user approved option B starting with stage 1: establish an M7 regression baseline
+before changing routing, retrieval, generation or UI. Use the existing pipeline and
+acceptance catalogue; keep the docs-only CI gate and thresholds unchanged. Reject
+a formatting-only patch (leaves correctness defects) and framework replacement
+(unmeasured migration). A bounded synthetic fixture verifies pipeline contracts,
+not live answer quality. A separate read-only local-provider mode records live
+results or explicit NOT RUN; no paid calls, corpus mutation or model downloads.
+The approved direction is `docs/testing/answer-quality-change-proposal.md`. Stage 1
+is authorized; stages 2–5 and paid/reindex operations are not authorized by this decision.
+
+## 2026-11-03 — Stage 1 accepted; proceed with Stage 2
+
+User approved Stage 1 and instructed proceeding. Localize Stage 2 in M4/M5 specs:
+use deterministic semantic SQL for explicitly supported average/lowest-product
+operations, preserve other LLM SQL with schema/repair improvements, intersect
+requested constraints with role permissions, and hand selected ASINs into review
+retrieval. Reject prompt-only repair (does not enforce semantics) and framework
+replacement (unnecessary migration). No additional hosted spend or corpus/UI
+changes. This user instruction authorizes continuation of this staged cross-module
+change in the same session. Stage 1 remains an immutable before baseline; Stage 2
+gets separate artifacts. No commit/push/deployment authorized.
+
+## 2026-11-03 — Stage 2 accepted; Stage 3 isolated implementation approved
+
+User said “go ahead” after the concrete Stage 3 proposal and separate acceptance
+boundaries. Accept Stage 2's bounded implementation without declaring an overall
+quality pass; implement S3.1–S3.4 per
+`.claude/specs/M3_answer_quality_stage3_proposal.md`. Read-only live coverage audit
+and bounded isolated fixture verification are authorized. Serving corpus/Gold,
+real backfill, model downloads, hosted spend, cutover, deployment, commit and push
+remain gated. Preserve all existing uncommitted work and Stage 1 baseline.
+
+## 2026-11-03 — Stage 3 versioned fixture boundary
+
+Use bounded immutable SQLite/FTS vectors plus Delta SQL snapshots to validate the
+new evidence contract without writing serving Postgres or Gold. Pin one complete
+bundle per pipeline turn; validate embedding lineage before query embedding and
+reject unknown/same-dimension mismatches. Preserve full redacted parents and unique
+review counts; normalized outputs carry a version to prevent repeated decoding.
+Do not retrofit legacy model identity or metadata through ambiguous ASIN-only joins.
+Product-aware sampling improves a measured bounded population; 225000 reviews cannot
+cover 645448 products. Real pgvector migration/backfill/cutover requires its own
+measured resource/cost/rollback plan and approval. Fixture evidence is not a complete
+answer-quality pass; synthesis/formatting/support remain later stages.
+
+## 2026-11-03 — User authorizes practical coverage/metadata/output fixes
+
+User requested the workaround and said “you have permission to fix them”. Implement
+`.claude/specs/M4_answer_quality_stage4_workaround.md` in the same staged change.
+Prefer bounded, permission-constrained read-only retrieval of selected products
+from existing Silver over a bulk re-embed. Validate SQL-selection aggregates before
+using source reviews; enrich indexed reviews only on exact legacy chunk identity.
+Deterministic SQL narration prevents incorrect extrema. Fix citation/Markdown/chart
+presentation as necessary. No corpus mutation/migration, paid calls, downloads,
+deployment, commit or push. Stage 3 final acceptance is not inferred.
+
+## 2026-11-03 — Prefer verified source reviews over rebuilding the corpus
+
+For supported SQL-selected product explanations, read existing Silver directly and
+verify selected review counts/means; no dependency on the sampled index or query
+embedding is necessary. Ordinary review retrieval retains its sample, with exact
+identity metadata enrichment and conservative rating-intent selection. This fixes
+observed missing-product cases without reindexing or inferring legacy vector
+provenance. Fail closed when source selection cannot be verified. Deterministic
+SQL summaries avoid model extrema errors; bounded source-quote fallbacks and safe
+Markdown/citation/chart rendering address observed presentation defects. General
+semantic support/hosted calibration remains unmeasured; numeric/citation syntax
+checks do not prove faithfulness. User authorization covers these fixes, not a bulk
+corpus migration or new provider spend.
+
+## 2026-11-03 — Independently route explicit combined questions
+
+Reported lowest-electronics + damaged-return-policy request was sent to one
+SQL/review route. Reuse existing executors per explicit question with a shared
+budget, bounded decomposition, combined citations, one persisted turn and honest
+partial results. Rejected sending policy text into generated SQL or asking the
+user to repeat each question. Existing fix authorization applies; no corpus or
+paid-model work. Narrow verification replaces the prior broad testing campaign.
+
+## 2026-11-03 — User authorizes conversational planning and guarded synthesis
+
+Implement `.claude/specs/M4_conversational_planning.md` under explicit “go ahead ...
+to fix things”. Use configured large-tier interpretation/synthesis, with typed
+plans, server-owned access decisions and typed clarification payloads. Model size
+is not a correctness guarantee; decline unrelated requests and never use reviews
+to answer greetings/access questions. Hybrid validated suggestions fill composer.
+Rejected more router regexes alone, model-controlled authorization, and unbounded
+context/corpus rebuilds. No new paid runs or provider changes; narrow verification.
+
+## 2026-11-03 — Repair conversational planning from real user failures
+
+User explicitly authorizes fixing the reproduced loops and live hosted/browser
+multi-turn testing. Prefer schema-informed semantic planning and typed active-plan
+state over expanding a word whitelist. Add product-grain price/discovery contracts,
+contextual executable suggestions and truthful zero-match rendering. Rejected a
+corpus rebuild and model-size-only fix: neither addresses pre-model rejection/state
+loss. Retain source/permission guards and bounded read-only source access. Live
+runs share the remaining original $2 budget; no serving data or schema mutations.
+
+## 2026-11-03 — Documentation reconciliation and branch publication authorized
+
+The user explicitly requested auditing every change since GitHub ec0ef26, concise
+commits without co-author trailers, and a push. This supersedes earlier no-commit/
+no-push restrictions for this publication only; it does not accept quality or
+approve main merge, deployment, ETL/reindex, serving migration or new paid runs.
+Fetched origin/main; ec0ef26 contains the prior local65665dd with an identical tree,
+so fast-forwarded without replacing source changes. Keep connected implementation
+in one commit, isolate six AST-equivalent baseline formatting fixes, and publish
+current-status/documentation reconciliation separately. Do not fabricate independent
+stages by splitting mutually dependent pipeline/eval files into broken commits.
+The wider hermetic publication check exposed a replacement-metric fallback loop
+and numeric display-modifier decomposition; repair them with targeted assertions,
+not weaker baselines. No new hosted/DB-backed run is needed for this audit.

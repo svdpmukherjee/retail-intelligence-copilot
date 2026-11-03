@@ -36,7 +36,7 @@ function renderCenter(
   if (turns.length === 0 && !inFlight && !err) return <EmptyState role={role} scope={scope} onStarter={a.onStarter} />;
   return (
     <>
-      <StackedTurns turns={turns} activeTurnId={active.turnId} activeN={active.n} onCiteClick={a.onCiteClick} />
+      <StackedTurns turns={turns} activeTurnId={active.turnId} activeN={active.n} onCiteClick={a.onCiteClick} onSuggestion={a.onStarter} />
       {inFlight && <LoadingState query={query} onCancel={a.onCancel} />}
       {!inFlight && !!err && (
         <>
@@ -121,6 +121,8 @@ export default function App() {
     return {
       kind: p.kind ?? "answer",
       answer: p.answer,
+      suggestions: p.suggestions,
+      clarification_state: p.clarification_state,
       citations: p.citations,
       sql: p.sql,
       audit: {
@@ -281,7 +283,10 @@ export default function App() {
 
   const actions: CenterActions = {
     onCiteClick,
-    onStarter: setQuestion,
+    onStarter: (text: string) => {
+      setQuestion(text);
+      requestAnimationFrame(() => document.querySelector<HTMLInputElement>('.composer input')?.focus());
+    },
     onCancel: () => abortRef.current?.abort(),
     onRetry: () => (failedResumeId ? void onSelectThread(failedResumeId) : lastQuery && void send(lastQuery)),
   };

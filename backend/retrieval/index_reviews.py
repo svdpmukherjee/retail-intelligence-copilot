@@ -125,3 +125,18 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def prepare_candidate_reviews(rows: list[dict], source_snapshot: str) -> tuple[list, list[dict]]:
+    """Normalize bounded isolated rows; reject bad identities/text explicitly."""
+    from retrieval.chunking import source_parent
+
+    if len(rows) > 100:
+        raise ValueError("Candidate fixture is limited to 100 reviews")
+    parents, rejected = [], []
+    for at, row in enumerate(rows):
+        try:
+            parents.append(source_parent(row, source_snapshot))
+        except ValueError as exc:
+            rejected.append({"row": at, "reason": str(exc).splitlines()[0]})
+    return parents, rejected

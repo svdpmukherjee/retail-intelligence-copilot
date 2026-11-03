@@ -11,7 +11,7 @@ from retrieval.schema import CHUNK_COLUMNS, CHUNKS_TABLE, Chunk, SearchHit, chun
 _META_COLUMNS = tuple(c for c in CHUNK_COLUMNS if c != "embedding")
 
 # Columns a caller may filter on; the allowlist keeps the WHERE builder injection-proof.
-FILTER_COLUMNS = ("source_type", "source", "category")
+FILTER_COLUMNS = ("source_type", "source", "category", "asin")
 
 Filters = dict[str, str | list[str]]
 
@@ -162,6 +162,10 @@ def get_vector_store() -> VectorStore:
     settings = get_settings()
     if settings.vector_store == "azure_search":
         return AzureSearchStore(settings)
+    if settings.evidence_bundle_path:
+        from retrieval.evidence_bundle import configured_bundle
+
+        return configured_bundle(settings.evidence_bundle_path)
     if settings.database_url is None:
         raise RuntimeError("DATABASE_URL is not set; it is required for VECTOR_STORE=pgvector.")
     return PgVectorStore(settings.database_url.get_secret_value(), get_embedder().dim)

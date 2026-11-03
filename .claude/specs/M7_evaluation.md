@@ -369,3 +369,66 @@ are cached third-party snapshots); do not hard-code a price without that check.
 - An embedder/retrieval bake-off — that is B-9, deliberately a separate single-axis
   study run strictly after B-8.
 - A live quality dashboard or historical trend store — the report + `audit_log` suffice.
+
+
+## Approved change — answer-quality baseline, stage 1 (2026-11-03)
+
+Approval: option B, starting with stage 1, in the user conversation; ADR in
+`context/DECISIONS.md`. This localized amendment supersedes the older docs-only
+measurement scope only for the new baseline runner; existing CI gate is unchanged.
+
+### M7.Q1 Catalogue and bounded semantic gold
+- Add `backend/eval/ground_truth/quality_cases.json` and `quality_fixture.json`.
+- Cover proposal A01–A12 for marketing/executive, exact sequence setup, known
+  independent category averages and eligible lowest-rated product IDs. Boundary
+  A13–A22 have explicit expectations and NOT RUN reasons until instrumented.
+- Extend existing acceptance docs rather than replace their catalogue.
+
+### M7.Q2 Pipeline baseline runner
+- Add `backend/eval/quality_baseline.py` and fixture adapters in
+  `backend/eval/quality_fixture.py`; call real `pipeline.answer`, not pinned docs.
+- Default synthetic mode uses in-memory DuckDB rows, deterministic lexical/vector
+  adapters, scripted LLM and in-memory memory store. Preserve actual route,
+  effective_query, SQL guard/execution, hybrid fusion, composer/grounding, and
+  memory logic. Label adapters and all synthetic outcomes explicitly.
+- Separate live mode uses existing read-only retrieval/Gold and only a loopback
+  free LLM without API key, offline model loading, no audit/tracing persistence;
+  ephemeral memory for sequences. Refuse paid/remote configuration.
+- Capture original/resolved query, route/scope, SQL/tool rows, selected products,
+  retrieved source bodies/metadata and final output. Only synthetic artifacts may
+  be committed; live evidence remains local, redacted, never dumped as settings.
+- Report PASS/FAIL/NOT RUN per assertion. Missing prerequisites never PASS;
+  semantic support and browser behavior stay NOT RUN without a real reviewer.
+- CLI writes JSON and Markdown; exit 1 for observed failure, 2 for incomplete
+  coverage with no observed failure, 0 only when all applicable assertions pass.
+  No new thresholds or CI wiring in this change.
+
+### M7.Q3 Verify and document
+- Add `backend/tests/test_quality_baseline.py`: numeric gold, wrong product
+  joins, scope leaks, known multi-turn contamination, partial outcomes, adapter
+  cleanup, blocked network/persistence and truthful synthetic/manual labels.
+- Run a real CLI-to-artifact fixture smoke. Attempt bounded local live smoke only
+  when safe prerequisites exist; report missing live paths as NOT RUN.
+- Update `docs/testing/acceptance/README.md`, write
+  `docs/testing/acceptance/quality-baseline.{json,md}` (synthetic only) and
+  `docs/modules/M7_answer_quality_baseline.md`. ruff/black and scoped tests pass.
+- Out of scope: changes to runtime agents/UI, database schema/index contents,
+  generation provider behavior, existing evaluation thresholds or CI. $0 hosted
+  spend. No ETL, full embeddings, downloads or serving-data mutation.
+
+### M7.Q4 — approved hosted live extension (2026-11-03)
+User explicitly authorized existing provider/credentials, $2 maximum incremental
+spend, read-only existing database/indexes, local-only results; no reindex,
+deployment, commit or push. This supersedes Q2/Q3 local-only/$0 restrictions only
+for this separately invoked probe. Add `eval/hosted_quality_probe.py` and scoped
+hermetic guard tests. Require CLI authorization, run-wide retained conservative
+reservations, at most 60 requests, current model pricing and provider price ceilings;
+refuse unpriced models/additional billing surfaces. Enforce Postgres read-only
+transactions, offline cached embeddings, ephemeral memory/no audit/tracing via Q2.
+Keep existing runtime settings/providers/agents unchanged. Save actual evidence,
+finish reasons and cost journal outside the repo; report limitations honestly.
+
+Evidence-transfer approval: user subsequently explicitly approved sending test
+questions and retrieved review/document excerpts to OpenRouter and its selected
+model providers for these bounded tests. This resolves the automatic approval
+review rejection; only this authorized live probe may transfer those payloads.

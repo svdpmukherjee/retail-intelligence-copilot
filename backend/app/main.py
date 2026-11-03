@@ -153,9 +153,7 @@ class DeleteResult(BaseModel):
 async def delete_thread(thread_id: str, user_id: str = Query(min_length=1)) -> DeleteResult:
     """Permanently delete one conversation (owner-scoped). The caller confirms in the UI first."""
     try:
-        removed = await asyncio.to_thread(
-            get_memory_store().delete_thread, thread_id, user_id
-        )
+        removed = await asyncio.to_thread(get_memory_store().delete_thread, thread_id, user_id)
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
     if not removed:
@@ -171,9 +169,7 @@ async def delete_all_threads(
     if role not in ACCESS_POLICY:
         raise HTTPException(status_code=400, detail=f"Unknown role: {role!r}")
     try:
-        removed = await asyncio.to_thread(
-            get_memory_store().delete_all_threads, user_id, role
-        )
+        removed = await asyncio.to_thread(get_memory_store().delete_all_threads, user_id, role)
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Conversation history unavailable") from exc
     return DeleteResult(deleted=removed)
