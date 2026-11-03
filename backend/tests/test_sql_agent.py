@@ -14,6 +14,8 @@ from agents.sql_agent import (
 )
 from app.cost import CostLedger
 
+pytestmark = pytest.mark.usefixtures("synthetic_gold")
+
 
 def test_safe_select_accepts_single_select():
     assert _safe_select("SELECT count(*) FROM structured;") == "SELECT count(*) FROM structured"
@@ -45,7 +47,7 @@ def test_run_sql_blocks_unsafe_before_executing():
         run_sql("SELECT 1; DROP TABLE structured")
 
 
-def test_aggregate_over_committed_gold_is_exact():
+def test_aggregate_over_synthetic_gold_is_exact():
     table = DeltaTable(str(mod.gold_structured_path())).to_pyarrow_table()
     ratings = table.column("rating").to_pylist()
     out = run_sql("SELECT count(*) AS n, sum(rating) AS total FROM structured")

@@ -22,8 +22,41 @@ import os
 from urllib.parse import urlsplit, urlunsplit
 
 import psycopg
+import pyarrow as pa
+import pytest
+from deltalake import write_deltalake
 
 from app.config import Settings, get_settings
+
+
+@pytest.fixture
+def synthetic_gold(tmp_path, monkeypatch):
+    """Tiny authored Delta tables; never read or modify the local data lake."""
+    from agents import sql_agent
+    from retrieval import index_reviews
+
+    rows = [
+        {
+            "asin": f"TEST-{i}",
+            "category": category,
+            "rating": float(rating),
+            "year": 2023,
+            "title": f"Synthetic review {i}",
+            "text": f"Authored test review for product {i}.",
+            "price": float(10 + i),
+        }
+        for i, (category, rating) in enumerate(
+            [("Electronics", 5), ("Electronics", 3), ("Books", 4), ("Books", 2), ("Books", 1)]
+        )
+    ]
+    table = pa.Table.from_pylist(rows)
+    structured = tmp_path / "gold" / "structured"
+    reviews = tmp_path / "gold" / "reviews"
+    write_deltalake(str(structured), table)
+    write_deltalake(str(reviews), table)
+    monkeypatch.setattr(sql_agent, "gold_structured_path", lambda: structured)
+    monkeypatch.setattr(index_reviews, "gold_reviews_path", lambda: reviews)
+    return rows
 
 
 def _configured_url() -> str | None:
