@@ -74,9 +74,7 @@ class _NoOpTrace:
     def span(self, name: str, *, metadata: dict[str, Scalar] | None = None) -> Iterator[SpanHandle]:
         yield _NOOP_SPAN
 
-    def end(
-        self, metadata: dict[str, Scalar] | None = None, *, output: str | None = None
-    ) -> None:
+    def end(self, metadata: dict[str, Scalar] | None = None, *, output: str | None = None) -> None:
         return None
 
 
@@ -126,9 +124,7 @@ class _LangfuseTrace:
         finally:
             child.end()
 
-    def end(
-        self, metadata: dict[str, Scalar] | None = None, *, output: str | None = None
-    ) -> None:
+    def end(self, metadata: dict[str, Scalar] | None = None, *, output: str | None = None) -> None:
         fields: dict = {"metadata": _safe(metadata)}
         if output is not None:
             fields["output"] = output

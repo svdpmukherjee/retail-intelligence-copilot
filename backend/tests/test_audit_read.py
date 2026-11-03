@@ -24,8 +24,18 @@ def store():
 
 def _seed(store, n=5):
     for i in range(n):
-        store.record({"query": f"q{i}", "role": "admin", "intent": "x", "tool_path": ["a"],
-                      "sources": [], "tokens": 10 + i, "cost_usd": 0.01, "latency_ms": 5.0})
+        store.record(
+            {
+                "query": f"q{i}",
+                "role": "admin",
+                "intent": "x",
+                "tool_path": ["a"],
+                "sources": [],
+                "tokens": 10 + i,
+                "cost_usd": 0.01,
+                "latency_ms": 5.0,
+            }
+        )
 
 
 def test_list_recent_order_pagination_get_count(store):

@@ -153,9 +153,7 @@ class MemoryStore:
             ]
             if not ids:
                 return 0
-            conn.execute(
-                f"DELETE FROM {MESSAGES_TABLE} WHERE thread_id = ANY(%s)", [ids]
-            )
+            conn.execute(f"DELETE FROM {MESSAGES_TABLE} WHERE thread_id = ANY(%s)", [ids])
             conn.execute(
                 f"DELETE FROM {THREADS_TABLE} WHERE user_id = %s AND role = %s", [user_id, role]
             )

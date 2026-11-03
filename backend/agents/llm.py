@@ -42,9 +42,7 @@ async def _chat(
     return data["choices"][0]["message"]["content"], data.get("usage")
 
 
-def _actual_tokens(
-    usage: dict | None, system: str, user: str, limit: int
-) -> tuple[int, int, int]:
+def _actual_tokens(usage: dict | None, system: str, user: str, limit: int) -> tuple[int, int, int]:
     """(prompt, completion, total) from the provider's usage, falling back to the chars/4 estimate
     plus the reserved output cap when the provider returns no usage block."""
     if usage:
