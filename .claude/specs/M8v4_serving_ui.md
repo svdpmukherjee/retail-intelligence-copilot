@@ -190,3 +190,29 @@ slugs, provider names, raw `audit` JSON, and raw grounding tokens (`extractive`,
 - Restored-turn persisted citations (needs per-turn `citations` persisted — open backend
   change, flagged in handoff §3.1, not built here).
 - Any second backend field beyond `citations[].display_label`.
+
+## Authorized answer-quality presentation localization (2026-11-03)
+
+User explicitly authorized fixing known answer-quality defects; see
+`M4_answer_quality_stage4_workaround.md`. This supersedes the earlier backend-field
+limit only for additive optional `citations[].passage` and grounding path `calculated`.
+Use one safe Markdown/citation renderer for live/replay, optional expandable redacted
+passages, and dimension-validated SQL comparisons/time series independent of role.
+Ambiguous/incomplete results stay tables. No raw HTML execution or unsafe generated
+links. Existing owner/history/governance contracts and layout remain in place.
+
+Authorized conversational correction (2026-11-03): see
+`M4_conversational_planning.md` for pre-routing interpretation, typed clarification
+state, large-tier synthesis and additive permission-filtered suggestion fields.
+
+### Current answer-quality response/UI integration (2026-11-03)
+
+Optional `suggestions`, `clarification_state` and `conversation_state` extend the
+response and existing JSON render snapshots, not database schema. Suggested
+questions reflect the active validated plan/result and role. Buttons fill/focus
+the composer, never auto-submit; restored turns retain choices. Specific backend
+zero-match/failure text must not be replaced with generic no-evidence copy.
+`citations[].passage` supports full redacted expandable context. Shared safe
+Markdown/grouped-citation rendering applies to live/history and every role shape;
+charts require complete, dimension-compatible results. Historical layout/spec
+restrictions apply except where these authorized appendices explicitly extend them.

@@ -1,0 +1,4139 @@
+{
+  "mode": "fixture",
+  "fixture_version": "quality-fixture-v1",
+  "catalogue_sha256": "15ffab913b69f170bb9510159d28e0ee1e1fb893cd6275a1022150436af223b3",
+  "coverage": "12 authored review rows; 6 products; 4 categories; January 2023. Not a representative retail sample.",
+  "limitations": [
+    "No browser or semantic-support reviewer executed.",
+    "Ephemeral memory: DB ownership/persistence and cross-thread findings untested.",
+    "Finish reason and source/index versions not exposed by runtime adapters.",
+    "Synthetic contracts, not real LLM/embedding quality."
+  ],
+  "results": [
+    {
+      "id": "A01",
+      "role": "marketing",
+      "expectation": "examples require qualitative support review; prevalence requires counted population",
+      "question": "What do customers praise most about our Beauty products?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.03278688524590164
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.03225806451612903
+          },
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015625
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "category": "Electronics",
+            "asin": "E-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery lasts all day. Fixture review 1.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers praise most about our Beauty products?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [1]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [2]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Electronics: Battery lasts all day. Fixture review 1. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 2,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          },
+          {
+            "n": 3,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 4,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 5,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          },
+          {
+            "n": 6,
+            "source_id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "label": "review E-high (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery lasts all day. Fixture review 1."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "5ba37324d68df2e6fd017b0e49c076ad5988ff1f"
+          ],
+          "memory": {
+            "thread_id": "baseline-A01-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 1.0
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A01",
+      "role": "executive",
+      "expectation": "examples require qualitative support review; prevalence requires counted population",
+      "question": "What do customers praise most about our Beauty products?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.03278688524590164
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.03225806451612903
+          },
+          {
+            "id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "category": "Books",
+            "asin": "K-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Book explains gardening clearly. Fixture review 2.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.015625
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers praise most about our Beauty products?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {},
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [1]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [2]\ncustomer review \u00b7 Books: Book explains gardening clearly. Fixture review 2. [3]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [5]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 2,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          },
+          {
+            "n": 3,
+            "source_id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "label": "review K-good (Books)",
+            "display_label": "customer review \u00b7 Books",
+            "snippet": "Book explains gardening clearly. Fixture review 2."
+          },
+          {
+            "n": 4,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 5,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 6,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c"
+          ],
+          "memory": {
+            "thread_id": "baseline-A01-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.7
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A02",
+      "role": "marketing",
+      "expectation": "review-weighted fixture averages; no inferred time trend",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 3
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A02-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 24.2
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "numeric gold",
+          "status": "PASS",
+          "reason": "Expected {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}; observed {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A02",
+      "role": "executive",
+      "expectation": "review-weighted fixture averages; no inferred time trend",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 4
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A02-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 16.1
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "numeric gold",
+          "status": "PASS",
+          "reason": "Expected {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0, 'Books': 5.0}; observed {'Beauty_and_Personal_Care': 4.0, 'Books': 5.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A03",
+      "role": "marketing",
+      "expectation": "standalone question; review evidence belongs to selected low-rated toys",
+      "question": "Why are customers unhappy with our lowest-rated toys?",
+      "setup": [
+        {
+          "question": "What do customers praise most about our Beauty products?",
+          "kind": "answer",
+          "answer": "customer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [1]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [2]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Electronics: Battery lasts all day. Fixture review 1. [6]",
+          "memory": {
+            "thread_id": "baseline-A03-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        },
+        {
+          "question": "What's the average customer rating by category?",
+          "kind": "answer",
+          "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A03-marketing",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category? Why are customers unhappy with our lowest-rated toys?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 3
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A03-marketing",
+            "history_turns_used": 4,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.0
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "standalone query",
+          "status": "FAIL",
+          "reason": "Complete questions must not inherit unrelated prior questions."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "FAIL",
+          "reason": "Expected ['T-low']; observed []."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A03",
+      "role": "executive",
+      "expectation": "standalone question; review evidence belongs to selected low-rated toys",
+      "question": "Why are customers unhappy with our lowest-rated toys?",
+      "setup": [
+        {
+          "question": "What's the average customer rating by category?",
+          "kind": "answer",
+          "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A03-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category? Why are customers unhappy with our lowest-rated toys?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 4
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A03-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.9
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "standalone query",
+          "status": "FAIL",
+          "reason": "Complete questions must not inherit unrelated prior questions."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "FAIL",
+          "reason": "Expected ['T-low']; observed []."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A04",
+      "role": "marketing",
+      "expectation": "select low-rated electronics then explain with their reviews",
+      "question": "Why are our lowest-rated electronics disappointing customers?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "columns": [
+            "asin",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "Why are our lowest-rated electronics disappointing customers?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "E-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=E-low, avg_rating=1.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=E-low, avg_rating=1.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "columns": [
+            "asin",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "total_rows": 1
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A04-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.4
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "standalone query",
+          "status": "PASS",
+          "reason": "Complete questions must not inherit unrelated prior questions."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "PASS",
+          "reason": "Expected ['E-low']; observed ['E-low']."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A04",
+      "role": "executive",
+      "expectation": "select low-rated electronics then explain with their reviews",
+      "question": "Why are our lowest-rated electronics disappointing customers?",
+      "setup": [
+        {
+          "question": "What's the average customer rating by category?",
+          "kind": "answer",
+          "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A04-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        },
+        {
+          "question": "What do customers complain about most in their reviews?",
+          "kind": "answer",
+          "answer": "customer review \u00b7 Books: Book explains gardening clearly. Fixture review 2. [1]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [2]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [6]",
+          "memory": {
+            "thread_id": "baseline-A04-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "columns": [
+            "asin",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What do customers complain about most in their reviews? Why are our lowest-rated electronics disappointing customers?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "E-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=E-low, avg_rating=1.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=E-low, avg_rating=1.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "columns": [
+            "asin",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "total_rows": 1
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A04-executive",
+            "history_turns_used": 4,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.9
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "standalone query",
+          "status": "FAIL",
+          "reason": "Complete questions must not inherit unrelated prior questions."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "PASS",
+          "reason": "Expected ['E-low']; observed ['E-low']."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A05",
+      "role": "marketing",
+      "expectation": "negative evidence; measured frequency or explicitly bounded examples",
+      "question": "What do customers complain about most in their reviews?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.01639344262295082
+          },
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.016129032258064516
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015625
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "category": "Electronics",
+            "asin": "E-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery lasts all day. Fixture review 1.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers complain about most in their reviews?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [1]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [2]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [4]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [5]\ncustomer review \u00b7 Electronics: Battery lasts all day. Fixture review 1. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 2,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 3,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 4,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          },
+          {
+            "n": 5,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          },
+          {
+            "n": 6,
+            "source_id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "label": "review E-high (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery lasts all day. Fixture review 1."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "5ba37324d68df2e6fd017b0e49c076ad5988ff1f"
+          ],
+          "memory": {
+            "thread_id": "baseline-A05-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.7
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A05",
+      "role": "executive",
+      "expectation": "negative evidence; measured frequency or explicitly bounded examples",
+      "question": "What do customers complain about most in their reviews?",
+      "setup": [
+        {
+          "question": "What's the average customer rating by category?",
+          "kind": "answer",
+          "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A05-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "category": "Books",
+            "asin": "K-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Book explains gardening clearly. Fixture review 2.",
+            "score": 0.01639344262295082
+          },
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.016129032258064516
+          },
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015625
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers complain about most in their reviews?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {},
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Books: Book explains gardening clearly. Fixture review 2. [1]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [2]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "label": "review K-good (Books)",
+            "display_label": "customer review \u00b7 Books",
+            "snippet": "Book explains gardening clearly. Fixture review 2."
+          },
+          {
+            "n": 2,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 3,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 4,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 5,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          },
+          {
+            "n": 6,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "49e69533c93809602bd90a82dc0e8866389df8a2"
+          ],
+          "memory": {
+            "thread_id": "baseline-A05-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.7
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A06",
+      "role": "marketing",
+      "expectation": "separate arrival defects, customer damage and shipping refunds",
+      "question": "What does our return policy say about damaged items?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Non-returnable items",
+            "text": "Return and Refund Policy - Non-returnable items\nOpened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective.",
+            "score": 0.03252247488101534
+          },
+          {
+            "id": "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Return window",
+            "text": "Return and Refund Policy - Return window\nMost items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition.",
+            "score": 0.032266458495966696
+          },
+          {
+            "id": "edfd146202a919510c31d8565189cdad45e38f43",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Condition requirements",
+            "text": "Return and Refund Policy - Condition requirements\nItems must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial refund of up to 50 percent.",
+            "score": 0.031754032258064516
+          },
+          {
+            "id": "61e7220597f3cbc9f05d29597a7c52f7c13b3b08",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Refund method and timing",
+            "text": "Return and Refund Policy - Refund method and timing\nRefunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived damaged or was sent in error.",
+            "score": 0.03149801587301587
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What does our return policy say about damaged items?",
+        "decision": {
+          "intent": "docs_rag",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "policy or how-to question for the documents",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "Return and Refund Policy - Non-returnable items Opened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective. [1]\nReturn and Refund Policy - Return window Most items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition. [2]\nReturn and Refund Policy - Condition requirements Items must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial refund of up to 50 percent. [3]\nReturn and Refund Policy - Refund method and timing Refunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived damaged or was sent in error. [4]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "label": "Return and Refund Policy / Non-returnable items",
+            "display_label": "Return and Refund Policy \u00b7 Non Returnable Items",
+            "snippet": "Return and Refund Policy - Non-returnable items Opened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective."
+          },
+          {
+            "n": 2,
+            "source_id": "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "label": "Return and Refund Policy / Return window",
+            "display_label": "Return and Refund Policy \u00b7 Return window",
+            "snippet": "Return and Refund Policy - Return window Most items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition."
+          },
+          {
+            "n": 3,
+            "source_id": "edfd146202a919510c31d8565189cdad45e38f43",
+            "label": "Return and Refund Policy / Condition requirements",
+            "display_label": "Return and Refund Policy \u00b7 Condition requirements",
+            "snippet": "Return and Refund Policy - Condition requirements Items must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial\u2026"
+          },
+          {
+            "n": 4,
+            "source_id": "61e7220597f3cbc9f05d29597a7c52f7c13b3b08",
+            "label": "Return and Refund Policy / Refund method and timing",
+            "display_label": "Return and Refund Policy \u00b7 Refund method and timing",
+            "snippet": "Return and Refund Policy - Refund method and timing Refunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived\u2026"
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "docs_rag",
+          "tool_path": [
+            "docs_rag"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "edfd146202a919510c31d8565189cdad45e38f43",
+            "61e7220597f3cbc9f05d29597a7c52f7c13b3b08"
+          ],
+          "memory": {
+            "thread_id": "baseline-A06-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.9
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['docs_rag']; observed ['docs_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A06",
+      "role": "executive",
+      "expectation": "separate arrival defects, customer damage and shipping refunds",
+      "question": "What does our return policy say about damaged items?",
+      "setup": [
+        {
+          "question": "What's the average customer rating by category?",
+          "kind": "answer",
+          "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A06-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        },
+        {
+          "question": "What do customers complain about most in their reviews?",
+          "kind": "answer",
+          "answer": "customer review \u00b7 Books: Book explains gardening clearly. Fixture review 2. [1]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [2]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [6]",
+          "memory": {
+            "thread_id": "baseline-A06-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        },
+        {
+          "question": "Why are our lowest-rated electronics disappointing customers?",
+          "kind": "answer",
+          "answer": "asin=E-low, avg_rating=1.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A06-executive",
+            "history_turns_used": 4,
+            "persisted": 1,
+            "followup_augmented": true
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Non-returnable items",
+            "text": "Return and Refund Policy - Non-returnable items\nOpened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective.",
+            "score": 0.03252247488101534
+          },
+          {
+            "id": "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Return window",
+            "text": "Return and Refund Policy - Return window\nMost items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition.",
+            "score": 0.032266458495966696
+          },
+          {
+            "id": "edfd146202a919510c31d8565189cdad45e38f43",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Condition requirements",
+            "text": "Return and Refund Policy - Condition requirements\nItems must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial refund of up to 50 percent.",
+            "score": 0.031754032258064516
+          },
+          {
+            "id": "61e7220597f3cbc9f05d29597a7c52f7c13b3b08",
+            "category": null,
+            "asin": null,
+            "source_type": "doc",
+            "doc_id": "authored/return-refund-policy",
+            "section": "Refund method and timing",
+            "text": "Return and Refund Policy - Refund method and timing\nRefunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived damaged or was sent in error.",
+            "score": 0.03149801587301587
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What does our return policy say about damaged items?",
+        "decision": {
+          "intent": "docs_rag",
+          "scope": {},
+          "rationale": "policy or how-to question for the documents",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "Return and Refund Policy - Non-returnable items Opened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective. [1]\nReturn and Refund Policy - Return window Most items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition. [2]\nReturn and Refund Policy - Condition requirements Items must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial refund of up to 50 percent. [3]\nReturn and Refund Policy - Refund method and timing Refunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived damaged or was sent in error. [4]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "label": "Return and Refund Policy / Non-returnable items",
+            "display_label": "Return and Refund Policy \u00b7 Non Returnable Items",
+            "snippet": "Return and Refund Policy - Non-returnable items Opened software, personal care items, perishable goods, gift cards, and custom-made products cannot be returned unless they arrive defective."
+          },
+          {
+            "n": 2,
+            "source_id": "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "label": "Return and Refund Policy / Return window",
+            "display_label": "Return and Refund Policy \u00b7 Return window",
+            "snippet": "Return and Refund Policy - Return window Most items may be returned within 30 days of delivery. Electronics may be returned within 15 days. Books and media may be returned within 30 days if unopened or in new condition."
+          },
+          {
+            "n": 3,
+            "source_id": "edfd146202a919510c31d8565189cdad45e38f43",
+            "label": "Return and Refund Policy / Condition requirements",
+            "display_label": "Return and Refund Policy \u00b7 Condition requirements",
+            "snippet": "Return and Refund Policy - Condition requirements Items must be unused, in original packaging, and include all accessories and manuals. Items showing signs of wear, damage by the customer, or missing parts are eligible only for a partial\u2026"
+          },
+          {
+            "n": 4,
+            "source_id": "61e7220597f3cbc9f05d29597a7c52f7c13b3b08",
+            "label": "Return and Refund Policy / Refund method and timing",
+            "display_label": "Return and Refund Policy \u00b7 Refund method and timing",
+            "snippet": "Return and Refund Policy - Refund method and timing Refunds are issued to the original payment method within 5 to 7 business days after the returned item is received and inspected. Shipping fees are refunded only if the item arrived\u2026"
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "docs_rag",
+          "tool_path": [
+            "docs_rag"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "56c00622c2427d8cad2086f0e9d83817143a6fa2",
+            "228fa5ae028cf49a6de6634edea15bdf91bbd34c",
+            "edfd146202a919510c31d8565189cdad45e38f43",
+            "61e7220597f3cbc9f05d29597a7c52f7c13b3b08"
+          ],
+          "memory": {
+            "thread_id": "baseline-A06-executive",
+            "history_turns_used": 6,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.9
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['docs_rag']; observed ['docs_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A07",
+      "role": "marketing",
+      "expectation": "preserve selected-product antecedent",
+      "question": "Why is that?",
+      "setup": [
+        {
+          "question": "Which Electronics products are lowest-rated?",
+          "kind": "answer",
+          "answer": "asin=E-low, avg_rating=1.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A07-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "columns": [
+            "asin",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "Which Electronics products are lowest-rated? Why is that?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "E-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=E-low, avg_rating=1.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=E-low, avg_rating=1.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "columns": [
+            "asin",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "total_rows": 1
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A07-marketing",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.3
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "PASS",
+          "reason": "Expected ['E-low']; observed ['E-low']."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A07",
+      "role": "executive",
+      "expectation": "preserve selected-product antecedent",
+      "question": "Why is that?",
+      "setup": [
+        {
+          "question": "Which Electronics products are lowest-rated?",
+          "kind": "answer",
+          "answer": "asin=E-low, avg_rating=1.0 [1]",
+          "memory": {
+            "thread_id": "baseline-A07-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "columns": [
+            "asin",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "Which Electronics products are lowest-rated? Why is that?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "E-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=E-low, avg_rating=1.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=E-low, avg_rating=1.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, AVG(rating) AS avg_rating FROM structured WHERE category = 'Electronics' GROUP BY asin HAVING COUNT(*) >= 2 ORDER BY avg_rating, asin LIMIT 1",
+          "columns": [
+            "asin",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "E-low",
+              1.0
+            ]
+          ],
+          "total_rows": 1
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A07-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.4
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "FAIL",
+          "reason": "Expected ['sql_agent', 'review_rag']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "selected product gold",
+          "status": "PASS",
+          "reason": "Expected ['E-low']; observed ['E-low']."
+        },
+        {
+          "name": "product evidence join",
+          "status": "FAIL",
+          "reason": "Explanation evidence must belong to the selected products."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A08",
+      "role": "marketing",
+      "expectation": "browser: comparison only, no temporal trend or false rank",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 3
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A08-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.2
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "numeric gold",
+          "status": "PASS",
+          "reason": "Expected {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}; observed {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "browser semantics",
+          "status": "NOT RUN",
+          "reason": "No browser executed."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A08",
+      "role": "executive",
+      "expectation": "browser: comparison only, no temporal trend or false rank",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What's the average customer rating by category?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 4
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A08-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.3
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "numeric gold",
+          "status": "PASS",
+          "reason": "Expected {'Beauty_and_Personal_Care': 4.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0, 'Books': 5.0}; observed {'Beauty_and_Personal_Care': 4.0, 'Books': 5.0, 'Electronics': 3.0, 'Toys_and_Games': 2.0}."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "browser semantics",
+          "status": "NOT RUN",
+          "reason": "No browser executed."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A09",
+      "role": "marketing",
+      "expectation": "browser: verified temporal dimension, chronological order and units",
+      "question": "What is the average rating per month?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What is the average rating per month?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 3
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A09-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 13.8
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "browser semantics",
+          "status": "NOT RUN",
+          "reason": "No browser executed."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A09",
+      "role": "executive",
+      "expectation": "browser: verified temporal dimension, chronological order and units",
+      "question": "What is the average rating per month?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "columns": [
+            "category",
+            "avg_rating"
+          ]
+        },
+        "resolved_query": "What is the average rating per month?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "category=Beauty_and_Personal_Care, avg_rating=4.0; category=Books, avg_rating=5.0; category=Electronics, avg_rating=3.0; category=Toys_and_Games, avg_rating=2.0"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT category, AVG(rating) AS avg_rating FROM structured GROUP BY category ORDER BY category",
+          "columns": [
+            "category",
+            "avg_rating"
+          ],
+          "rows": [
+            [
+              "Beauty_and_Personal_Care",
+              4.0
+            ],
+            [
+              "Books",
+              5.0
+            ],
+            [
+              "Electronics",
+              3.0
+            ],
+            [
+              "Toys_and_Games",
+              2.0
+            ]
+          ],
+          "total_rows": 4
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A09-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.1
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "browser semantics",
+          "status": "NOT RUN",
+          "reason": "No browser executed."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A10",
+      "role": "marketing",
+      "expectation": "honest empty selection, no empty SQL cited as supporting evidence; missing-review and failure variants pending",
+      "question": "Which products have the lowest rating in UnknownCategory?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin FROM structured WHERE category = 'UnknownCategory'",
+          "rows": [],
+          "columns": [
+            "asin"
+          ]
+        },
+        "resolved_query": "Which products have the lowest rating in UnknownCategory?",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "no rows [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "no rows"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin FROM structured WHERE category = 'UnknownCategory'",
+          "columns": [
+            "asin"
+          ],
+          "rows": [],
+          "total_rows": 0
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A10-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.0
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "empty fixture selection",
+          "status": "PASS",
+          "reason": "UnknownCategory is absent from the authored fixture."
+        },
+        {
+          "name": "empty is not evidence",
+          "status": "FAIL",
+          "reason": "Zero-row outcomes must not become a supporting SQL source/table."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A10",
+      "role": "executive",
+      "expectation": "honest empty selection, no empty SQL cited as supporting evidence; missing-review and failure variants pending",
+      "question": "Which products have the lowest rating in UnknownCategory?",
+      "setup": [],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin FROM structured WHERE category = 'UnknownCategory'",
+          "rows": [],
+          "columns": [
+            "asin"
+          ]
+        },
+        "resolved_query": "Which products have the lowest rating in UnknownCategory?",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": []
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "no rows [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "no rows"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin FROM structured WHERE category = 'UnknownCategory'",
+          "columns": [
+            "asin"
+          ],
+          "rows": [],
+          "total_rows": 0
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A10-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.3
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "empty fixture selection",
+          "status": "PASS",
+          "reason": "UnknownCategory is absent from the authored fixture."
+        },
+        {
+          "name": "empty is not evidence",
+          "status": "FAIL",
+          "reason": "Zero-row outcomes must not become a supporting SQL source/table."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A11",
+      "role": "marketing",
+      "expectation": "marketing cannot retrieve Books; executive can",
+      "question": "What do customers say about Books?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.01639344262295082
+          },
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.016129032258064516
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015625
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "category": "Electronics",
+            "asin": "E-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery lasts all day. Fixture review 1.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers say about Books?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [1]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [2]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [4]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [5]\ncustomer review \u00b7 Electronics: Battery lasts all day. Fixture review 1. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 2,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 3,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 4,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          },
+          {
+            "n": 5,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          },
+          {
+            "n": 6,
+            "source_id": "5ba37324d68df2e6fd017b0e49c076ad5988ff1f",
+            "label": "review E-high (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery lasts all day. Fixture review 1."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "5ba37324d68df2e6fd017b0e49c076ad5988ff1f"
+          ],
+          "memory": {
+            "thread_id": "baseline-A11-marketing",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.7
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A11",
+      "role": "executive",
+      "expectation": "marketing cannot retrieve Books; executive can",
+      "question": "What do customers say about Books?",
+      "setup": [],
+      "observation": {
+        "retrieved": [
+          {
+            "id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "category": "Books",
+            "asin": "K-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Book explains gardening clearly. Fixture review 2.",
+            "score": 0.01639344262295082
+          },
+          {
+            "id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "category": "Electronics",
+            "asin": "E-low",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Battery fails after one day. Fixture review 2.",
+            "score": 0.016129032258064516
+          },
+          {
+            "id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1.",
+            "score": 0.015873015873015872
+          },
+          {
+            "id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 1.",
+            "score": 0.015625
+          },
+          {
+            "id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "category": "Toys_and_Games",
+            "asin": "T-high",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Toy is usable but assembly is difficult. Fixture review 2.",
+            "score": 0.015384615384615385
+          },
+          {
+            "id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "category": "Beauty_and_Personal_Care",
+            "asin": "B-good",
+            "source_type": "review",
+            "doc_id": null,
+            "section": null,
+            "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2.",
+            "score": 0.015151515151515152
+          }
+        ],
+        "sql": null,
+        "resolved_query": "What do customers say about Books?",
+        "decision": {
+          "intent": "review_rag",
+          "scope": {},
+          "rationale": "scripted fixture route",
+          "question": null
+        }
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "customer review \u00b7 Books: Book explains gardening clearly. Fixture review 2. [1]\ncustomer review \u00b7 Electronics: Battery fails after one day. Fixture review 2. [2]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 1. [3]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 1. [4]\ncustomer review \u00b7 Toys and Games: Toy is usable but assembly is difficult. Fixture review 2. [5]\ncustomer review \u00b7 Beauty and Personal Care: Beauty cream feels gentle and smells pleasant. Fixture review 2. [6]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "label": "review K-good (Books)",
+            "display_label": "customer review \u00b7 Books",
+            "snippet": "Book explains gardening clearly. Fixture review 2."
+          },
+          {
+            "n": 2,
+            "source_id": "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "label": "review E-low (Electronics)",
+            "display_label": "customer review \u00b7 Electronics",
+            "snippet": "Battery fails after one day. Fixture review 2."
+          },
+          {
+            "n": 3,
+            "source_id": "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+          },
+          {
+            "n": 4,
+            "source_id": "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 1."
+          },
+          {
+            "n": 5,
+            "source_id": "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "label": "review T-high (Toys_and_Games)",
+            "display_label": "customer review \u00b7 Toys and Games",
+            "snippet": "Toy is usable but assembly is difficult. Fixture review 2."
+          },
+          {
+            "n": 6,
+            "source_id": "49e69533c93809602bd90a82dc0e8866389df8a2",
+            "label": "review B-good (Beauty_and_Personal_Care)",
+            "display_label": "customer review \u00b7 Beauty and Personal Care",
+            "snippet": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+          }
+        ],
+        "sql": null,
+        "audit": {
+          "intent": "review_rag",
+          "tool_path": [
+            "review_rag"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "extractive",
+            "issues": [
+              "llm draft blocked",
+              "answer has no citations"
+            ]
+          },
+          "sources": [
+            "0414877e3ea44d4b78a89786d8fbc96a2a1ced8b",
+            "05d29b7bb3228edc9d05ac6f0c0021f7e0b65319",
+            "0f9866e4a3e5395e8bec0b02c6c915cb4f4e88c6",
+            "2a50b6f75235fe64f36132bececf7254ac9f6be7",
+            "3a0241160893dc3d939a7ee8cf722067290fdb9c",
+            "49e69533c93809602bd90a82dc0e8866389df8a2"
+          ],
+          "memory": {
+            "thread_id": "baseline-A11-executive",
+            "history_turns_used": 0,
+            "persisted": 1,
+            "followup_augmented": false
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 0.6
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['review_rag']; observed ['review_rag']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "requested category",
+          "status": "FAIL",
+          "reason": "Requested category must constrain evidence within access scope."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "FAIL"
+    },
+    {
+      "id": "A12",
+      "role": "marketing",
+      "expectation": "first turn clarifies missing measure; second turn resolves without a loop",
+      "question": "most-reviewed products",
+      "setup": [
+        {
+          "question": "Which products have the highest revenue?",
+          "kind": "clarification",
+          "answer": "I don't have sales or revenue figures for these products \u2014 the data covers customer ratings, review counts and categories, not transactions. Would you like the best-rated or the most-reviewed products instead?",
+          "memory": {
+            "thread_id": "baseline-A12-marketing",
+            "history_turns_used": 0,
+            "persisted": 0,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, COUNT(*) AS review_count FROM structured GROUP BY asin ORDER BY review_count DESC, asin",
+          "rows": [
+            [
+              "B-good",
+              2
+            ],
+            [
+              "E-high",
+              2
+            ],
+            [
+              "E-low",
+              2
+            ],
+            [
+              "T-high",
+              2
+            ],
+            [
+              "T-low",
+              2
+            ]
+          ],
+          "columns": [
+            "asin",
+            "review_count"
+          ]
+        },
+        "resolved_query": "Which products have the highest revenue? most-reviewed products",
+        "decision": {
+          "intent": "sql",
+          "scope": {
+            "category": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "B-good",
+          "E-high",
+          "E-low",
+          "T-high",
+          "T-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=B-good, review_count=2; asin=E-high, review_count=2; asin=E-low, review_count=2; asin=T-high, review_count=2; asin=T-low, review_count=2 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=B-good, review_count=2; asin=E-high, review_count=2; asin=E-low, review_count=2; asin=T-high, review_count=2; asin=T-low, review_count=2"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, COUNT(*) AS review_count FROM structured GROUP BY asin ORDER BY review_count DESC, asin",
+          "columns": [
+            "asin",
+            "review_count"
+          ],
+          "rows": [
+            [
+              "B-good",
+              2
+            ],
+            [
+              "E-high",
+              2
+            ],
+            [
+              "E-low",
+              2
+            ],
+            [
+              "T-high",
+              2
+            ],
+            [
+              "T-low",
+              2
+            ]
+          ],
+          "total_rows": 5
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": true,
+            "categories": [
+              "Electronics",
+              "Beauty_and_Personal_Care",
+              "Toys_and_Games"
+            ]
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A12-marketing",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.0
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "clarification resolved",
+          "status": "PASS",
+          "reason": "First turn clarifies; concrete reply must not clarify again."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A12",
+      "role": "executive",
+      "expectation": "first turn clarifies missing measure; second turn resolves without a loop",
+      "question": "most-reviewed products",
+      "setup": [
+        {
+          "question": "Which products have the highest revenue?",
+          "kind": "clarification",
+          "answer": "I don't have sales or revenue figures for these products \u2014 the data covers customer ratings, review counts and categories, not transactions. Would you like the best-rated or the most-reviewed products instead?",
+          "memory": {
+            "thread_id": "baseline-A12-executive",
+            "history_turns_used": 0,
+            "persisted": 0,
+            "followup_augmented": false
+          }
+        }
+      ],
+      "observation": {
+        "retrieved": [],
+        "sql": {
+          "sql": "SELECT asin, COUNT(*) AS review_count FROM structured GROUP BY asin ORDER BY review_count DESC, asin",
+          "rows": [
+            [
+              "B-good",
+              2
+            ],
+            [
+              "E-high",
+              2
+            ],
+            [
+              "E-low",
+              2
+            ],
+            [
+              "K-good",
+              2
+            ],
+            [
+              "T-high",
+              2
+            ],
+            [
+              "T-low",
+              2
+            ]
+          ],
+          "columns": [
+            "asin",
+            "review_count"
+          ]
+        },
+        "resolved_query": "Which products have the highest revenue? most-reviewed products",
+        "decision": {
+          "intent": "sql",
+          "scope": {},
+          "rationale": "aggregate question over structured data",
+          "question": null
+        },
+        "selected_product_ids": [
+          "B-good",
+          "E-high",
+          "E-low",
+          "K-good",
+          "T-high",
+          "T-low"
+        ]
+      },
+      "response": {
+        "kind": "answer",
+        "answer": "asin=B-good, review_count=2; asin=E-high, review_count=2; asin=E-low, review_count=2; asin=K-good, review_count=2; asin=T-high, review_count=2; asin=T-low, review_count=2 [1]",
+        "citations": [
+          {
+            "n": 1,
+            "source_id": "sql",
+            "label": "SQL result",
+            "display_label": "Calculated from your data",
+            "snippet": "asin=B-good, review_count=2; asin=E-high, review_count=2; asin=E-low, review_count=2; asin=K-good, review_count=2; asin=T-high, review_count=2; asin=T-low, review_count=2"
+          }
+        ],
+        "sql": {
+          "sql": "SELECT asin, COUNT(*) AS review_count FROM structured GROUP BY asin ORDER BY review_count DESC, asin",
+          "columns": [
+            "asin",
+            "review_count"
+          ],
+          "rows": [
+            [
+              "B-good",
+              2
+            ],
+            [
+              "E-high",
+              2
+            ],
+            [
+              "E-low",
+              2
+            ],
+            [
+              "K-good",
+              2
+            ],
+            [
+              "T-high",
+              2
+            ],
+            [
+              "T-low",
+              2
+            ]
+          ],
+          "total_rows": 6
+        },
+        "audit": {
+          "intent": "sql",
+          "tool_path": [
+            "sql_agent"
+          ],
+          "scope": {
+            "restricted": false,
+            "categories": []
+          },
+          "grounding": {
+            "path": "llm",
+            "issues": []
+          },
+          "sources": [
+            "sql"
+          ],
+          "memory": {
+            "thread_id": "baseline-A12-executive",
+            "history_turns_used": 2,
+            "persisted": 1,
+            "followup_augmented": true
+          },
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "latency_ms": 14.2
+        }
+      },
+      "checks": [
+        {
+          "name": "required tools",
+          "status": "PASS",
+          "reason": "Expected ['sql_agent']; observed ['sql_agent']."
+        },
+        {
+          "name": "observable scope",
+          "status": "PASS",
+          "reason": "Returned review categories and projected SQL category columns only."
+        },
+        {
+          "name": "SQL product scope",
+          "status": "NOT RUN",
+          "reason": "Projection omits category; independent product provenance join pending."
+        },
+        {
+          "name": "clarification resolved",
+          "status": "PASS",
+          "reason": "First turn clarifies; concrete reply must not clarify again."
+        },
+        {
+          "name": "citation references",
+          "status": "PASS",
+          "reason": "Reference integrity only, not factual support."
+        },
+        {
+          "name": "qualitative support",
+          "status": "NOT RUN",
+          "reason": "Requires reviewer judgment against captured source bodies."
+        },
+        {
+          "name": "live generation and retrieval",
+          "status": "NOT RUN",
+          "reason": "Scripted LLM and bag-of-words adapters; not production embeddings."
+        }
+      ],
+      "status": "NOT RUN"
+    },
+    {
+      "id": "A13",
+      "expectation": "Markdown rendering and replay parity",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A14",
+      "expectation": "Strict numeric comparison 4.50 versus above 4.5",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A15",
+      "expectation": "Relevant expandable evidence beyond 240 characters",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A16",
+      "expectation": "Untrusted evidence and stale memory injection",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A17",
+      "expectation": "Reconcile deleted/edited sources and rollback",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A18",
+      "expectation": "Same-dimension embedding model mismatch",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A19",
+      "expectation": "Long-review tail retrieval and unique-review counts",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A20",
+      "expectation": "SQL fetch/display truncation semantics",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A21",
+      "expectation": "Length-limited/empty/malformed generation",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    },
+    {
+      "id": "A22",
+      "expectation": "SQL repair receives sanitized execution feedback",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline.",
+      "role": "both",
+      "status": "NOT RUN",
+      "checks": [
+        {
+          "name": "boundary instrumentation",
+          "status": "NOT RUN",
+          "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "PASS": 0,
+    "FAIL": 12,
+    "NOT RUN": 22
+  },
+  "assertions": {
+    "PASS": 79,
+    "FAIL": 29,
+    "NOT RUN": 70
+  }
+}

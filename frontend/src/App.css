@@ -503,3 +503,25 @@ select.user { width: 100%; font-family: var(--sans); font-size: 13.5px; color: v
   color: var(--danger-ink); background: var(--danger-weak);
   border-color: color-mix(in srgb, var(--danger) 25%, var(--border));
 }
+
+/* Safe answer formatting shares the live and replay rendering path. */
+.answer-document { overflow-wrap: anywhere; }
+.answer-document h2, .answer-document h3, .answer-document h4,
+.answer-document h5, .answer-document h6 { font-size: 1.05em; margin: 14px 0 7px; }
+.answer-document p, .answer-document ul, .answer-document ol { margin: 7px 0; }
+.answer-document li { margin: 5px 0; }
+.answer-document blockquote { margin: 8px 0; padding-left: 12px; border-left: 2px solid var(--border, #d9dee6); }
+.answer-document pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px; }
+.markdown-table { max-width: 100%; overflow-x: auto; }
+.markdown-table table { border-collapse: collapse; width: 100%; }
+.markdown-table th, .markdown-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border, #d9dee6); }
+.full-evidence, .exact-values { margin-top: 12px; }
+.full-evidence summary, .exact-values summary { cursor: pointer; }
+.full-evidence .esnip { white-space: pre-wrap; margin-top: 10px; }
+
+.question-suggestions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.question-suggestions button { max-width:100%; text-align:left; overflow-wrap:anywhere;
+  padding:8px 12px; border:1px solid var(--line, #d7dde5); border-radius:12px;
+  background:var(--panel, #fff); color:inherit; font:inherit; cursor:pointer; }
+.question-suggestions button:hover { background:var(--soft, #edf4f1); }
+.question-suggestions button:focus-visible { outline:2px solid var(--accent, #28735c); outline-offset:2px; }

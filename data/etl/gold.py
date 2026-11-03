@@ -11,6 +11,9 @@ from pyspark.sql.window import Window
 
 STRUCTURED_COLUMNS = (
     "asin",
+    "parent_id",
+    "identity_kind",
+    "source_snapshot",
     "user_id_hash",
     "year",
     "rating",
@@ -28,7 +31,20 @@ STRUCTURED_COLUMNS = (
     "main_category",
 )
 # Only redacted free text plus metadata; no reviewer identifiers reach the RAG index.
-REVIEW_TEXT_COLUMNS = ("asin", "title", "text", "description", "category", "year")
+REVIEW_TEXT_COLUMNS = (
+    "parent_id",
+    "identity_kind",
+    "source_snapshot",
+    "asin",
+    "title",
+    "text",
+    "description",
+    "category",
+    "year",
+    "rating",
+    "timestamp",
+    "product_title",
+)
 MANIFEST_FILE = "_manifest.json"
 
 
@@ -53,7 +69,37 @@ def run_gold(spark: SparkSession, settings: Settings | None = None) -> dict:
     """Split Silver into the SQL and RAG Gold tables and write a manifest."""
     settings = settings or get_settings()
     gold_root = Path(resolve_layer_path("gold", settings))
-    silver = spark.read.format("delta").load(resolve_layer_path("silver", settings))
+    from delta.tables import DeltaTable
+
+    silver_version = (
+        DeltaTable.forPath(spark, resolve_layer_path("silver", settings))
+        .history(1)
+        .select("version")
+        .head()[0]
+    )
+    silver = (
+        spark.read.format("delta")
+        .option("versionAsOf", silver_version)
+        .load(resolve_layer_path("silver", settings))
+    )
+
+    # Identity is derived before projection. This private tuple survives text edits;
+    # timestamp edits change fallback identity and need source reconciliation.
+    snapshot = f"silver:{silver_version}"
+    fallback = F.sha2(F.to_json(F.struct("category", "asin", "user_id_hash", "timestamp")), 256)
+    parent_key, kind = fallback, F.lit("silver_source_tuple_v1")
+    if "review_id" in silver.columns:
+        has_id = F.col("review_id").isNotNull() & (F.col("review_id") != "")
+        parent_key = F.when(
+            has_id, F.sha2(F.to_json(F.struct("category", "review_id")), 256)
+        ).otherwise(fallback)
+        kind = F.when(has_id, F.lit("silver_upstream_id_v1")).otherwise(kind)
+    identity_kind = "per_row:upstream_or_private_tuple"
+    silver = (
+        silver.withColumn("parent_id", parent_key)
+        .withColumn("identity_kind", kind)
+        .withColumn("source_snapshot", F.lit(snapshot))
+    )
 
     # Cap before projecting so the ordering columns (timestamp) are still present.
     tables = {
@@ -88,6 +134,8 @@ def run_gold(spark: SparkSession, settings: Settings | None = None) -> dict:
 
     manifest = {
         "run_timestamp": datetime.now(UTC).isoformat(),
+        "source_snapshot": snapshot,
+        "identity_kind": identity_kind,
         "row_counts": counts,
         "year_min": settings.etl_year_min,
         "year_max": settings.etl_year_max,

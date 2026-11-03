@@ -3,6 +3,8 @@ import type { PanelState } from "../panelState";
 import { splitClaims, stripCites } from "../answer";
 import { FALLBACK_NOTE, HISTORICAL_NOTE, NO_EVIDENCE, SQL_DEGRADED } from "../copy";
 import CitationChips from "./CitationChips";
+import AnswerDocument from "./AnswerDocument";
+import QuestionSuggestions from "./QuestionSuggestions";
 import DefaultShape from "./shapes/DefaultShape";
 import ExecutiveShape from "./shapes/ExecutiveShape";
 import MarketingShape from "./shapes/MarketingShape";
@@ -13,6 +15,7 @@ interface LiveProps {
   state: PanelState;
   activeN?: number | null;
   onCiteClick: (n: number) => void;
+  onSuggestion?: (question: string) => void;
   // A turn reopened from history but replayed in full from its stored snapshot.
   restored?: boolean;
   historical?: undefined;
@@ -32,7 +35,7 @@ const SHAPES = { support: SupportShape, marketing: MarketingShape, executive: Ex
 
 function HistoricalTurn({ role, content }: { role: string; content: string }) {
   // Markers point at evidence that was not kept, so they are dropped, not linked.
-  const lines = splitClaims(content).map(stripCites);
+  const text = stripCites(content);
   return (
     <div className="turn bot historical" data-state="historical">
       <div className="av" aria-hidden="true">
@@ -41,11 +44,7 @@ function HistoricalTurn({ role, content }: { role: string; content: string }) {
       <div className="body">
         <div className="answer">
           <div className={`shape shape-${role in SHAPES ? role : "default"}`}>
-            {lines.map((l, i) => (
-              <p key={i} className="line">
-                {l}
-              </p>
-            ))}
+            <AnswerDocument text={text} onCiteClick={() => {}} validCitations={[]} />
           </div>
           <div className="hist-note" role="note">
             {HISTORICAL_NOTE}
@@ -58,7 +57,7 @@ function HistoricalTurn({ role, content }: { role: string; content: string }) {
 
 export default function AssistantTurn(props: Props) {
   if (props.historical) return <HistoricalTurn {...props.historical} />;
-  const { res, state, activeN = null, onCiteClick, restored = false } = props;
+  const { res, state, activeN = null, onCiteClick, onSuggestion, restored = false } = props;
   // A clarification is a question back to the user, not an answer: plain question, no sources,
   // no charts, no warnings. The conversation continues with the user's next message.
   if (res.kind === "clarification") {
@@ -75,6 +74,7 @@ export default function AssistantTurn(props: Props) {
               </span>
               <p>{res.answer}</p>
             </div>
+            <QuestionSuggestions questions={res.suggestions} onSelect={onSuggestion} />
             {restored && (
               <div className="hist-note" role="note">
                 Replayed from history
@@ -96,7 +96,7 @@ export default function AssistantTurn(props: Props) {
       </div>
       <div className="body">
         <div className="answer">
-          {state === "degraded-SQL" && (
+          {state === "degraded-SQL" && citations.length > 0 && (
             <div className="warnline" role="status">
               <span className="ic" aria-hidden="true">
                 &#9888;
@@ -117,7 +117,7 @@ export default function AssistantTurn(props: Props) {
               <span className="ic" aria-hidden="true">
                 &#9675;
               </span>
-              <span>{NO_EVIDENCE}</span>
+              <span>{res.answer || NO_EVIDENCE}</span>
             </div>
           ) : (
             <>
@@ -130,6 +130,7 @@ export default function AssistantTurn(props: Props) {
               )}
             </>
           )}
+          <QuestionSuggestions questions={res.suggestions} onSelect={onSuggestion} />
         </div>
       </div>
     </div>

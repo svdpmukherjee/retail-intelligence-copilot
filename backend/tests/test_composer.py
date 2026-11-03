@@ -82,20 +82,22 @@ def test_sql_block_rounds_redacts_and_caps_at_the_query_bound() -> None:
     assert len(capped.rows) == MAX_SQL_ROWS_SHOWN and capped.total_rows == MAX_SQL_ROWS_SHOWN + 5
 
 
-def test_sql_block_absent_without_sql_or_when_sql_citation_dropped(monkeypatch) -> None:
+def test_sql_block_absent_without_sql_and_retained_with_calculated_summary(monkeypatch) -> None:
     assert asyncio.run(compose("q", None, [_hit("c1", "loud")], CostLedger())).sql is None
 
     class Llm:
         available = True
 
-        async def complete(self, system, user, *, ledger, task=None):
+        async def complete(self, system, user, *, ledger, task=None, max_tokens=None):
             return "Only the review says it is loud [2]"
 
     monkeypatch.setattr("agents.composer.get_llm", lambda **_: Llm())
     sql = {"sql": "select 1", "columns": ["n"], "rows": [[3]]}
     result = asyncio.run(compose("q", sql, [_hit("c1", "loud")], CostLedger()))
-    assert [c.n for c in result.citations] == [2]
-    assert result.sql is None
+    # The calculated summary always retains the actual SQL result independently
+    # of whether the model chooses to mention it in qualitative prose.
+    assert [c.n for c in result.citations] == [1, 2]
+    assert result.sql is not None
 
 
 def test_truncate_leaves_short_text_unchanged() -> None:

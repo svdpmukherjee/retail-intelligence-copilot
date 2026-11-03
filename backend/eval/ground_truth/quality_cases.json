@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "roles": [
+    "marketing",
+    "executive"
+  ],
+  "cases": [
+    {
+      "id": "A01",
+      "question": "What do customers praise most about our Beauty products?",
+      "setup": [],
+      "tools": [
+        "review_rag"
+      ],
+      "category": "Beauty_and_Personal_Care",
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "examples require qualitative support review; prevalence requires counted population"
+    },
+    {
+      "id": "A02",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "tools": [
+        "sql_agent"
+      ],
+      "category": null,
+      "sql_check": "averages",
+      "standalone": false,
+      "expectation": "review-weighted fixture averages; no inferred time trend"
+    },
+    {
+      "id": "A03",
+      "question": "Why are customers unhappy with our lowest-rated toys?",
+      "setup": [
+        "What's the average customer rating by category?"
+      ],
+      "tools": [
+        "sql_agent",
+        "review_rag"
+      ],
+      "category": "Toys_and_Games",
+      "sql_check": "lowest",
+      "standalone": true,
+      "expectation": "standalone question; review evidence belongs to selected low-rated toys",
+      "setup_by_role": {
+        "marketing": [
+          "What do customers praise most about our Beauty products?",
+          "What's the average customer rating by category?"
+        ]
+      }
+    },
+    {
+      "id": "A04",
+      "question": "Why are our lowest-rated electronics disappointing customers?",
+      "setup": [],
+      "tools": [
+        "sql_agent",
+        "review_rag"
+      ],
+      "category": "Electronics",
+      "sql_check": "lowest",
+      "standalone": true,
+      "expectation": "select low-rated electronics then explain with their reviews",
+      "setup_by_role": {
+        "executive": [
+          "What's the average customer rating by category?",
+          "What do customers complain about most in their reviews?"
+        ]
+      }
+    },
+    {
+      "id": "A05",
+      "question": "What do customers complain about most in their reviews?",
+      "setup": [],
+      "tools": [
+        "review_rag"
+      ],
+      "category": null,
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "negative evidence; measured frequency or explicitly bounded examples",
+      "setup_by_role": {
+        "executive": [
+          "What's the average customer rating by category?"
+        ]
+      }
+    },
+    {
+      "id": "A06",
+      "question": "What does our return policy say about damaged items?",
+      "setup": [],
+      "tools": [
+        "docs_rag"
+      ],
+      "category": null,
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "separate arrival defects, customer damage and shipping refunds",
+      "setup_by_role": {
+        "executive": [
+          "What's the average customer rating by category?",
+          "What do customers complain about most in their reviews?",
+          "Why are our lowest-rated electronics disappointing customers?"
+        ]
+      }
+    },
+    {
+      "id": "A07",
+      "question": "Why is that?",
+      "setup": [
+        "Which Electronics products are lowest-rated?"
+      ],
+      "tools": [
+        "sql_agent",
+        "review_rag"
+      ],
+      "category": "Electronics",
+      "sql_check": "lowest",
+      "standalone": false,
+      "expectation": "preserve selected-product antecedent"
+    },
+    {
+      "id": "A08",
+      "question": "What's the average customer rating by category?",
+      "setup": [],
+      "tools": [
+        "sql_agent"
+      ],
+      "category": null,
+      "sql_check": "averages",
+      "standalone": false,
+      "expectation": "browser: comparison only, no temporal trend or false rank"
+    },
+    {
+      "id": "A09",
+      "question": "What is the average rating per month?",
+      "setup": [],
+      "tools": [
+        "sql_agent"
+      ],
+      "category": null,
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "browser: verified temporal dimension, chronological order and units"
+    },
+    {
+      "id": "A10",
+      "question": "Which products have the lowest rating in UnknownCategory?",
+      "setup": [],
+      "tools": [
+        "sql_agent"
+      ],
+      "category": null,
+      "sql_check": "empty",
+      "standalone": false,
+      "expectation": "honest empty selection, no empty SQL cited as supporting evidence; missing-review and failure variants pending"
+    },
+    {
+      "id": "A11",
+      "question": "What do customers say about Books?",
+      "setup": [],
+      "tools": [
+        "review_rag"
+      ],
+      "category": "Books",
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "marketing cannot retrieve Books; executive can"
+    },
+    {
+      "id": "A12",
+      "question": "most-reviewed products",
+      "setup": [
+        "Which products have the highest revenue?"
+      ],
+      "tools": [
+        "sql_agent"
+      ],
+      "category": null,
+      "sql_check": null,
+      "standalone": false,
+      "expectation": "first turn clarifies missing measure; second turn resolves without a loop"
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "A13",
+      "expectation": "Markdown rendering and replay parity",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A14",
+      "expectation": "Strict numeric comparison 4.50 versus above 4.5",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A15",
+      "expectation": "Relevant expandable evidence beyond 240 characters",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A16",
+      "expectation": "Untrusted evidence and stale memory injection",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A17",
+      "expectation": "Reconcile deleted/edited sources and rollback",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A18",
+      "expectation": "Same-dimension embedding model mismatch",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A19",
+      "expectation": "Long-review tail retrieval and unique-review counts",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A20",
+      "expectation": "SQL fetch/display truncation semantics",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A21",
+      "expectation": "Length-limited/empty/malformed generation",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    },
+    {
+      "id": "A22",
+      "expectation": "SQL repair receives sanitized execution feedback",
+      "reason": "Requires dedicated boundary instrumentation in a later stage; not measured by this baseline."
+    }
+  ]
+}

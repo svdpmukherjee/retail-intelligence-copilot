@@ -16,7 +16,7 @@ from typing import Literal, get_args
 
 from app.config import get_settings
 
-Task = Literal["route", "sql", "compose", "summary"]
+Task = Literal["understand", "route", "sql", "compose", "summary"]
 Tier = Literal["small", "medium", "large"]
 TASKS: tuple[str, ...] = get_args(Task)
 
@@ -44,11 +44,15 @@ _POLICY: dict[str, tuple[Tier, str]] = {
         "Intent classification is a short, structured task; the medium tier lifts routing "
         "accuracy to 0.88 (small 0.75) for a fraction more cost.",
     ),
+    "understand": (
+        "large",
+        "User-authorized conversational interpretation needs compound planning, context and "
+        "clarification; use the configured large tier with server-validated output.",
+    ),
     "compose": (
-        "medium",
-        "The synthesised answer the user reads must be faithful and fully cited; the medium tier "
-        "scored faithfulness 1.00 and citation validity 1.00 — above the large tier — at lower "
-        "cost.",
+        "large",
+        "User-authorized final synthesis uses the configured large tier; calculated values "
+        "and evidence checks remain code-owned. This is not a new quality benchmark result.",
     ),
     "sql": (
         "large",

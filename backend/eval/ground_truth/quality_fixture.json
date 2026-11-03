@@ -1,0 +1,128 @@
+{
+  "version": "quality-fixture-v1",
+  "rows": [
+    {
+      "asin": "E-low",
+      "category": "Electronics",
+      "rating": 1,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "E-low",
+      "text": "Battery fails after one day. Fixture review 1."
+    },
+    {
+      "asin": "E-low",
+      "category": "Electronics",
+      "rating": 1,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "E-low",
+      "text": "Battery fails after one day. Fixture review 2."
+    },
+    {
+      "asin": "E-high",
+      "category": "Electronics",
+      "rating": 5,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "E-high",
+      "text": "Battery lasts all day. Fixture review 1."
+    },
+    {
+      "asin": "E-high",
+      "category": "Electronics",
+      "rating": 5,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "E-high",
+      "text": "Battery lasts all day. Fixture review 2."
+    },
+    {
+      "asin": "T-low",
+      "category": "Toys_and_Games",
+      "rating": 1,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "T-low",
+      "text": "Toy wheels break immediately. Fixture review 1."
+    },
+    {
+      "asin": "T-low",
+      "category": "Toys_and_Games",
+      "rating": 1,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "T-low",
+      "text": "Toy wheels break immediately. Fixture review 2."
+    },
+    {
+      "asin": "T-high",
+      "category": "Toys_and_Games",
+      "rating": 3,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "T-high",
+      "text": "Toy is usable but assembly is difficult. Fixture review 1."
+    },
+    {
+      "asin": "T-high",
+      "category": "Toys_and_Games",
+      "rating": 3,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "T-high",
+      "text": "Toy is usable but assembly is difficult. Fixture review 2."
+    },
+    {
+      "asin": "B-good",
+      "category": "Beauty_and_Personal_Care",
+      "rating": 5,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "B-good",
+      "text": "Beauty cream feels gentle and smells pleasant. Fixture review 1."
+    },
+    {
+      "asin": "B-good",
+      "category": "Beauty_and_Personal_Care",
+      "rating": 3,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "B-good",
+      "text": "Beauty cream feels gentle and smells pleasant. Fixture review 2."
+    },
+    {
+      "asin": "K-good",
+      "category": "Books",
+      "rating": 5,
+      "year": 2023,
+      "timestamp": "2023-01-01",
+      "product_title": "K-good",
+      "text": "Book explains gardening clearly. Fixture review 1."
+    },
+    {
+      "asin": "K-good",
+      "category": "Books",
+      "rating": 5,
+      "year": 2023,
+      "timestamp": "2023-01-02",
+      "product_title": "K-good",
+      "text": "Book explains gardening clearly. Fixture review 2."
+    }
+  ],
+  "averages": {
+    "Beauty_and_Personal_Care": 4.0,
+    "Electronics": 3.0,
+    "Toys_and_Games": 2.0,
+    "Books": 5.0
+  },
+  "lowest": {
+    "Electronics": [
+      "E-low"
+    ],
+    "Toys_and_Games": [
+      "T-low"
+    ]
+  },
+  "coverage": "12 authored review rows; 6 products; 4 categories; January 2023. Not a representative retail sample."
+}

@@ -230,3 +230,28 @@ memory recall and the knowledge graph are the documented stretch, out of scope h
   embedded retrieval.
 - **React chat/thread UI and Azure deployment — M8.** M5 exposes only the extended `POST /query`.
 - Any Azure OpenAI call (summariser is gated, go-ahead only).
+
+## Stage 2 answer-quality localization (2026-11-03)
+User approved Stage 1 and instructed proceeding with Stage 2. As part of the
+approved M4 change appendix, narrow `memory/manager.py` subject inheritance to
+actual reference-dependent follow-ups. Complete questions beginning with “why”
+and complete topic switches while clarification is pending remain standalone.
+Retain clarification replies and genuine “why is that?” context. Tests cover
+role constraints after resolution. No memory DB/schema/persistence changes.
+
+Authorized conversational correction (2026-11-03): see
+`M4_conversational_planning.md` for pre-routing interpretation, typed clarification
+state, large-tier synthesis and additive permission-filtered suggestion fields.
+
+### Current additive conversation payload (2026-11-03)
+
+`AnswerResult`, stored render snapshots and `MemoryContext` support optional
+`conversation_state` (active validated parts), `clarification_state` (pending
+selection parts/index/slots), and `suggestions` (composer-fill question text).
+These reuse existing JSON payloads; no DDL/backfill. Persist serialized state with
+PII redaction; load active state even after a non-clarification result. Old history
+without these keys remains compatible. Memory is context, never a factual citation.
+Standalone questions remain independent; explicit replacements/cancellation must
+not revive stale numeric/category conditions. Concrete replacement metrics after
+an unavailable-measure clarification retain requested scope without reattaching
+sales/revenue text. See the current conversation spec and named regression tests.

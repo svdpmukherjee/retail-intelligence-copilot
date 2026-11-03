@@ -1,0 +1,339 @@
+{
+  "mode": "isolated synthetic corpus, real cached embeddings/SQLite FTS/Delta/pipeline",
+  "hosted_usd": 0,
+  "generation": "disabled",
+  "checks": [
+    {
+      "name": "battery stopped charging",
+      "status": "PASS"
+    },
+    {
+      "name": "quantum isotope reactor coolant",
+      "status": "PASS"
+    },
+    {
+      "name": "Why do customers complain about battery charging?",
+      "status": "PASS"
+    },
+    {
+      "name": "What do customers praise about headphone comfort?",
+      "status": "PASS"
+    },
+    {
+      "name": "What color is the submarine periscope?",
+      "status": "PASS"
+    },
+    {
+      "name": "Why do customers complain about a battery leaking?",
+      "status": "PASS"
+    },
+    {
+      "name": "empty/crossed scope",
+      "status": "PASS"
+    },
+    {
+      "name": "empty/crossed scope",
+      "status": "PASS"
+    },
+    {
+      "name": "pipeline selection and constrained retrieval tools",
+      "status": "PASS"
+    },
+    {
+      "name": "no hosted generation",
+      "status": "PASS"
+    },
+    {
+      "name": "SQL selection independent of chunk counts",
+      "status": "PASS"
+    },
+    {
+      "name": "honest selection-only when generic query is below relevance floor",
+      "status": "PASS"
+    },
+    {
+      "name": "real pipeline retrieves relevant review evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "scope enforced in candidate pipeline",
+      "status": "PASS"
+    },
+    {
+      "name": "denied category has no evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "atomic switch binds SQL and index",
+      "status": "PASS"
+    },
+    {
+      "name": "deleted docs removed",
+      "status": "PASS"
+    },
+    {
+      "name": "rollback restores prior doc evidence",
+      "status": "PASS"
+    }
+  ],
+  "retrieval": [
+    {
+      "partition": "calibration",
+      "query": "battery stopped charging",
+      "expected_nonempty": true,
+      "raw_scores": [
+        0.8186,
+        0.672
+      ],
+      "returned_parents": [
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335",
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874"
+      ],
+      "assessment": {
+        "status": "available",
+        "unique_review_parents": 2,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 2,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 2
+      },
+      "expected_source_parents": [
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874",
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335"
+      ],
+      "expected_indexed_parents": [
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874",
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335"
+      ],
+      "indexed_parent_recall": 1.0,
+      "source_parent_recall": 1.0,
+      "lexical_relevant_parents": 2,
+      "lexical_only_relevant_parents": 0
+    },
+    {
+      "partition": "calibration",
+      "query": "quantum isotope reactor coolant",
+      "expected_nonempty": false,
+      "raw_scores": [
+        0.044,
+        0.0284,
+        0.0284,
+        0.0284,
+        0.0228,
+        -0.0349,
+        -0.0659
+      ],
+      "returned_parents": [],
+      "assessment": {
+        "status": "none",
+        "unique_review_parents": 0,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 7,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 0
+      },
+      "expected_source_parents": [],
+      "expected_indexed_parents": [],
+      "indexed_parent_recall": null,
+      "source_parent_recall": null,
+      "lexical_relevant_parents": 0,
+      "lexical_only_relevant_parents": 0
+    },
+    {
+      "partition": "heldout",
+      "query": "Why do customers complain about battery charging?",
+      "expected_nonempty": true,
+      "raw_scores": [
+        0.4134,
+        0.3896
+      ],
+      "returned_parents": [
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335",
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874"
+      ],
+      "assessment": {
+        "status": "available",
+        "unique_review_parents": 2,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 2,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 2
+      },
+      "expected_source_parents": [
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874",
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335"
+      ],
+      "expected_indexed_parents": [
+        "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874",
+        "ed757e50fa75cb741b1024d6f0f84c7eeabeb76d7f2c83e712d8485f9dd62335"
+      ],
+      "indexed_parent_recall": 1.0,
+      "source_parent_recall": 1.0,
+      "lexical_relevant_parents": 2,
+      "lexical_only_relevant_parents": 0
+    },
+    {
+      "partition": "heldout",
+      "query": "What do customers praise about headphone comfort?",
+      "expected_nonempty": true,
+      "raw_scores": [
+        0.6499
+      ],
+      "returned_parents": [
+        "ec6c26c8551bdad7112a1a1793f15338018d8cbb8aa7813264abc18acfe0e13b"
+      ],
+      "assessment": {
+        "status": "available",
+        "unique_review_parents": 1,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 1,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 1
+      },
+      "expected_source_parents": [
+        "6d49e036ac7850ba19a5edc2bfa448e01d9f5474d1c285703d39434f482d3822",
+        "ec6c26c8551bdad7112a1a1793f15338018d8cbb8aa7813264abc18acfe0e13b"
+      ],
+      "expected_indexed_parents": [
+        "ec6c26c8551bdad7112a1a1793f15338018d8cbb8aa7813264abc18acfe0e13b"
+      ],
+      "indexed_parent_recall": 1.0,
+      "source_parent_recall": 0.5,
+      "lexical_relevant_parents": 1,
+      "lexical_only_relevant_parents": 0
+    },
+    {
+      "partition": "heldout",
+      "query": "What color is the submarine periscope?",
+      "expected_nonempty": false,
+      "raw_scores": [
+        0.0235,
+        0.0144,
+        -0.0119,
+        -0.0119,
+        -0.0119,
+        -0.0558,
+        -0.0706
+      ],
+      "returned_parents": [],
+      "assessment": {
+        "status": "none",
+        "unique_review_parents": 0,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 7,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 0
+      },
+      "expected_source_parents": [],
+      "expected_indexed_parents": [],
+      "indexed_parent_recall": null,
+      "source_parent_recall": null,
+      "lexical_relevant_parents": 0,
+      "lexical_only_relevant_parents": 0
+    },
+    {
+      "partition": "heldout",
+      "query": "Why do customers complain about a battery leaking?",
+      "expected_nonempty": true,
+      "raw_scores": [
+        0.4072,
+        0.0227,
+        0.0227,
+        0.0227
+      ],
+      "returned_parents": [
+        "007ef7c7ac554511bcbde64a860de35ac9c89a93f348e2b5f86d9981ba517eff"
+      ],
+      "assessment": {
+        "status": "available",
+        "unique_review_parents": 1,
+        "missing_product_ids": [],
+        "minimum_raw_cosine": 0.35,
+        "vector_candidates": 4,
+        "candidate_scope": "isolated_versioned_bundle",
+        "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+        "lexical_candidates": 1
+      },
+      "expected_source_parents": [
+        "007ef7c7ac554511bcbde64a860de35ac9c89a93f348e2b5f86d9981ba517eff"
+      ],
+      "expected_indexed_parents": [
+        "007ef7c7ac554511bcbde64a860de35ac9c89a93f348e2b5f86d9981ba517eff"
+      ],
+      "indexed_parent_recall": 1.0,
+      "source_parent_recall": 1.0,
+      "lexical_relevant_parents": 1,
+      "lexical_only_relevant_parents": 0
+    }
+  ],
+  "build": {
+    "corpus_version": "v1",
+    "parents": 6,
+    "chunks": 9,
+    "embedded_chunks": 9,
+    "reused_chunks": 0,
+    "deleted_parents": [],
+    "edited_parents": [],
+    "hosted_usd": 0
+  },
+  "embedding": {
+    "provider": "local",
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "dimensions": 384,
+    "tokenizer": "66854eac0051205f3bc495b01f6e3db009bf68ae4357305b44d34019134e42f7",
+    "preprocessing": "sentence-transformers-normalized-v1:max_tokens=256"
+  },
+  "product_pipeline": {
+    "evidence": {
+      "status": "none",
+      "unique_review_parents": 0,
+      "missing_product_ids": [
+        "P1"
+      ],
+      "minimum_raw_cosine": 0.35,
+      "vector_candidates": 2,
+      "candidate_scope": "isolated_versioned_bundle",
+      "interpretation": "Qualitative examples; no population prevalence or factual-support guarantee.",
+      "lexical_candidates": 0
+    },
+    "grounding": {
+      "path": "selection_only",
+      "issues": [
+        "missing product reviews"
+      ]
+    },
+    "citation_count": 1
+  },
+  "reconcile": {
+    "corpus_version": "v2",
+    "parents": 4,
+    "chunks": 4,
+    "embedded_chunks": 1,
+    "reused_chunks": 3,
+    "deleted_parents": [
+      "007ef7c7ac554511bcbde64a860de35ac9c89a93f348e2b5f86d9981ba517eff",
+      "92ba0058ef7ac1819858a0f4b96be62763c30cdf"
+    ],
+    "edited_parents": [
+      "9ccec2a9cf0cf4cf996e1d76136e62e215786bf7bd37ac65921289b54880b874"
+    ],
+    "hosted_usd": 0
+  },
+  "limitations": [
+    "Synthetic sources only; no serving backfill or quality improvement claimed.",
+    "Two calibration and four held-out probes are too small for general relevance calibration.",
+    "No hosted synthesis, browser, or factual-support score is measured."
+  ],
+  "passed": true
+}

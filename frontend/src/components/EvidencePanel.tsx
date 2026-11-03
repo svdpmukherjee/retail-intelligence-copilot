@@ -66,9 +66,14 @@ export default function EvidencePanel({ citations, activeN, open, onClose }: Pro
                 {shown.display_label}
               </div>
               {shown.snippet ? (
-                <div className="esnip">&ldquo;{shown.snippet}&rdquo;</div>
+                <div className="esnip">&ldquo;{shown.snippet.replace(/<br\s*\/?>/gi, "\n")}&rdquo;</div>
               ) : (
                 <div className="esnip nullsnip">the exact words aren&rsquo;t available to show.</div>
+              )}
+              {shown.passage && shown.passage !== shown.snippet && (
+                <details className="full-evidence"><summary>Read full passage</summary>
+                  <div className="esnip">{shown.passage}</div>
+                </details>
               )}
             </div>
           </div>

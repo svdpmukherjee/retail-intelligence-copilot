@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel
@@ -35,6 +36,21 @@ class Chunk(BaseModel):
     section: str | None = None
     chunk_index: int | None = None
     source: str | None = None
+    # Candidate v2 metadata lives in its versioned index payload. Legacy SQL
+    # columns stay unchanged until a separately authorized serving migration.
+    parent_text: str | None = None  # full redacted context; never a new review count
+    parent_id: str | None = None
+    rating: float | None = None
+    timestamp: datetime | None = None
+    product_title: str | None = None
+    price: float | None = None
+    product_avg_rating: float | None = None
+    source_snapshot: str | None = None
+    content_hash: str | None = None
+    normalization_version: str | None = None
+    chunker_version: str | None = None
+    start_char: int | None = None
+    end_char: int | None = None
 
 
 class SearchHit(BaseModel):

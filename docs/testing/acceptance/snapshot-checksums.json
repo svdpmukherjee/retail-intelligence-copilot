@@ -1,0 +1,12 @@
+{
+  "purpose": "Frozen historical synthetic acceptance snapshots; do not regenerate in place.",
+  "algorithm": "SHA256",
+  "files": {
+    "quality-baseline.json": "584cf474a963e0a5e74623410768113a0e331e663956baecaa902e91b30c32b7",
+    "quality-baseline.md": "74b945b01ba9c2442b6290d0637e420f8261282ec6e1cd86a2508eb90a487ca1",
+    "quality-stage2.json": "875db87c2d9fc76773eb2b7c07b637790ec99b34c93383d66ff782b7f07ad8cf",
+    "quality-stage2.md": "c5fd9e0b8af6f74840cd2ea875ed44ea27d163f5f8998f7eb0858c47cb43ef72",
+    "evidence-stage3.json": "337a95e78afd711c9538f06a0ef5ea529a5582b7cc11f7e83742a0c0488c7486",
+    "evidence-stage3.md": "328e0680d99f944eafdf59edb5548045beefa07ff59b90352081c9d28afc267d"
+  }
+}

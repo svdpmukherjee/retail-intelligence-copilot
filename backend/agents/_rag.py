@@ -20,4 +20,5 @@ def rag(
     if source_type == "doc":
         # Docs are not product-scoped, so a role's product-category filter doesn't apply.
         filters.pop("category", None)
+        filters.pop("asin", None)
     return hybrid_search(query, k, filters=filters, store=store, embedder=embedder)

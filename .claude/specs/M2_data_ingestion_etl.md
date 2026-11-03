@@ -170,3 +170,13 @@ behind the provider seam.
   ~225k reviews embedded); M2 proves the pipeline on a tiny sample, and the 15-category
   config + caps carry to the gated real run. Embedding (M3) is not run here.
 - SQL agent, retrieval, governance enforcement (M4/M6).
+
+## Approved Stage 3 answer-quality localization (2026-11-03)
+
+See `M3_answer_quality_stage3_proposal.md` for the approved cross-module change.
+Forward Gold projection pins its Silver Delta version and carries parent identity,
+rating, timestamp and product title before SQL/RAG projection. Private reviewer
+keys stay out of review Gold. Nullable upstream IDs fall back per row to the private
+source tuple; text edits preserve identity, tuple-key edits do not. No serving ETL
+is authorized; only the two-review isolated projection test may execute this change.
+Sampling alternatives are bounded fixture policies pending a measured real run plan.

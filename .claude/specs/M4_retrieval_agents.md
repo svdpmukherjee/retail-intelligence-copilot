@@ -300,3 +300,102 @@ the free/local path; Azure LLM + any hosted reranker sit behind the provider sea
   single question per call.
 - **Evaluation gate (recall@k, MRR, faithfulness, cost/latency thresholds) — M7.**
 - **React UI and Azure deployment — M8.** M4 exposes only the `POST /query` API route.
+
+## Approved change — answer quality Stage 2 (2026-11-03)
+
+User approved Stage 1 and instructed “proceed”; implement the Stage 2 scope in
+`docs/testing/answer-quality-change-proposal.md`. This user instruction authorizes
+continuing this cross-module change in the current session. Selected design:
+bounded deterministic semantic operations for category review averages and
+lowest-rated product selection; retain existing LLM SQL for other requests. Reject
+prompt-only repairs and an orchestration framework replacement. M5 follow-up
+localization below belongs to this same approved change.
+
+### M4.Q1 Interpretation and tool plan
+- Complete why questions stay standalone; genuine deictic follow-ups and replies
+  to clarification retain needed subject context. A topic switch while a
+  clarification is pending must remain standalone.
+- Canonical requested categories intersect role permissions for SQL/reviews;
+  explicit empty intersection returns no data, never an unrestricted query.
+  Preserve permission scope separately in audit. Docs remain source-scoped.
+- Explanations of lowest-rated products require SQL selection then review evidence.
+  Preserve existing metric-change and policy routing; no universal “why => SQL”.
+- Files: new `agents/query_plan.py`, router, pipeline, memory/manager.py.
+
+### M4.Q2 Semantic SQL and bounded outcomes
+- Category average = AVG(rating) over review rows. Lowest-rated selection groups
+  by stable ASIN/category over all reviews; configurable minimum review count
+  default 2; default one lowest product, bounded explicit top/bottom N <= 25.
+  Include product IDs, counts, category and readable title, with stable tie-breaks.
+- Deterministic SQL for these explicit supported operations; do not claim this
+  validates arbitrary generated SQL. Other SQL receives types/grain/canonical
+  values/metric definitions and one retry with redacted failed SQL/error feedback.
+- Return explicit success/empty and has_more by fetching MAX_ROWS+1; do not
+  fabricate an exact total beyond the fetched bound. Expose has_more additively.
+- Files: sql_agent.py, app/config.py, .env.example, composer.py.
+
+### M4.Q3 Product-evidence handoff and empty safety
+- Add allowlisted parameterized ASIN filters. Intersect them with requested and
+  permission filters; only reviews of selected products reach the composer.
+- If selection fails/is empty/has no usable product IDs, do not broaden retrieval.
+  If selected products lack indexed evidence, disclose that limitation. Counts
+  of reviews in SQL do not prove availability or negativity of indexed reviews.
+- Empty SQL is not citable evidence and has no SQL display block. SQL failure and
+  empty selection get distinct plain-language outcomes. No historical memory
+  can fill an empty current source with a factual answer.
+- Files: vector_store.py, _rag.py, pipeline.py, composer.py.
+
+### Verification and bounds
+- New DB/network-free semantic tests (deny external I/O), update old baseline
+  assertions only where behavior was intentionally corrected. Preserve Stage 1
+  baseline artifacts; write Stage 2 synthetic comparison separately. Verify all
+  A01–A12 routing/SQL/permission contracts without claiming synthetic generation
+  quality. Cover empty filters, product joins, fallback, repair and fetch overflow.
+- One real read-only smoke with existing cached embeddings/index/Gold and model
+  generation disabled; record observed evidence coverage and no paid spend.
+  Hosted synthesis/repair quality remains unvalidated without a later live run.
+- Supporting eval fixture/capture changes and scoped tests allowed. No serving
+  schema/index/data mutations, downloads, new providers, UI/Markdown/chart fixes,
+  grouped citation fixes, sentiment metadata/reindex or prevalence claims in scope.
+- Document `docs/modules/M4_answer_quality_stage2.md`; update context/ADR. No
+  commits/pushes/deployments. $0 additional hosted spend.
+
+Overflow integration: `frontend/src/api/types.ts`, `answer.ts` and
+`components/shapes/SqlTable.tsx` may consume additive `has_more` for truthful
+“at least” counts and suppress charts of incomplete query results. This is Q18
+contract integration only; Markdown and categorical chart semantics remain Stage 4.
+
+Empty/failure presentation integration: `frontend/src/panelState.ts` and
+`components/AssistantTurn.tsx` may honor the new selection-only outcome without
+labelling it a verbatim-source fallback, and avoid promising customer excerpts
+when SQL failed and no evidence exists. Keep the existing visual layout unchanged.
+
+## Approved Stage 3 retrieval integration (2026-11-03)
+
+See `M3_answer_quality_stage3_proposal.md`. Opt-in fixture bundles bind SQL and
+retrieval to one immutable per-turn version; compatibility is checked before query
+embedding. Candidate-only focused lexical retrieval, raw-cosine sufficiency,
+rating-intent filters and unique-parent selection preserve role/request/ASIN scope.
+Expose partial evidence in audit and plain user wording. The small fixture floor is
+not a calibrated full-corpus threshold; legacy serving retrieval stays unchanged.
+Full normalized parent text is retained/access-controlled for inspection; automatic
+correction-aware synthesis and general factual support remain Stage 4.
+
+## Authorized practical source/narration workaround (2026-11-03)
+
+User explicitly granted permission to fix the explained defects. The concrete scope
+and limits are in `M4_answer_quality_stage4_workaround.md`. Supported product selection
+now uses bounded read-only Silver reviews with aggregate/scope checks, without
+requiring index coverage. General search retains the sampled index with exact
+metadata enrichment. SQL-only narration and unqualified category review COUNT(*)
+are deterministic; qualifiers are never silently dropped. Delimited sources,
+conservative draft checks and bounded fallback excerpts are not a general semantic
+support guarantee. No corpus migration or hosted spend is implied.
+
+Follow-up combined-question contract: see M4_answer_quality_stage4_workaround.md.
+Explicit independent parts (maximum four) run existing scoped tools separately
+under one turn/budget, then combine citations and preserve partial results.
+
+Authorized conversational correction (2026-11-03): see
+`M4_conversational_planning.md` for pre-routing interpretation, typed clarification
+state, large-tier synthesis and additive permission-filtered suggestion fields.

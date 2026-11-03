@@ -180,3 +180,17 @@ provider-adapter, and `build_where` as the single retrieval choke point). New co
 - The retrieval/answer quality + cost/latency **evaluation gate** — that is M7.
 - Any audit-log UI / dashboard and Azure Key Vault / managed identity wiring — M8 (serving/deploy).
 - Redefining the M5 memory schema; M6 only adds an owner check + scope filter on existing tables.
+
+## Authorized answer-quality grounding appendix (2026-11-03)
+
+Role policy and ownership rules remain unchanged. Requested categories/ASINs are
+intersected with permissions before data access; explicit empty intersections never
+broaden access. Grouped markers `[1, 3]` and adjacent `[1][3]` use one shared citation
+parser for validation, used-source retention and safe frontend links. Unknown
+references are rejected, not invented. Final synthesis retains the complete scoped
+retrieved source pool internally before retaining public used citations. Redacted
+full passages may be exposed for source inspection; private reviewer IDs/lineage
+and operational details remain off the chat surface. Known prevalence, numeric,
+update and full-refund support checks plus one bounded repair can force excerpts;
+these are not a general semantic-entailment guarantee. See M4 conversational and
+workaround specs and docs/answer-quality-status.md for current verification limits.
