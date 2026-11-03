@@ -8,6 +8,8 @@ from retrieval.index_reviews import (
 )
 from retrieval.vector_store import get_vector_store
 
+pytestmark = pytest.mark.usefixtures("synthetic_gold")
+
 
 @pytest.fixture
 def store():
@@ -48,8 +50,8 @@ def test_index_reviews_on_gold_sample_is_populated_and_idempotent(store) -> None
     assert bad == 0
 
 
-def test_iter_gold_review_batches_covers_every_row_in_bounded_batches() -> None:
-    total = len(read_gold_reviews())
+def test_iter_gold_review_batches_covers_every_row_in_bounded_batches(synthetic_gold) -> None:
+    total = len(synthetic_gold)
     size = max(1, total // 3)
 
     batches = list(iter_gold_review_batches(size))
@@ -57,10 +59,13 @@ def test_iter_gold_review_batches_covers_every_row_in_bounded_batches() -> None:
     assert len(batches) > 1
     assert all(0 < len(b) <= size for b in batches)
     assert sum(len(b) for b in batches) == total
+    assert sorted(row["asin"] for batch in batches for row in batch) == sorted(
+        row["asin"] for row in synthetic_gold
+    )
 
 
 def test_read_gold_reviews_honours_limit() -> None:
     rows = read_gold_reviews(2)
 
     assert isinstance(rows, list)
-    assert len(rows) <= 2
+    assert len(rows) == 2

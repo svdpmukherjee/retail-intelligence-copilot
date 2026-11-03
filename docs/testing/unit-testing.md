@@ -11,6 +11,17 @@ sub-agent, written and run while building each sub-module.
 **Example (M1):** `backend/tests/test_cost.py` checks `CostLedger` under the cap,
 at the cap, and over the cap (expects `CostCeilingExceeded`).
 
+## Gold data in CI
+
+`test_sql_agent.py` and `test_index_reviews.py` use the `synthetic_gold` fixture
+in `backend/tests/conftest.py`. It creates five authored reviews across two
+categories as temporary Delta tables and redirects only those tests' Gold paths.
+Pytest removes the temporary data under its normal temporary-directory retention
+policy. No real reviews, local Gold tables, ETL run or cloud service is needed.
+The SQL tests still execute real DuckDB queries; review tests still read real
+Delta batches. Database-backed indexing remains a separate integration check
+and skips when no database is configured.
+
 
 ## Answer-quality publication checks (2026-11-03)
 
