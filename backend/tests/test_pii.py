@@ -57,7 +57,12 @@ def test_llm_draft_pii_is_scrubbed_from_served_answer(monkeypatch) -> None:
     result = asyncio.run(compose("q", None, [SearchHit(chunk=chunk, score=1.0)], CostLedger()))
 
     assert result.audit["grounding"]["path"] == "llm"
-    assert result.answer == "Reach support at [EMAIL] or [PHONE] [1]."
+    # Review-sourced answers carry the selection-bias caveat; the PII scrub still applies
+    # to whatever the LLM echoed into the drafted body.
+    assert result.answer == (
+        "Examples from selected reviews; these do not measure how widespread an issue is.\n\n"
+        "Reach support at [EMAIL] or [PHONE] [1]."
+    )
     assert [c.n for c in result.citations] == [1]
 
 

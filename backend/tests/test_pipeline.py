@@ -24,7 +24,7 @@ def no_llm(monkeypatch):
 
 
 def _route(intent):
-    async def fake(query, role, ledger=None):
+    async def fake(query, role, ledger=None, **kwargs):
         return RouteDecision(intent=intent, scope={}, rationale="test")
 
     return fake
@@ -38,7 +38,11 @@ def test_query_returns_answer_with_audit(monkeypatch) -> None:
     monkeypatch.setattr(pipeline, "route", _route("review_rag"))
     monkeypatch.setattr(pipeline, "review_rag", lambda q, scope: [hit])
 
-    resp = client.post("/query", json={"query": "complaints?", "role": "support"})
+    # A specific question takes the execute path; a vague one ("complaints?") would be
+    # answered with a clarifying question instead and never reach the tool.
+    resp = client.post(
+        "/query", json={"query": "what do customers say about the battery", "role": "support"}
+    )
 
     assert resp.status_code == 200
     body = resp.json()
@@ -56,7 +60,7 @@ def test_sql_tool_failure_becomes_clean_http_error(monkeypatch) -> None:
     monkeypatch.setattr(pipeline, "route", _route("sql"))
     monkeypatch.setattr(pipeline, "sql_agent", boom)
 
-    resp = client.post("/query", json={"query": "how many?", "role": "support"})
+    resp = client.post("/query", json={"query": "how many products are there", "role": "support"})
 
     assert resp.status_code == 502
     assert "Catalog Error" in resp.json()["detail"]
