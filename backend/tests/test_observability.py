@@ -120,7 +120,7 @@ def test_answer_traces_each_stage_without_leaking_query(monkeypatch):
         score=1.0,
     )
 
-    async def fake_route(query, role, ledger=None):
+    async def fake_route(query, role, ledger=None, **kwargs):
         ledger.add(7, 0.25)
         return RouteDecision(intent="review_rag", scope={}, rationale="test")
 
@@ -159,7 +159,7 @@ def test_answer_survives_tracer_failure(monkeypatch):
         def start_trace(self, name, *, metadata=None):
             raise RuntimeError("down")
 
-    async def fake_route(query, role, ledger=None):
+    async def fake_route(query, role, ledger=None, **kwargs):
         return RouteDecision(intent="review_rag", scope={}, rationale="test")
 
     monkeypatch.setattr(pipeline, "get_tracer", lambda: Boom())
@@ -169,4 +169,7 @@ def test_answer_survives_tracer_failure(monkeypatch):
     monkeypatch.setenv("AUDIT_ENABLED", "false")
     get_settings.cache_clear()
 
-    assert asyncio.run(pipeline.answer("anything", "support")).audit["intent"] == "review_rag"
+    # A specific question takes the execute path; the point is that a failing tracer is
+    # swallowed and the turn still produces its answer and audit.
+    result = asyncio.run(pipeline.answer("what do customers say about the battery", "support"))
+    assert result.audit["intent"] == "review_rag"

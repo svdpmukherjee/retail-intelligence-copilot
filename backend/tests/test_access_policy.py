@@ -58,7 +58,9 @@ def test_pipeline_maps_access_denied_to_pipeline_error() -> None:
         asyncio.run(pipeline.answer("anything", "intruder"))
 
 
-def test_query_endpoint_returns_502_for_denied_role() -> None:
+def test_query_endpoint_rejects_unknown_role() -> None:
+    # An unknown role is a client error, rejected up front (400) before any retrieval —
+    # never passed to the pipeline as an upstream (502) failure.
     resp = TestClient(app).post("/query", json={"query": "hi", "role": "intruder"})
-    assert resp.status_code == 502
-    assert "AccessDenied" in resp.json()["detail"]
+    assert resp.status_code == 400
+    assert "Unknown role" in resp.json()["detail"]

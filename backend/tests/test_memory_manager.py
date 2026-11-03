@@ -92,12 +92,14 @@ def test_route_context_none_is_unchanged_and_context_reaches_llm(monkeypatch) ->
     llm = FakeLLM('{"intent": "docs_rag", "rationale": "r"}')
     monkeypatch.setattr("agents.router.get_llm", lambda **_: llm)
 
-    asyncio.run(router.route("returns policy?", "analyst"))
-    asyncio.run(router.route("returns policy?", "analyst", context=_ctx()))
+    # Use a query no rule matches, so routing actually reaches the LLM (a rule-matched
+    # query like "returns policy?" is classified without ever calling the model).
+    asyncio.run(router.route("what do people think", "analyst"))
+    asyncio.run(router.route("what do people think", "analyst", context=_ctx()))
 
-    assert llm.users[0] == "returns policy?"
+    assert llm.users[0] == "what do people think"
     assert llm.users[1].startswith(_ctx().render())
-    assert llm.users[1].endswith("Question: returns policy?")
+    assert llm.users[1].endswith("Question: what do people think")
 
     monkeypatch.setattr("agents.router.get_llm", lambda **_: NoLLM())
     plain = asyncio.run(router.route("average rating?", "analyst"))
@@ -112,8 +114,16 @@ def test_compose_context_reaches_llm_but_is_never_cited(monkeypatch) -> None:
     plain = asyncio.run(composer.compose("q", None, [_hit()], CostLedger()))
     with_ctx = asyncio.run(composer.compose("q", None, [_hit()], CostLedger(), context=_ctx()))
 
-    assert llm.users[0] == "Question: q\n\nSources:\n[1] (review B01 (E)) battery dies fast"
-    assert llm.users[1].startswith(_ctx().render())
+    assert llm.users[0] == (
+        "Question: q\nSQL summarized separately: False\n"
+        '<source_data>[{"citation": 1, "label": "customer review · E", '
+        '"text": "battery dies fast"}]</source_data>'
+    )
+    # With context, the rendered memory is prepended as a background-only <memory_data>
+    # block; the question + sources tail is byte-for-byte the no-context prompt.
+    assert "<memory_data>" in llm.users[1]
+    assert "prefers short answers" in llm.users[1]
+    assert "tell me about the X100 battery" in llm.users[1]
     assert llm.users[1].endswith(llm.users[0])
     assert plain == with_ctx
     assert [c.source_id for c in with_ctx.citations] == ["c1"]

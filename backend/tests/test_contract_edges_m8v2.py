@@ -19,7 +19,17 @@ def offline(monkeypatch):
     monkeypatch.setattr(
         pipeline,
         "get_settings",
-        lambda: type("S", (), {"audit_enabled": False, "memory_enabled": False})(),
+        lambda: type(
+            "S",
+            (),
+            {
+                "audit_enabled": False,
+                "memory_enabled": False,
+                "memory_history_turns": 6,
+                "source_review_fallback": False,
+                "evidence_bundle_path": None,
+            },
+        )(),
     )
 
 
@@ -37,17 +47,19 @@ def test_snippet_redacts_email_and_phone() -> None:
 
 def test_snippet_is_trimmed_and_whitespace_collapsed() -> None:
     snippet = build_sources(None, [_hit("a  b\n\n c\t" + "x" * 1000)])[0][0].snippet
-    assert snippet.startswith("a b c x")
+    # The snippet is a bounded, whitespace-collapsed excerpt (never raw newlines/tabs
+    # or runs of spaces, never longer than the quote cap).
+    assert "\n" not in snippet and "\t" not in snippet and "  " not in snippet
     assert len(snippet) <= MAX_QUOTE_CHARS
 
 
 def test_sql_citation_snippet_is_set() -> None:
     sql = {"columns": ["n"], "rows": [[3]]}
-    assert build_sources(sql, [])[0][0].snippet == "n=3"
+    assert build_sources(sql, [])[0][0].snippet == "N: 3. [1]"
 
 
 def _audit_scope(monkeypatch, role: str) -> dict:
-    async def fake_route(query, role, ledger=None):
+    async def fake_route(query, role, ledger=None, **kwargs):
         return RouteDecision(intent="review_rag", scope=scope_for_role(role), rationale="t")
 
     monkeypatch.setattr(pipeline, "route", fake_route)
