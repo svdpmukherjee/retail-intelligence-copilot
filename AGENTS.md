@@ -5,6 +5,15 @@
 > the always-on rules and points you at the rest. **`CLAUDE.md` remains the
 > source of truth** — read it in full before any non-trivial work.
 
+## Current-state handoff
+
+Read `context/CURRENT_TASK.md` and `context/RESUME_NEXT_SESSION.md` before acting.
+`docs/answer-quality-status.md` consolidates the post-`ec0ef26` remediation;
+`context/CHANGE_INVENTORY.md` maps every changed path to its spec/note/tests.
+Module DONE rows and older module/worklog notes describe historical baselines.
+Later implementation, test, authorization and acceptance states may supersede them;
+publication is not a quality acceptance or permission for migration/deployment.
+
 ## How to work in this repo (orchestration model)
 
 You are an **orchestrator**, not a lone coder. The project is built **one module

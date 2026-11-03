@@ -973,3 +973,101 @@ Template for each new snapshot:
 3. Reset the `class ... new;` line to list ONLY the nodes added/changed this module.
 4. Fill the "Added/changed this module" bullet list.
 -->
+
+
+## Snapshot — answer-quality remediation after ec0ef26 (2026-11-03)
+
+Implementation snapshot, not a new accepted module or serving migration. Earlier
+snapshots retain their historical claims; current acceptance/configuration/test
+boundaries live in [answer-quality-status.md](answer-quality-status.md).
+
+```mermaid
+flowchart TB
+    ROOT["retail-intelligence-copilot/<br/>PRD.md · CLAUDE.md · README.md · .gitignore · .claudeignore"]
+    CLA[".claude/<br/>settings.json"]
+    AG[".claude/agents/<br/>planner · developer · tester · documenter · designer · solution-architect"]
+    CM[".claude/commands/<br/>module.md"]
+    RU[".claude/rules/<br/>code_style · security · testing · ux-surface"]
+    CX["context/<br/>PROJECT · CURRENT_TASK · RESUME_NEXT_SESSION · CHANGE_INVENTORY · historical WORKLOG/DECISIONS"]
+    DC["docs/<br/>architecture/ · img/ · repo-evolution.md"]
+    DM["docs/modules/<br/>original baseline notes + M7baseline · M4Stage2 · M3Stage3 · source workaround · conversational repair"]
+    DDES["design/<br/>README · iteration-2/ · iteration-3/ · iteration-4/ (brief · wireframes · decisions · handoff · mockups/m8-chat.html)"]
+
+    SPEC[".claude/specs/<br/>M1 · M2 · M3 · M4 · M5 · M6 · M7 · M8_serving_ui · M8v2_serving_ui · M8v3_serving_ui · M8v4_serving_ui"]
+    COST["COST.md"]
+    GH[".github/workflows/<br/>ci.yml (backend · eval · frontend)"]
+    BE["backend/<br/>pyproject.toml · .env.example · Dockerfile · .dockerignore"]
+    BEAPP["app/<br/>config.py · cost.py · main.py (GET /threads · /threads/{id} · /audit)"]
+    BEAGT["agents/<br/>conversation · catalogue · product_criteria · query_plan · suggestions · router · SQL · composer · answer_evidence · pipeline · model_policy"]
+    BEGOV["governance/<br/>policy · pii · grounding · audit"]
+    BEMEM["memory/<br/>schema · store · manager"]
+    BERET["retrieval/<br/>legacy serving + exact metadata enrichment · source_reviews · opt-in provenance/normalization/token chunks/immutable fixture bundles"]
+    BEEVAL["eval/<br/>existing docs-only gate + quality baseline/fixture · hosted-budget probe · evidence coverage · offline Stage3 smoke"]
+    BET["tests/<br/>+ test_composer_display_label"]
+    FE["frontend/<br/>index.html · package.json · tsconfig.json · vite.config.ts · .env.example · Dockerfile · .dockerignore"]
+    FES["src/<br/>App.tsx · main.tsx · App.css (declutter + bounded rail) · vite-env.d.ts · panelState · answer · copy (re-worded + SYSTEM_ERROR) · identities · turns"]
+    FEAPI["src/api/<br/>types: full passages · partial/overflow · suggestions · active/clarification payloads"]
+    FECMP["src/components/<br/>existing chat/history/evidence + AnswerDocument · QuestionSuggestions · shared live/replay rendering"]
+    FESHP["src/components/shapes/<br/>shared safe answer rendering · SqlData/SqlTable · truthful comparisons/time series"]
+    ADM["docs/modules/<br/>original baseline notes + M7baseline · M4Stage2 · M3Stage3 · source workaround · conversational repair"]
+    INF["infra/<br/>main.bicep · budget.bicep · main.bicepparam · teardown.sh · docker-compose.yml · webapp.bicep · README.md"]
+    DATA["data/<br/>pyproject.toml"]
+    DETL["data/etl/<br/>existing pipeline + forward Gold parent identity/source snapshot/review metadata (fixture-tested only)"]
+    DSAMP["data/sample/<br/>amazon_reviews_sample.jsonl"]
+    DDOCS["data/docs/<br/>authored/ (18 md) · manuals/ (4 pdf) · make_manual_pdfs.py"]
+    DTST["data/tests/<br/>test_storage · test_bronze · test_silver · test_gold"]
+    DT["docs/testing/<br/>unit-testing.md · sit.md"]
+
+    ROOT --> CLA
+    CLA --> AG
+    CLA --> CM
+    CLA --> RU
+    CLA --> SPEC
+    ROOT --> CX
+    ROOT --> DC
+    DC --> DM
+    DC --> DDES
+    DC --> DT
+    ROOT --> COST
+    ROOT --> GH
+    ROOT --> BE
+    BE --> BEAPP
+    BE --> BEAGT
+    BE --> BEGOV
+    BE --> BEMEM
+    BE --> BERET
+    BE --> BEEVAL
+    BE --> BET
+    ROOT --> FE
+    FE --> FES
+    FES --> FEAPI
+    FES --> FECMP
+    FECMP --> FESHP
+    FES --> ADM
+    ROOT --> INF
+    ROOT --> DATA
+    DATA --> DETL
+    DATA --> DSAMP
+    DATA --> DDOCS
+    DATA --> DTST
+
+    classDef new fill:#fff3bf,stroke:#f08c00,stroke-width:3px,color:#000;
+    class BEAGT,BERET,BEEVAL,FEAPI,FECMP,FESHP,DETL,CX,DM new;
+```
+
+**Added/changed in this remediation:**
+- Capability-aware typed planning, scoped independent tasks and saved conversation
+  criteria; product-grain prices/counts and deterministic SQL narration.
+- Read-only verified Silver evidence for selected ASINs; exact legacy chunk metadata
+  enrichment; full scoped evidence retained for final synthesis and bounded repair.
+- Isolated versioned evidence fixtures/provenance/token chunks and forward Gold
+  projection metadata; no serving backfill, index rebuild or cutover.
+- Safe Markdown/grouped citations, truthful tables/charts, full redacted evidence,
+  specific empty outcomes and contextual composer-fill suggestions in live/replay.
+- Synthetic before/after snapshots, hermetic checks, live read-only browser records
+  summarized with limits, and a consolidated agent handoff/file inventory.
+
+The publication audit also restores concrete replacement-metric fallback resolution,
+keeps numeric display modifiers attached to their original task, updates the Stage3
+partial-state test for explicit criteria, and isolates six AST-equivalent formatting
+fixes. The source corpus and database schemas were not migrated.

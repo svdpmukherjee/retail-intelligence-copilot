@@ -1,5 +1,9 @@
 # Model comparison study (B-8)
 
+> Historical B8 benchmark. Current runtime policy uses the configured large tier
+> for `understand`/`compose` by explicit user request, not a new benchmark result.
+> See [current status](answer-quality-status.md) before changing model policy.
+
 > **Real gated run** on 2026-11-01 via provider `openrouter`.
 
 ## Results

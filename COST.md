@@ -90,3 +90,81 @@ flips / the spend starts (cost gate). Flags are the `.env` keys from `.env.examp
 - [ ] **P8 — Evidence + teardown.** Screenshot the live answer, eval gate, and deployed
       UI under `docs/img/`; log final actuals in the ledger; then **`az group delete -n
       rg-ric-demo`** to stop all burn.
+
+### 2026-11-03 — M7 Stage 1 hosted quality probe
+
+User authorized at most **$2 additional generation spend** using existing provider
+credentials. Preflight: public model pricing read, existing database/index read,
+cached embeddings only. Hosted execution was rejected by automatic approval review
+pending explicit evidence-transfer authorization. **Generation requests: 0;
+additional generation spend: $0.** No reindex, downloads or provisioned services.
+
+After explicit user approval of evidence transfer, the bounded M7 probe completed:
+**60 OpenRouter requests; provider-reported actual generation cost $0.002433719**
+(cost supplied on all 60 requests). Conservative retained reservations $0.07857544;
+approved cap $2. Request ceiling reached; no further generation calls. Journal:
+`/private/tmp/ric-quality-hosted-stage1.budget.json` (local only, temporary).
+No reindex, embedding API calls, downloads, provisioning, deployments or data writes.
+
+### 2026-11-03 — Answer quality Stage 2
+
+Additional generation/cloud API spend **$0**. Six read-only SQL/retrieval smoke
+checks used existing Gold/indexes and cached offline embeddings with all model
+generation explicitly disabled. No reindex, downloads, provisioning, deployment
+or data writes. Stage 1's $0.002433719 actual remains the only new hosted spend.
+
+### 2026-11-03 — User-requested Stage 2 live browser validation
+
+Existing OpenRouter/evidence-transfer approval continued under the remaining $2
+budget for the user's explicit live-browser request. Isolated actual Chrome/UI/API
+run: **24 hosted calls; provider-reported actual $0.000890035** (24/24 cost coverage),
+retained upper reservation $0.02789944. Combined actual with Stage 1 $0.003323754.
+No extra hosted calls for mobile replay/evidence checks. Existing corpus read-only,
+chat storage ephemeral; no provisioning, reindex, downloads or deployment. Local
+journal `/private/tmp/ric-stage2-browser/budget.json`; screenshots/report adjacent.
+
+### 2026-11-03 — Answer quality Stage 3 isolated foundations
+
+Additional hosted/cloud spend **$0**. Read-only existing SQL/Gold/index coverage
+audit; real cached local embeddings over synthetic bounded fixture sources, local
+SQLite/FTS and Delta artifacts; two-review temporary Spark projection check using
+existing Java/cached jars. No model downloads, provider requests, serving corpus
+writes, real backfill, deployment or provisioning. Total approved live-test spend
+remains **$0.003323754**. Separate authorization is required for real backfill/cutover.
+
+### 2026-11-03 — Practical source/narration/presentation fixes
+
+Additional hosted/cloud spend **$0**. Existing Silver/Gold/index read-only checks,
+local cached query embeddings, isolated real Chrome/React/FastAPI runs with all
+hosted generation disabled and ephemeral chats. No corpus re-embedding, index/schema
+mutation, ETL run, model/package downloads, deployment or provisioning. Earlier
+hosted actual remains **$0.003323754**. Temporary test services stopped.
+
+- 2026-11-03 combined-question follow-up: $0 additional provider/cloud spend.
+  Focused hermetic checks and generation-disabled read-only local smoke only.
+  Prior provider-reported total remains $0.003323754.
+
+- 2026-11-03 conversational correction: $0 additional provider/cloud spend.
+  Scripted model tests, offline cached embeddings and read-only existing-data
+  smokes; no hosted completions. Runtime understand/compose now use configured
+  large tier under the existing per-query budget; hosted quality/cost unmeasured.
+  Prior provider-reported total remains $0.003323754.
+
+### 2026-11-03 — Authorized real-user conversation repair/rechecks
+
+- Actual isolated Chrome/React/FastAPI, existing configured OpenRouter models,
+  read-only corpus and RAM-only test conversations: 71 turns across27distinct
+  queries, including debug failures/replays and targeted rechecks.
+- 118 hosted attempts; 114 report cost, 4 HTTP failures have no cost report.
+  Provider-reported additional cost **$0.010445375**; cumulative reported with
+  earlier$0.003323754 = **$0.013769129**. Missing error-call billing is not assumed0.
+- Conservative reservations retained across server restarts: **$0.42382848** under
+  the shared$1.50test cap and original$2authorization; no further paid runs planned.
+- Local budget journal `/private/tmp/ric-natural-browser/budget.json` (not Git).
+  No ETL/reindex/embedding/model downloads, provisioning or deployment costs.
+
+### 2026-11-03 — Documentation audit and Git publication
+
+New provider/cloud/embedding spend **$0**. Existing local Ruff/Black, inspected
+DB-free pytest suites and frontend checks only; no new hosted campaign, Spark,
+corpus indexing or deployment. Reported remediation total remains $0.013769129.
