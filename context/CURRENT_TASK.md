@@ -99,3 +99,11 @@ locally; see the latest section of `docs/modules/M4_conversational_planning.md`.
 No hosted/browser retry or service restart was performed; start a fresh chat for
 review because the earlier failed turn replaced its active selection state.
 This patch is uncommitted and does not change quality-stage acceptance.
+
+## README follow-up — 2026-11-04
+
+User-requested documentation clarity pass completed: technology-led engineering
+summary, separate product metadata, model selection/planner/router responsibilities,
+PostgreSQL memory and Docker/Langfuse boundaries. README and SVG/Mermaid updated;
+local links/XML/rendering/whitespace checked. Documentation edits remain local;
+implementation and quality acceptance states above are unchanged. See WORKLOG.

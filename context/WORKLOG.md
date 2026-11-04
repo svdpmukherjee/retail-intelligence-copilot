@@ -402,3 +402,23 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   Silver1 aggregates verified/no missing IDs. No provider calls, corpus/schema/index
   or history/audit writes, application restart, commit/push. Hosted/browser retry
   remains unverified; use a fresh chat after an already failed active-state turn.
+
+- 2026-11-04 — **README technology and architecture clarity pass.** User requested
+  concise recruiter-facing skills alongside usable self-setup guidance. Checked ETL,
+  product-metadata enrichment, model policy, planner/router, access validation,
+  PostgreSQL search/memory/audit and Langfuse configuration against implementation.
+  Rewrote the engineering table around named tools and decisions; clarified Gemma
+  open-weight models via OpenRouter, first-LLM planning vs code model selection,
+  raw/raw_meta feeds, agent dispatch and host/Compose/separate Langfuse boundaries.
+  Updated SVG + Mermaid and visual maintenance notes; shortened dense explanations
+  and removed duplicate verification links. Validated 62 local README link/media
+  targets and linked fragments, SVG XML, headless Chrome diagram rendering and
+  whitespace. Documentation only; no runtime tests, provider calls, data/env changes,
+  acceptance changes, commit or push. Existing unrelated working files preserved.
+
+- 2026-11-04 — **README concern-first engineering table.** User requested that
+  RAG concepts remain explicit alongside named technologies. Restored Concern /
+  Implementation (tools and tradeoffs) / Inspect columns; separated chunking,
+  hybrid retrieval, grounding and access/privacy concerns. Kept concise decisions,
+  source links and current opt-in/quality boundaries. README local links and
+  whitespace checked; documentation only, no application tests, commit or push.

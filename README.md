@@ -3,16 +3,14 @@
 **Conversational analytics and retrieval-augmented generation over retail reviews,
 product metadata and policy documents.**
 
-**The problem.** Retail teams sit on millions of customer reviews and product
-records they can't actually query; the insight is trapped, and getting an answer
-today means waiting on a data analyst.
+**Why I built it.** Retail teams need answers across customer feedback, product
+records and policies without waiting for an analyst. This copilot turns plain-language
+questions into scoped SQL, review search and document retrieval, then returns
+calculated results and cited evidence.
 
-**The idea.** Let support, marketing and executives ask about customer reviews,
-product ratings, recorded prices and policy documents in plain language. A
-capability-aware conversation planner resolves the request, then scoped SQL/review/
-document tools supply evidence for the answer. Access filters, calculated summaries,
-citations and draft checks reduce known failures; they do not guarantee that every
-model claim is correct.
+**What I engineered.** A Spark/Delta medallion pipeline, task-aware LLM routing,
+text-to-SQL with DuckDB, hybrid RAG with pgvector, PostgreSQL conversation memory,
+and Langfuse tracing — connected through a FastAPI API and React interface.
 
 **Watch the demo:** role-scoped queries, supporting evidence, admin audit and Langfuse traces.
 
@@ -29,7 +27,10 @@ https://github.com/user-attachments/assets/019bc1bd-f163-44f9-9db4-29539c38f7e0
 [Data](#the-data) · [Verification](#whats-verified-and-what-isnt) ·
 [How I built it](#how-i-built-it) · [Run locally](#run-locally)
 
-`Python 3.12 · FastAPI · React / TypeScript · PostgreSQL / pgvector · DuckDB · Spark / Delta · Langfuse (optional)`
+**Stack:** Python 3.12 · FastAPI · React / TypeScript / Vite · PySpark / Delta Lake ·
+DuckDB · PostgreSQL / pgvector · Sentence Transformers · OpenRouter / Gemma 3 ·
+Langfuse · Docker Compose
+
 
 ## What you can ask
 
@@ -41,72 +42,77 @@ https://github.com/user-attachments/assets/019bc1bd-f163-44f9-9db4-29539c38f7e0
 | “What is the policy for returning a damaged item?” | Retrieval over authored policy documents with inspectable passages. |
 | “Show the lowest-rated products and explain the return policy.” | Independent scoped tasks, clarification when needed, then combined evidence and citations. |
 
-These illustrate supported paths, not guaranteed matches. The conversation retains
-selection criteria, asks for missing definitions and offers relevant next questions.
-The interface provides owner-scoped history and an evidence panel for inspecting
-full redacted source passages. Its identity selector is a **demo control**, not
-production authentication.
+Follow-ups retain selection criteria; missing definitions trigger clarification.
+Owner-scoped history and an evidence panel expose redacted source passages.
+The identity selector is a **demo control**, not production authentication.
 
 ## How an answer is produced
 
-The system combines **structured analytics and unstructured retrieval**. SQL computes
-ratings, counts and recorded prices; review and document tools provide textual
-evidence. Ingestion is a separate batch operation, never a per-question Spark job.
+Three connected layers keep batch processing, interactive answers and operator
+inspection distinct:
 
-<a href="docs/img/answer-flow.svg"><img src="docs/img/answer-flow.svg" alt="Answer flow: batch data preparation, permission-scoped conversation tools, checked evidence and separate operator surfaces" width="100%"></a>
+<a href="docs/img/answer-flow.svg"><img src="docs/img/answer-flow.svg" alt="Architecture: separate review and product-metadata feeds, Spark/Delta medallion ETL, task-based model selection, validated agent routing, DuckDB analytics, PostgreSQL retrieval and memory, and Langfuse tracing" width="100%"></a>
 
-*Click the diagram to open the full-size SVG. [Mermaid source](docs/diagrams/answer-flow.mmd).*
+*Click for the full-size diagram. [Mermaid source](docs/diagrams/answer-flow.mmd).*
 
-Access restrictions apply before source evidence reaches synthesis. Shared policy
-documents remain separate from category-scoped product/review access. Empty,
-denied, partial and unsupported requests have explicit outcomes. Source excerpts
-are a visible fallback when a draft fails checks.
+1. **Batch ETL — PySpark + Delta Lake.** `data/raw/` reviews and `data/raw_meta/`
+   product attributes feed Bronze → Silver → Gold, with product enrichment and PII
+   handling. Policies/manuals are chunked separately.
+2. **Context + models — FastAPI, PostgreSQL, OpenRouter.** Load role-scoped memory;
+   code selects a model tier per task. The first LLM task is normally large-tier
+   planning from the question, capabilities and saved criteria.
+3. **Validation + routing — Pydantic and Python.** Validate typed tasks and intersect
+   filters with server-owned permissions. Route to SQL/review/docs agents using the
+   plan or rules, with medium-tier classification as a fallback.
+4. **Evidence + answer — DuckDB and hybrid RAG.** Query Gold, search reviews/docs,
+   or verify selected-product Silver reviews. Large-tier synthesis adds citations;
+   code checks drafts, permits one repair, then falls back to excerpts. Numeric-only
+   summaries come from calculations.
+5. **Persistence + inspection — PostgreSQL and Langfuse.** Save history, criteria,
+   clarifications and durable memory. Audit/admin views and stage traces expose
+   models, routing, sources, tokens, cost and latency outside customer chat.
 
-Audit records document individual turns; traces help diagnose execution stages.
-Both are operator surfaces: cost, tokens, routing and latency stay out of the retail
-chat. Langfuse is optional and disabled by default; audit writes are best-effort,
-so this is not a guaranteed compliance ledger.
+**Where it runs:** repo **Docker Compose → PostgreSQL/pgvector** for search,
+memory and audit; **host → FastAPI, React/Vite and batch Spark**. Langfuse uses a
+**separate Docker stack or hosted endpoint**. Tracing is shown in the demo and
+config-enabled (off in a fresh clone); audit writes are best-effort.
 
 ## RAG engineering decisions
 
-| Concern | Implementation and tradeoff | Inspect |
+| Concern | Implementation · tools and tradeoffs | Inspect |
 |---|---|---|
-| **Planning and tool use** | Dataset capabilities inform typed plans; server validation preserves category, rating, price and selection conditions. Independent questions share a turn budget; greetings, access questions and unsupported measures have explicit paths. | [Planning](backend/agents/query_plan.py) · [Pipeline](backend/agents/pipeline.py) |
-| **Hybrid retrieval** | Dense vectors and keyword results are combined with **reciprocal-rank fusion (RRF)**, then bounded to top-k. A local cross-encoder reranker is optional; default is no reranker. The Azure reranker is not implemented. | [Hybrid search](backend/retrieval/hybrid.py) · [Reranking](backend/retrieval/rerank.py) |
-| **Chunking and metadata** | Current serving uses one chunk per sampled review and section-aware document chunks carrying source/category/product metadata. Token-bounded overlap, parent IDs, offsets, source hashes and immutable evidence bundles are implemented as an **opt-in, fixture-tested path**, not an activated corpus replacement. | [Chunking](backend/retrieval/chunking.py) · [Evidence foundations](docs/modules/M3_answer_quality_stage3.md) |
-| **SQL + source evidence** | SQL uses scoped structured data; supported operations use templates and generated SQL has statement checks. Ratings aggregate all rated review rows per product; prices use product/category grain. Selected-product explanations verify bounded Silver source counts/means against SQL selection. | [SQL tool](backend/agents/sql_agent.py) · [Source-first evidence](docs/modules/M4_answer_quality_workaround.md) |
-| **Grounding and citations** | Calculated numeric summaries, grouped citations, inspectable passages and targeted draft guards reduce known numeric, prevalence and policy errors. One bounded repair or source-excerpt fallback limits repeated generation. Citation validity is **not** an entailment proof. | [Citation checks](backend/governance/grounding.py) · [Answer composition](backend/agents/composer.py) |
-| **Conversation state** | Owner-scoped threads retain recent context, active selection criteria and pending clarifications. Topic changes replace stale criteria; follow-up suggestions respect supported capabilities and role scope. | [Conversation implementation](docs/modules/M4_conversational_planning.md) · [Memory](backend/memory) |
-| **Access and privacy** | Server-owned category permissions constrain SQL and retrieval; unknown roles are denied. Reviewer IDs are hashed at ingestion; email/phone patterns are redacted. Demo role selection does not establish authenticated identity. | [Policy](backend/governance/policy.py) · [PII handling](backend/governance/pii.py) |
-| **Auditability and observability** | PostgreSQL audit records and an admin-only read path expose turn evidence and model/tool usage. Optional Langfuse traces expose stage diagnostics, with redacted input/output and restricted metadata. | [Audit storage](backend/governance/audit.py) · [Tracing](backend/observability/tracing.py) · [Admin view](frontend/src/admin) |
-| **Evaluation and cost control** | Retrieval recall@k/MRR, answer checks, cost/query and p50/p95 latency have an evaluation harness. Per-query token/cost accounting and explicit hosted-provider opt-ins bound execution. The CI quality evaluation is docs-only, not a full conversational quality certification. | [Evaluation](backend/eval) · [Cost ledger](backend/app/cost.py) · [CI](.github/workflows/ci.yml) |
+| **Data preparation and enrichment** | **PySpark + Delta Lake** medallion ETL joins product metadata and produces separate analytics/search outputs. Batch processing stays outside the query path. | [ETL](data/etl/pipeline.py) · [Product dimension](data/etl/product_meta.py) |
+| **Planning and tool use** | **Pydantic** typed plans dispatch SQL/review/docs agents; **OpenRouter + Gemma 3** tiers match model capacity to each task. Python validates plans before execution. | [Planner](backend/agents/conversation.py) · [Router](backend/agents/router.py) · [Model policy](backend/agents/model_policy.py) |
+| **Hybrid retrieval and reranking** | **Sentence Transformers MiniLM + pgvector + PostgreSQL full-text search**, fused with **reciprocal-rank fusion (RRF)**. Local cross-encoder reranking is configurable, off by default. | [Hybrid search](backend/retrieval/hybrid.py) · [Reranking](backend/retrieval/rerank.py) |
+| **Chunking and source metadata** | One chunk per sampled review; section-aware policy/manual chunks retain source, category and product metadata. Token-overlap chunks and versioned provenance remain an opt-in, fixture-tested path. | [Chunking](backend/retrieval/chunking.py) · [Evidence foundations](docs/modules/M3_answer_quality_stage3.md) |
+| **Structured analytics + source evidence** | **DuckDB over Delta** uses scoped templates and checked generated SQL. Product-level prices avoid review weighting; bounded Silver reviews reconcile evidence with SQL-selected products. | [SQL agent](backend/agents/sql_agent.py) · [Source lookup](backend/retrieval/source_reviews.py) |
+| **Grounding and citations** | **Python checks** combine calculated summaries, inspectable citations and targeted draft guards. One bounded repair precedes source-excerpt fallback; citation validity alone does not prove factual support. | [Grounding](backend/governance/grounding.py) · [Composer](backend/agents/composer.py) |
+| **Conversation state and memory** | **PostgreSQL** stores owner-scoped history, findings/preferences, selections and clarifications for follow-ups. Memory provides context, never cited evidence. | [Memory manager](backend/memory/manager.py) · [Persistence](backend/memory/store.py) |
+| **Access control and privacy** | **Server-owned Python policies** constrain SQL/retrieval before synthesis; unknown roles are denied. Ingestion hashes reviewer IDs and redacts email/phone patterns. Demo identity selection is not authentication. | [Access policy](backend/governance/policy.py) · [PII handling](backend/governance/pii.py) |
+| **Auditability and observability** | **Langfuse** stage traces and **PostgreSQL audit / React admin** expose redacted evidence, model/tool choices, routing rationale and usage. Audit writes are best-effort. | [Tracing](backend/observability/tracing.py) · [Audit](backend/governance/audit.py) · [Admin UI](frontend/src/admin) |
+| **Evaluation and cost control** | Recall@k/MRR, grounding, cost/query and p50/p95 latency harness; **pytest + GitHub Actions** checks. Per-turn token/cost caps bound execution; CI quality evaluation currently covers docs. | [Evaluation](backend/eval) · [Cost ledger](backend/app/cost.py) · [CI](.github/workflows/ci.yml) |
 
-The provider adapters support a local/free path and optional hosted generation;
-Azure integration is a separate configured path. Model selection is task-aware —
-see [Model routing](#model-routing) below.
 
 ## Model routing
 
-Not every step needs the biggest model. The pipeline maps each LLM task to a
-capability **tier**, and each tier to a configured open-weight model, so spend
-tracks how hard the task is — and the choice *plus its rationale* is recorded on
-every call for the audit and observability planes. The tiers come from a measured
-[model study](docs/model-comparison.md) (six models, three sizes × two families),
-not from defaulting to the largest.
+**The demonstrated hosted path uses open-weight Gemma 3 models through OpenRouter.**
+A code-owned **task → tier → configured model** policy selects each call's model;
+simple controls and supported follow-ups can bypass LLM calls.
 
-| Pipeline task | Tier | Default model | Why this tier |
-|---|---|---|---|
-| Summarise a turn into memory | small | Gemma 3 4B | Low-stakes; the small tier scored faithfulness 1.00 at the lowest latency and cost. |
-| Classify intent (routing) | medium | Gemma 3 12B | Short, structured task; medium lifts routing accuracy 0.75 → 0.88 for a little more cost. |
-| Interpret & plan the request | large | Gemma 3 27B | Compound planning, context and clarification, with server-validated output. |
-| Generate SQL | large | Gemma 3 27B | Text-to-SQL must be exact; large led routing accuracy (1.00) with 4/4 runnable SQL. |
-| Compose the final answer | large | Gemma 3 27B | Final synthesis; calculated values and evidence checks stay code-owned. |
+| Task | Tier / default model | Selection reason |
+|---|---|---|
+| Summarize a turn for memory | Small · **Gemma 3 4B** | Lightweight background task; lowest measured latency/cost. |
+| Classify intent when needed | Medium · **Gemma 3 12B** | Structured classification; measured improvement over the small tier. |
+| Interpret and plan the request | Large · **Gemma 3 27B** | Compound requests, context and clarification; output validated by the server. |
+| Generate SQL when needed | Large · **Gemma 3 27B** | Runnable SQL and exact structured output. |
+| Synthesize or repair an answer | Large · **Gemma 3 27B** | Combine evidence; calculations and draft checks remain code-owned. |
 
-The tier→model mapping is configuration (`OPENROUTER_MODEL_SMALL|MEDIUM|LARGE`), so a
-model swaps without a code change, and the free/Azure paths ignore the per-call
-override. Routing is active in OpenRouter mode; a larger tier is a policy choice, not a
-claim of a new benchmark win. See [the study and its limits](docs/model-comparison.md) ·
-[routing policy](backend/agents/model_policy.py).
+The [six-model study](docs/model-comparison.md) informed the policy; later planning/
+synthesis choices are engineering decisions, not new benchmark wins. Tier models
+are configurable through `OPENROUTER_MODEL_{SMALL,MEDIUM,LARGE}`. Local
+OpenAI-compatible and Azure OpenAI adapters are also available; per-task switching
+applies to OpenRouter. The demo uses open-weight models.
+[Routing policy](backend/agents/model_policy.py) · [Adapters](backend/agents/llm.py).
 
 ## The data
 
@@ -116,45 +122,36 @@ and manuals. Recorded local snapshot, documented November 3, 2026:
 
 | Source / serving layer | Recorded scale | Used for |
 |---|---:|---|
-| Gold structured reviews | **911,308 reviews / 645,448 category-product pairs** | Ratings, counts, product discovery and recorded prices. |
+| Gold structured reviews + joined product metadata | **911,308 reviews / 645,448 category-product pairs** | Ratings, counts, product discovery and recorded prices. |
 | Sampled review index | **225,000 chunks / 191,007 products** | Semantic and keyword review search. |
 | Authored knowledge base | **22 source documents / 79 indexed chunks** | Policy and manual questions. |
 | Silver source reviews | Bounded reads for selected products | Evidence where SQL-selected products lack sampled index coverage. |
 
-**Coverage is a design constraint.** The sampled review index contains about
-29.59% of SQL category-product pairs; presence does not establish relevance or
-exhaustive review coverage. Verified Silver lookup addresses supported
-selected-product questions without pretending that ordinary semantic search covers
-the full corpus. Review examples do not establish complaint prevalence.
-
-The dataset has **no sales/revenue transactions**. Prices are recorded metadata,
-not live quotes, and missing prices remain explicit. The figures above describe a
-local operationalized corpus; they are not bundled with a fresh clone.
+**Coverage matters:** the sampled index covers **29.59%** of SQL category-product
+pairs. Verified Silver lookup supports selected-product explanations; review examples
+do not establish complaint prevalence. There are **no sales/revenue transactions**;
+prices are recorded metadata with explicit missing values. This corpus is not
+bundled with a fresh clone.
 
 ## What's verified, and what isn't
 
 - **Tested.** Backend test suite (last local run: 339 passed, 45 skipped where a
   live DB/LLM key wasn't available), plus lint/format and a frontend build, all in CI.
-- **Working demo, not a product.** The answer paths above are verified end-to-end
-  against the real corpus. Some answers still fall back to showing source excerpts
-  when a drafted answer can't be fully grounded — that behaviour is deliberate and visible.
-- **Out of scope.** Full-corpus recall, arbitrary generated SQL, production auth and
-  cloud deployment are not claimed. The identity switcher is a demo control, not real auth.
+- **Real-data demo.** Supported paths have end-to-end checks; rejected drafts can
+  fall back visibly to source excerpts. Overall answer-quality review remains open.
+- **Limits.** Full-corpus recall, arbitrary generated SQL quality, production auth
+  and cloud deployment are not claimed.
 
-Details: [quality report](docs/answer-quality-status.md) ·
-[acceptance artifacts](docs/testing/acceptance/README.md) ·
-[verification history](context/WORKLOG.md).
-
-Evidence and methodology: [consolidated quality report](docs/answer-quality-status.md) ·
-[frozen acceptance artifacts](docs/testing/acceptance/README.md) ·
-[test isolation and verification](docs/testing/unit-testing.md) ·
-[recorded verification history](context/WORKLOG.md).
+Citation checks do not prove factual support; CI's quality evaluation covers docs,
+not complete conversational quality. [Quality report](docs/answer-quality-status.md) ·
+[Acceptance evidence](docs/testing/acceptance/README.md) ·
+[Test methodology](docs/testing/unit-testing.md).
 
 ## How I built it
 
 Development uses a human-led orchestrator, specialist AI roles, file-based handoffs
-and explicit approval gates. The cards summarize the development method and its
-implementation milestones; the product's live data flow is shown above.
+and explicit approval gates. Specs, tests and documented decisions keep
+AI-assisted implementation reviewable.
 
 <table>
   <tr>
@@ -179,11 +176,6 @@ implementation milestones; the product's live data flow is shown above.
   </tr>
 </table>
 
-The UI evolved from an engineering spike through subsequent design iterations;
-the repository does not claim the original implementation was design-first.
-Historical module completion and current answer-quality acceptance are tracked
-separately.
-
 ## Run locally
 
 The current local route uses Python, Node, Java/Spark for batch preparation,
@@ -194,22 +186,21 @@ Delta lake, vector store, model cache and secrets are excluded.
 1. Follow the **[local setup guide](data-pipeline-setup/local/LOCAL_SETUP.md)** to
    install dependencies and configure your own ignored `backend/.env` from
    [the template](backend/.env.example).
-2. Prepare the real data and indexes as described there, then start the API and UI.
+2. Download reviews **and product metadata** (`data/raw/`, `data/raw_meta/`),
+   build the lake and indexes, then start the API and UI as described in the guide.
    Spark/ETL and embedding are preparation steps; reuse the prepared stores for
    subsequent application launches.
 3. Open the frontend at `http://localhost:5173` and try the questions above using
    an appropriate demo role.
 
-Local inference and embeddings can avoid hosted API charges, but require model
-downloads and suitable hardware. Azure/OpenRouter generation is optional and
-explicitly cost-gated. Docker Compose currently supplies PostgreSQL; a complete
-one-command application package is not yet provided.
+Choose **OpenRouter/Gemma 3** for the demonstrated hosted path, a **local
+OpenAI-compatible endpoint** for local inference, or the configured **Azure** path.
+Hosted generation requires an explicit opt-in; local models require downloads and
+suitable hardware. Enable [Langfuse tracing](data-pipeline-setup/local/LOCAL_SETUP.md#b8--observability-with-langfuse-optional)
+to inspect execution. The application is not yet packaged as a one-command Docker launch.
 
-For development without loading the corpus, use the
-[isolated test instructions](docs/testing/unit-testing.md). To reproduce the
-AI-assisted build method, read [the developer guide](docs/GUIDE.md) and
-[orchestrator contract](CLAUDE.md). Optional cloud setup and spending records live in
-[the cloud runbook](data-pipeline-setup/cloud/CLOUD_SETUP.md) and [COST.md](COST.md).
+For development without the corpus: [isolated tests](docs/testing/unit-testing.md).
+For cloud setup: [runbook](data-pipeline-setup/cloud/CLOUD_SETUP.md) · [spend ledger](COST.md).
 
 ## Further reading
 

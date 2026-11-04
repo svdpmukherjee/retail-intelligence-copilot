@@ -1,101 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="880" viewBox="0 0 1600 880" role="img" aria-labelledby="title desc">
-<title id="title">How an answer is produced</title>
-<desc id="desc">Batch preparation produces Gold tables, Silver reviews and a hybrid search index. At query time a capability-aware planner proposes tasks, validated against role permissions before scoped SQL and review/document access. Selected-product source checks and retrieved evidence feed synthesis and citation checks; calculated summaries feed the answer directly. Audit and optional Langfuse traces are separate operator surfaces. Data source labels on tool cards refer to the preparation outputs above.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<title id="title">Retail copilot: technologies and answer flow</title>
+<desc id="desc">Reviews and separate product metadata feed Spark/Delta medallion ETL. FastAPI loads PostgreSQL memory; a code policy chooses OpenRouter Gemma models per task. A large-tier planner precedes Pydantic validation, server access policy and intent routing to DuckDB SQL, review RAG and document RAG. Checked evidence feeds synthesis and cited answers. Docker Compose hosts PostgreSQL for retrieval, memory and audit. Langfuse provides execution traces through a separately configured endpoint.</desc>
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs>
-<style>text{font-family:Arial,Helvetica,sans-serif;fill:#0f172a}.heading{font-size:23px;font-weight:700}.label{font-size:18px;font-weight:700}.body{font-size:17px;fill:#334155}.note{font-size:16px;fill:#475569}.wire{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#arrow)}.dashed{stroke-dasharray:6 5}</style>
-<rect width="1600" height="880" rx="18" fill="#ffffff"/>
-
-<rect x="20" y="20" width="1560" height="300" rx="14" fill="#eff6ff" stroke="#cbd5e1"/>
-<text x="42" y="54" class="heading">1 · Data preparation</text><text x="1558" y="53" class="note" text-anchor="end">Batch / build time only</text>
-<rect x="42" y="82" width="246" height="99" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="56" y="109" class="label">Amazon review corpus</text>
-<text x="56" y="135" class="body">Reviews + product metadata</text>
-<rect x="320" y="82" width="360" height="99" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="334" y="109" class="label">Spark / Delta</text>
-<text x="334" y="135" class="body">Bronze → Silver → Gold</text>
-<text x="334" y="158" class="body">Hash reviewers; redact email / phone</text>
-<rect x="718" y="72" width="270" height="126" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="732" y="99" class="label">Prepared review data</text>
-<text x="732" y="125" class="body">Gold: structured tables</text>
-<text x="732" y="148" class="body">Silver: source reviews</text>
-<text x="732" y="171" class="body">Sample: review text</text>
-<rect x="42" y="214" width="246" height="78" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="56" y="241" class="label">Authored documents</text>
-<text x="56" y="267" class="body">Policies + manuals</text>
-<rect x="320" y="214" width="360" height="78" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="334" y="241" class="label">Section-aware chunks</text>
-<text x="334" y="267" class="body">Document text + source metadata</text>
-<rect x="1024" y="119" width="240" height="102" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="1038" y="146" class="label">Embeddings</text>
-<text x="1038" y="172" class="body">Sampled reviews + chunks</text>
-<text x="1038" y="195" class="body">Source metadata retained</text>
-<rect x="1300" y="119" width="258" height="102" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="1314" y="146" class="label">Hybrid search index</text>
-<text x="1314" y="172" class="body">PostgreSQL / pgvector</text>
-<text x="1314" y="195" class="body">+ keyword search</text>
-<path d="M288 131H320" class="wire"/>
-<path d="M680 131H718" class="wire"/>
-<path d="M288 253H320" class="wire"/>
-<path d="M988 174H1024" class="wire"/>
-<path d="M680 253H1004V194H1024" class="wire"/>
-<path d="M1264 170H1300" class="wire"/>
-<text x="718" y="284" class="note">Gold → SQL · Silver → selected-product lookup · Index → search</text>
-<rect x="20" y="342" width="1560" height="386" rx="14" fill="#f0fdfa" stroke="#cbd5e1"/>
-<text x="42" y="376" class="heading">2 · Conversation</text><text x="1558" y="375" class="note" text-anchor="end">Query time · access enforced before synthesis</text>
-<rect x="42" y="408" width="212" height="96" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="56" y="435" class="label">Question</text>
-<text x="56" y="461" class="body">Role + conversation</text>
-<text x="56" y="484" class="body">state</text>
-<rect x="284" y="408" width="222" height="119" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="298" y="435" class="label">Capability-aware plan</text>
-<text x="298" y="461" class="body">Clarify criteria or</text>
-<text x="298" y="484" class="body">propose typed tasks</text>
-<rect x="536" y="408" width="222" height="119" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="550" y="435" class="label">Validate + scope</text>
-<text x="550" y="461" class="body">Intersect tasks with</text>
-<text x="550" y="484" class="body">role permissions</text>
-<text x="550" y="507" class="body">Enforce at data access</text>
-<rect x="788" y="398" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="802" y="425" class="label">SQL tool · Gold</text>
-<text x="802" y="451" class="body">Scoped DuckDB</text>
-<text x="802" y="474" class="body">calculations</text>
-<rect x="788" y="561" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="802" y="588" class="label">Review / doc tools</text>
-<text x="802" y="614" class="body">Index: vector + keyword</text>
-<text x="802" y="637" class="body">RRF; optional reranking</text>
-<rect x="1058" y="398" width="240" height="123" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="1072" y="425" class="label">Selected reviews</text>
-<text x="1072" y="451" class="body">Silver: bounded read</text>
-<text x="1072" y="474" class="body">Verify counts / means</text>
-<text x="1072" y="497" class="body">against SQL selection</text>
-<rect x="1058" y="561" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="1072" y="588" class="label">Retrieved evidence</text>
-<text x="1072" y="614" class="body">Retain source evidence</text>
-<text x="1072" y="637" class="body">for synthesis</text>
-<rect x="1328" y="398" width="230" height="123" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
-<text x="1342" y="425" class="label">Synthesis + checks</text>
-<text x="1342" y="451" class="body">Citations / draft guards</text>
-<text x="1342" y="474" class="body">At most one bounded</text>
-<text x="1342" y="497" class="body">repair</text>
-<rect x="1328" y="561" width="230" height="130" rx="9" fill="#ccfbf1" stroke="#5eead4"/>
-<text x="1342" y="588" class="label">Answer / excerpts</text>
-<text x="1342" y="614" class="body">Cited answer or honest</text>
-<text x="1342" y="637" class="body">source excerpts</text>
-<text x="1342" y="660" class="body">Passages + follow-ups</text>
-<path d="M254 455H284" class="wire"/>
-<path d="M506 455H536" class="wire"/>
-<path d="M758 455H788" class="wire"/>
-<path d="M772 455V611H788" class="wire"/>
-<path d="M1028 448H1058" class="wire"/>
-<path d="M1178 521V561" class="wire"/>
-<path d="M1028 611H1058" class="wire"/>
-<path d="M1298 611H1313V460H1328" class="wire"/>
-<path d="M1443 521V561" class="wire"/>
-<path d="M908 498V540H1043V693H1313V650H1328" class="wire"/>
-<text x="930" y="717" class="note">Calculated numeric summaries → answer</text>
-<rect x="20" y="750" width="1560" height="110" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
-<text x="42" y="784" class="heading">3 · Operator plane</text><text x="1558" y="783" class="note" text-anchor="end">Separate from customer chat</text>
-<text x="42" y="819" class="body">Answer → best-effort audit / admin: query, answer, sources, routing, model calls, tokens, cost, latency</text>
-<text x="42" y="844" class="body">SQL / search / synthesis → optional Langfuse traces: stage timing, token / cost deltas, redacted input / output</text>
-<path d="M1500 691V750" class="wire dashed"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#0f172a}.heading{font-size:24px;font-weight:700}.label{font-size:21px;font-weight:700}.body{font-size:20px;fill:#334155}.note{font-size:18px;fill:#475569}.wire{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#arrow)}.dashed{stroke-dasharray:6 5}</style>
+<rect width="1600" height="1120" rx="18" fill="white"/>
+<rect x="20" y="20" width="1560" height="278" rx="12" fill="#eff6ff" stroke="#cbd5e1"/>
+<text x="42" y="55" class="heading">1 · Data preparation</text>
+<text x="910" y="55" class="note">Batch only · PySpark + Delta Lake · host process</text>
+<rect x="42" y="78" width="300" height="138" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="108" class="label">Separate Amazon feeds</text>
+<text x="58" y="136" class="body">Reviews: data/raw/</text>
+<text x="58" y="161" class="body">Products: data/raw_meta/</text>
+<text x="58" y="186" class="body">Titles, prices, ratings</text>
+<rect x="380" y="78" width="345" height="138" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="396" y="108" class="label">Medallion ETL</text>
+<text x="396" y="136" class="body">Bronze → Silver → Gold</text>
+<text x="396" y="161" class="body">Join product dimension</text>
+<text x="396" y="186" class="body">Hash IDs; redact email / phone</text>
+<rect x="763" y="78" width="330" height="138" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="779" y="108" class="label">Prepared data</text>
+<text x="779" y="136" class="body">Gold: analytics + review sample</text>
+<text x="779" y="161" class="body">Silver: enriched source reviews</text>
+<text x="779" y="186" class="body">Docs: section-aware chunks</text>
+<rect x="1131" y="78" width="427" height="138" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="1147" y="108" class="label">Search preparation</text>
+<text x="1147" y="136" class="body">Sentence Transformers / MiniLM</text>
+<text x="1147" y="161" class="body">pgvector + PostgreSQL full-text</text>
+<text x="1147" y="186" class="body">Source / category / product metadata</text>
+<path d="M342 146H380" class="wire"/>
+<path d="M725 146H763" class="wire"/>
+<path d="M1093 146H1131" class="wire"/>
+<text x="42" y="254" class="note">Authored policies + manuals → document chunks</text>
+<text x="763" y="254" class="note">Gold → DuckDB · Silver → source lookup · Index → RAG</text>
+<rect x="20" y="318" width="1560" height="570" rx="12" fill="#f0fdfa" stroke="#cbd5e1"/>
+<text x="42" y="354" class="heading">2 · Conversation</text>
+<text x="790" y="354" class="note">React / Vite → FastAPI · permission filters before evidence access</text>
+<rect x="42" y="372" width="1516" height="59" rx="12" fill="#e0e7ff" stroke="#cbd5e1"/>
+<text x="58" y="397" class="label">Model policy · code selects task → tier → OpenRouter / Gemma 3 before each LLM call</text>
+<text x="58" y="420" class="note">4B: memory summary · 12B: intent fallback · 27B: interpretation, text-to-SQL, synthesis / repair</text>
+<rect x="42" y="455" width="276" height="139" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="485" class="label">Question + context</text>
+<text x="58" y="513" class="body">Role checked in Python</text>
+<text x="58" y="538" class="body">Load PostgreSQL history</text>
+<text x="58" y="563" class="body">+ saved selection criteria</text>
+<rect x="352" y="455" width="276" height="139" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="368" y="485" class="label">First LLM: planner</text>
+<text x="368" y="513" class="body">Large tier · Gemma 3 27B</text>
+<text x="368" y="538" class="body">Dataset-aware interpretation</text>
+<text x="368" y="563" class="body">Typed tasks or clarification</text>
+<rect x="662" y="455" width="276" height="139" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="678" y="485" class="label">Server validation</text>
+<text x="678" y="513" class="body">Pydantic + Python guards</text>
+<text x="678" y="538" class="body">Validate tasks / conditions</text>
+<text x="678" y="563" class="body">Intersect role permissions</text>
+<rect x="972" y="455" width="276" height="139" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="988" y="485" class="label">Intent / tool router</text>
+<text x="988" y="513" class="body">Validated plan / rules first</text>
+<text x="988" y="538" class="body">12B classification fallback</text>
+<text x="988" y="563" class="body">SQL / reviews / docs / mix</text>
+<rect x="1282" y="455" width="276" height="139" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="1298" y="485" class="label">Scoped tools</text>
+<text x="1298" y="513" class="body">SQL → DuckDB / Gold</text>
+<text x="1298" y="538" class="body">Review-RAG → index</text>
+<text x="1298" y="563" class="body">Doc-RAG → policies</text>
+<path d="M318 520H352" class="wire"/>
+<path d="M628 520H662" class="wire"/>
+<path d="M938 520H972" class="wire"/>
+<path d="M1248 520H1282" class="wire"/>
+<path d="M485 431V455" class="wire dashed"/>
+<path d="M1420 594V615H184V646" class="wire"/>
+<rect x="42" y="646" width="360" height="140" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="58" y="676" class="label">SQL + review evidence</text>
+<text x="58" y="704" class="body">Gold Delta → DuckDB analytics</text>
+<text x="58" y="729" class="body">Selected IDs → bounded Silver read</text>
+<text x="58" y="754" class="body">Verify source counts / means</text>
+<rect x="440" y="646" width="360" height="140" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="456" y="676" class="label">Hybrid search evidence</text>
+<text x="456" y="704" class="body">pgvector + PostgreSQL FTS → RRF</text>
+<text x="456" y="729" class="body">Reviews + section-aware docs</text>
+<text x="456" y="754" class="body">Local reranker configurable; off</text>
+<rect x="838" y="646" width="342" height="140" rx="12" fill="#fff" stroke="#cbd5e1"/>
+<text x="854" y="676" class="label">Synthesis + code checks</text>
+<text x="854" y="704" class="body">Large tier · Gemma 3 27B</text>
+<text x="854" y="729" class="body">Citations / targeted draft guards</text>
+<text x="854" y="754" class="body">One bounded repair if needed</text>
+<rect x="1218" y="646" width="340" height="140" rx="12" fill="#ccfbf1" stroke="#cbd5e1"/>
+<text x="1234" y="676" class="label">Answer + evidence</text>
+<text x="1234" y="704" class="body">Cited answer or source excerpts</text>
+<text x="1234" y="729" class="body">Calculated numeric summaries</text>
+<text x="1234" y="754" class="body">Passages + follow-up suggestions</text>
+<path d="M620 615V646" class="wire"/>
+<path d="M402 735H420V803H820V735H838" class="wire"/>
+<path d="M800 700H838" class="wire"/>
+<path d="M1180 715H1218" class="wire"/>
+<text x="42" y="854" class="body">PostgreSQL memory ↔ turns: owner-scoped history, selections, clarifications, durable findings / preferences; 4B summaries</text>
+<rect x="20" y="908" width="1560" height="192" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="42" y="944" class="heading">3 · Storage, deployment and operator plane</text>
+<text x="42" y="979" class="body">Docker Compose → PostgreSQL / pgvector: search index + full-text search + conversation memory + audit</text>
+<text x="42" y="1011" class="body">PostgreSQL audit → React admin: sources, model / tier rationale, tokens, cost, latency; best-effort writes</text>
+<text x="42" y="1043" class="body">Langfuse → execution-stage traces: redacted input / output, timings and usage; enabled through configuration</text>
+<text x="42" y="1075" class="note">API / UI / Spark run on host · Langfuse uses a separate self-hosted Docker stack or hosted endpoint</text>
+<path d="M1388 786V908" class="wire dashed"/>
 </svg>

@@ -69,3 +69,8 @@ Every changed path is mapped in [CHANGE_INVENTORY.md](CHANGE_INVENTORY.md).
 The worklog and original module notes retain dated intermediate results; later
 status here and CURRENT_TASK.md supersedes old “unstarted/uncommitted/unmeasured”
 statements. Publishing does not imply quality acceptance, main merge or deployment.
+
+README presentation follow-up (2026-11-04): named technologies, verified runtime
+responsibilities and deployment boundaries now appear in the concise engineering
+summary and updated flow diagram. This documentation pass does not close M9 or
+change remediation acceptance.
