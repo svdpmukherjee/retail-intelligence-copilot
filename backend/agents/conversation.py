@@ -468,6 +468,47 @@ def _review_contract(query: str, context: MemoryContext | None) -> PlannedQuesti
     return PlannedQuestion(query=task, intent="review_rag")
 
 
+def _selected_review_followup(query: str, context: MemoryContext | None) -> PlannedQuestion | None:
+    """Resolve feedback about a prior rating selection without guessing product names."""
+    if (
+        not context
+        or requested_categories(query)
+        or re.search(
+            r"\d|\b(?:all|across|other|different|since|before|after|last|this|verified|brand|"
+            r"praise|positive|love|like)\b|polic|return|refund|warrant|manual",
+            query,
+            re.I,
+        )
+    ):
+        return None
+    if not re.search(r"\b(?:(?:those|these|selected) products|them|their)\b", query, re.I):
+        return None
+    if not re.search(
+        r"\b(?:dislike|drawbacks?|downsides?|complain\w*|negative|why|explain)\b",
+        query,
+        re.I,
+    ):
+        return None
+    prior = (context.conversation_state or {}).get("parts", [])
+    selections = [p for p in prior if p.get("selection")]
+    if len(selections) != 1:
+        return None
+    try:
+        selection = ProductCriteria.model_validate(selections[0]["selection"])
+    except ValidationError:
+        return None
+    categories = requested_categories(selections[0].get("query", ""))
+    if not categories:
+        return None
+    # Selection is rerun on the current data with the original typed criteria.
+    # Product IDs come from scoped SQL, never from model-written product names.
+    return PlannedQuestion(
+        query=query + " in " + ", ".join(categories),
+        intent="sql_rag",
+        selection=selection,
+    )
+
+
 def _product_fallback(query: str, context: MemoryContext | None) -> PlannedQuestion | None:
     """Narrow schema contracts for obvious catalogue requests if interpretation fails.
 
@@ -544,6 +585,10 @@ async def understand(
             return ConversationPlan(action="cancel")
     if len(independent_questions(query)) == 1 and (action := direct_action(query)):
         return ConversationPlan(action=action)
+    if len(independent_questions(query)) == 1 and (
+        selected := _selected_review_followup(query, context)
+    ):
+        return ConversationPlan(parts=[selected], relation="continuation")
     fallback = _fallback_parts(query, context)
     if len(fallback) > 4:
         return ConversationPlan(

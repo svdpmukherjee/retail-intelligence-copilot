@@ -208,3 +208,26 @@ HTTP failures without cost. Conservative reservations retained **$0.42382848** w
 the shared $1.50 test cap and original $2 authorization. Earlier reported spend
 $0.003323754; cumulative reported **$0.013769129**. Runtime configuration and .env
 unchanged. Human review/acceptance and full answer-quality acceptance remain pending.
+
+## Selected-product demo follow-up repair — 2026-11-04
+
+Read-only audit inspection confirmed the reported ranking → “What do reviewers
+ dislike about those products?” sequence: history loaded, but the second plan
+rewrote names into sampled review search, skipped SQL/source selection and returned
+zero citations. The original “Which three” also defaulted to five products.
+
+Explicit negative-feedback references now reuse the saved typed rating criteria
+before model interpretation, rerun scoped SQL, and use existing aggregate-checked
+Silver reviews by product ID. Count extraction recognizes “Which three”. New
+categories, global questions, positive feedback and additional qualifiers do not
+enter this negative-review shortcut. This reruns criteria on the current data;
+immutable cross-snapshot selection is not claimed. Start a fresh chat to replace
+an already failed turn that overwrote its active selection state.
+
+Verification: **185 inspected offline tests passed**, scoped Ruff/Black passed.
+Generation-disabled real-data execution selected exactly three products, then
+returned SQL + review tools, four citations and six review parents; Silver v1
+count/mean checks passed for every selected product with no missing IDs. Network
+was blocked during this smoke; no provider calls, history/audit writes, data/index/
+schema changes or application restart. The hosted/browser interaction was not
+rerun. Local smoke: `/private/tmp/ric-demo-followup-smoke.py`.

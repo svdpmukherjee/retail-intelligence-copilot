@@ -83,7 +83,8 @@ def selection_slots(text: str) -> dict:
         slots["minimum_reviews"] = int(match[1])
     number = r"(\d+|one|two|three|four|five|ten)"
     match = re.search(
-        rf"\b(?:show(?: me)?|use|top|bottom|up to|limit(?: to)?)\s+(?:the\s+)?{number}\b",
+        rf"\b(?:which|what|list|give me|show(?: me)?|use|top|bottom|up to|limit(?: to)?)"
+        rf"\s+(?:the\s+)?{number}\b",
         text,
         re.I,
     )

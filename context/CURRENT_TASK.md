@@ -90,3 +90,12 @@ frontend normally to load source changes; no serving process is managed here.
 
 Existing backend/.env may emit a parser warning around line44 while settings still
 load. It was not edited and must not be printed or changed incidentally.
+
+## Local demo follow-up patch — 2026-11-04
+
+The selected-product dislike follow-up and “Which three” count were repaired
+locally; see the latest section of `docs/modules/M4_conversational_planning.md`.
+185 offline tests and a generation-disabled read-only real-data sequence passed.
+No hosted/browser retry or service restart was performed; start a fresh chat for
+review because the earlier failed turn replaced its active selection state.
+This patch is uncommitted and does not change quality-stage acceptance.

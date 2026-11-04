@@ -369,3 +369,36 @@ Dated log of what got done each session, one line each. Newest at the bottom.
   pass. Initial suite attempt stopped during an embedding-model network lookup;
   offline rerun completed. User authorized commit and push on
   `fix/ci-gold-test-fixtures`; use Git tracking state to confirm publication.
+
+- 2026-11-04 — **Recruiter-facing README presentation refresh.** User requested
+  product-first documentation and accurate advanced-RAG details, deferring Docker
+  packaging/data decisions. Reorganized README around supported questions, a current
+  Mermaid batch/runtime/operator diagram, engineering choices with source links,
+  dated corpus/verification evidence, and a 2×2 build-method grid. Added four compact
+  SVG cards and `docs/presentation-visuals.md` with exact chat-GIF placement and a
+  real-interaction capture sequence; no fabricated or missing media embedded.
+  Removed the dated front-page status paragraph and historical UI/runtime/status
+  embeds; retained explicit sampled-coverage, opt-in-bundle, auth and quality limits.
+  Checked README local links/media targets, SVG XML and whitespace. No application
+  code, dataset, environment, acceptance state or deployment changed; no model calls,
+  ETL/indexing, commit or push. Existing EDA files left untouched.
+
+- 2026-11-04 — **Compact clickable runtime diagram.** Replaced the tall README
+  Mermaid block with `docs/img/answer-flow.svg`, a manually laid out 1600×880
+  vector diagram scaled to the README width and linked to the full-size asset.
+  Preserved the original flow in `docs/diagrams/answer-flow.mmd`; updated visual
+  maintenance notes. Checked SVG XML, README HTML asset links, browser rendering
+  and whitespace; rerouted the numeric-summary connector around the search card
+  after visual review. Documentation only; no application/data changes or commit/push.
+
+- 2026-11-04 — **Demo selected-product follow-up fixed.** Read-only audit/message
+  inspection found ranking succeeded but follow-up used product-name review_rag
+  without saved selection/source lookup, yielding zero citations. “Which three”
+  defaulted to five. Reuse typed criteria for explicit negative-feedback references
+  before model interpretation; scoped SQL IDs feed aggregate-checked Silver reads.
+  Extended explicit count extraction. Recorded spec/ADR and module note.185 scoped
+  offline tests pass; changed Ruff/Black pass. Network-blocked generation-disabled
+  real-data smoke: exactly3products, SQL+review tools,4citations,6review parents,
+  Silver1 aggregates verified/no missing IDs. No provider calls, corpus/schema/index
+  or history/audit writes, application restart, commit/push. Hosted/browser retry
+  remains unverified; use a fresh chat after an already failed active-state turn.

@@ -88,3 +88,18 @@ modifiers such as “and show1” remain part of the original task, not an indep
 unscoped query. Stage3's partial-state test supplies explicit selection conditions
 and retains its original partial-state assertions. This is a small integration
 repair, not authorization for a new hosted run or a broader implementation stage.
+
+### Selected-product demo follow-up repair (2026-11-04)
+
+Reported sequence: lowest average Electronics, minimum 50 reviews, three products;
+then “What do reviewers dislike about those products?” Audit confirms the second
+turn used only review_rag and returned zero passages. Resolve explicit feedback
+references from the saved typed selection before free-form model interpretation;
+rerun that scoped deterministic selection and use existing verified Silver lookup.
+Preserve sentiment and saved count/threshold; explicit new categories/global tasks
+must not inherit the old selection. Recognize “Which three … products” as an
+explicit count. Keep existing permission, aggregate, empty and partial guards.
+Verify scripted/offline regressions and generation-disabled read-only real-data
+execution; no paid calls, corpus/index/schema writes, deployment or publication.
+This reuses selection criteria against the current snapshot; it does not promise
+immutable product selection if underlying data changes between turns.

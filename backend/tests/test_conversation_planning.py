@@ -229,3 +229,111 @@ def test_final_synthesis_rejects_cross_part_citations_and_keeps_supported_draft(
     result = asyncio.run(synthesize_answers([original], ["Why?"], CostLedger()))
     assert "battery failure [2]" in result[0].answer
     assert result[0].audit["grounding"]["path"] == "llm"
+
+
+def test_demo_question_preserves_spelled_product_count_even_if_model_drops_it():
+    query = (
+        "Which three Electronics products have the lowest average rating, with at least 50 reviews?"
+    )
+    model = Script({"parts": [{"query": query, "intent": "sql"}]})
+    plan = asyncio.run(understand(query, "support", None, CostLedger(), llm=model))
+    assert plan.parts[0].selection.limit == 3
+    assert plan.parts[0].selection.minimum_reviews == 50
+
+
+@pytest.mark.parametrize("model_available", [True, False])
+def test_selected_product_dislike_followup_reuses_typed_selection(model_available):
+    from memory.manager import MemoryContext
+
+    context = MemoryContext(
+        thread_id="t",
+        conversation_state={
+            "parts": [
+                {
+                    "query": "Lowest average Electronics products with at least 50 reviews",
+                    "intent": "sql",
+                    "selection": {"mode": "lowest", "minimum_reviews": 50, "limit": 3},
+                }
+            ]
+        },
+    )
+
+    class MustNotGuessNames:
+        available = model_available
+
+        async def complete(self, *args, **kwargs):
+            pytest.fail("Selected-product reference should use saved typed criteria")
+
+    plan = asyncio.run(
+        understand(
+            "What do reviewers dislike about those products?",
+            "support",
+            context,
+            CostLedger(),
+            llm=MustNotGuessNames(),
+        )
+    )
+    assert plan.parts[0].intent == "sql_rag"
+    assert plan.parts[0].selection.limit == 3
+    assert plan.parts[0].selection.minimum_reviews == 50
+    assert "Electronics" in plan.parts[0].query
+    assert "dislike" in plan.parts[0].query
+
+
+def test_selected_product_followup_executes_sql_and_id_scoped_review_lookup():
+    answer(
+        "Which three Electronics products have the lowest average rating, with at least 2 reviews?",
+        "support",
+        thread_id="t",
+        user_id="u",
+    )
+    with capture() as observed:
+        result = answer(
+            "What do reviewers dislike about those products?", "support", thread_id="t", user_id="u"
+        )
+    assert result.audit["tool_path"] == ["sql_agent", "review_rag"]
+    selected = {r[observed["sql"]["columns"].index("asin")] for r in observed["sql"]["rows"]}
+    reviews = [h for h in observed["retrieved"] if h["source_type"] == "review"]
+    assert reviews and all(h["asin"] in selected for h in reviews)
+    assert result.citations and "No supporting evidence" not in result.answer
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "What do reviewers dislike about Toys products?",
+        "What do reviewers dislike across all categories?",
+        "What do reviewers praise about those products?",
+    ],
+)
+def test_selection_followup_does_not_capture_new_categories_or_positive_requests(query):
+    from agents.conversation import _selected_review_followup
+    from memory.manager import MemoryContext
+
+    context = MemoryContext(
+        thread_id="t",
+        conversation_state={
+            "parts": [
+                {
+                    "query": "Lowest average Electronics with at least 50 reviews",
+                    "selection": {"mode": "lowest", "minimum_reviews": 50, "limit": 3},
+                }
+            ]
+        },
+    )
+    assert _selected_review_followup(query, context) is None
+
+
+def test_selected_product_followup_keeps_current_role_denial():
+    from agents.conversation import PlannedQuestion
+
+    part = PlannedQuestion(
+        query="What do reviewers dislike about those products? in Books",
+        intent="sql_rag",
+        selection=ProductCriteria(minimum_reviews=50, limit=3),
+    )
+    result = asyncio.run(
+        pipeline._execute_question(part.query, "support", CostLedger(), planned=part)
+    )
+    assert "doesn't have access" in result.answer
+    assert result.audit["tool_path"] == []

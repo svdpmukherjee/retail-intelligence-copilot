@@ -975,3 +975,13 @@ stages by splitting mutually dependent pipeline/eval files into broken commits.
 The wider hermetic publication check exposed a replacement-metric fallback loop
 and numeric display-modifier decomposition; repair them with targeted assertions,
 not weaker baselines. No new hosted/DB-backed run is needed for this audit.
+
+## 2026-11-04 — Resolve selected-product feedback from typed conversation state
+
+The reported demo follow-up retained history but rewrote product references into
+names for sampled search, bypassing verified selected-product source access.
+Resolve an explicit feedback reference against the saved rating selection and
+reuse scoped SQL plus bounded aggregate-checked Silver reads. Preserve count and
+threshold; a new category/global question remains independent. Reject a looser
+vector threshold or treating zero sampled hits as proof of no reviews. Recognize
+“Which three” in count extraction. No corpus rebuild or new hosted run required.
