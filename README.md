@@ -14,10 +14,15 @@ document tools supply evidence for the answer. Access filters, calculated summar
 citations and draft checks reduce known failures; they do not guarantee that every
 model claim is correct.
 
-<!-- CHAT GIF: Insert the real recording here, immediately below the product pitch.
-     Target: docs/img/chat-interaction.gif. Show a product question, a cited answer,
-     opening the evidence panel, then a contextual follow-up. Use the current UI.
-     Embed only after the asset exists; see docs/presentation-visuals.md. -->
+**Watch the demo:** role-scoped queries, supporting evidence, admin audit and Langfuse traces.
+
+<p align="center">
+  <video
+    src="https://github.com/user-attachments/assets/019bc1bd-f163-44f9-9db4-29539c38f7e0"
+    controls
+    width="600">
+  </video>
+</p>
 
 **Explore:** [How it works](#how-an-answer-is-produced) ·
 [RAG engineering](#rag-engineering-decisions) · [Model routing](#model-routing) ·
