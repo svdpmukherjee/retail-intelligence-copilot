@@ -48,8 +48,14 @@ pip install "pyspark>=3.5,<4" "delta-spark>=3.2,<4"   # medallion pipeline (Spar
 
 # 3. Create the secrets file from the template, then edit it
 cp backend/.env.example backend/.env       # (Win) copy backend\.env.example backend\.env
-#   Edit backend/.env: at minimum set PII_HASH_SALT (any long random string).
-#   Defaults already use local, $0 mode (PROVIDER_MODE=free, local Ollama, local lake).
+#   Edit backend/.env and set two required values:
+#     PII_HASH_SALT=<any long random string>   (Silver aborts without it)
+#     DATABASE_URL=postgresql://rag:rag@localhost:5432/rag   (matches the Postgres
+#        container started in Step C.1; the template ships a <user>:<password>/<db>
+#        placeholder that will NOT connect until you set this.)
+#   The lake stays local and $0 by default (PROVIDER_MODE=free, local embedder,
+#   local Delta lake). Indexing (C.3) and the SQL answer path need nothing more.
+#   The CHAT answer path additionally needs an LLM — see "LLM for the chat" below.
 #   backend/.env is gitignored — real secrets never leave your machine.
 
 # 4. Install frontend deps
@@ -103,6 +109,43 @@ PYTHONPATH=.. DATA_LAKE_PATH=../data python -m data.etl.fetch_product_meta   # -
 - Run B.5 first — this reads `data/raw/<Category>.jsonl` to know which products to keep.
 - Amazon's metadata is missing `price` for a large share of products; those rows keep a null
   price (no values are invented). The script prints per-category price coverage.
+
+### B.7 — LLM for the chat answer path (pick one)
+
+The local embedder (`all-MiniLM-L6-v2`) runs on your machine at $0, so **indexing (C.3) and
+the SQL answer path work with no LLM key**. Generating a written chat answer needs a language
+model. Two options — set the values in `backend/.env`:
+
+- **Easiest (one hosted key).** `PROVIDER_MODE=openrouter`, `OPENROUTER_API_KEY=<your key>`,
+  `OPENROUTER_GO_AHEAD=true`. Uses hosted open-weight models (Gemma by default); embeddings
+  still stay local. A few $ of credit covers a demo.
+- **Fully local (no key, needs Ollama).** Install [Ollama](https://ollama.com), then
+  `ollama pull llama3.1` (or any chat model). Keep `PROVIDER_MODE=free` and set
+  `FREE_LLM_BASE_URL=http://localhost:11434/v1`, `FREE_LLM_API_KEY=ollama` (any non-empty
+  string), `FREE_LLM_MODEL=llama3.1`. Everything stays on your machine at $0.
+
+### B.8 — Observability with Langfuse (optional)
+
+The app runs fully without it; this only lights up the **observability plane** (span-level
+pipeline timings, tokens and cost traces). Tracing is **off by default** and activates only
+when `OBSERVABILITY_ENABLED=true` *and* both keys are present in `backend/.env`:
+
+```
+OBSERVABILITY_ENABLED=true
+LANGFUSE_HOST=http://localhost:3000      # or https://cloud.langfuse.com (optional; SDK defaults to cloud)
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+```
+
+- **Hosted:** create a free project at [Langfuse Cloud](https://cloud.langfuse.com) and copy its
+  keys.
+- **Self-hosted:** run Langfuse's own Docker stack (see the
+  [Langfuse self-host guide](https://langfuse.com/self-hosting/local)) — it is a **separate**
+  `docker compose` from this repo's `infra/`, listening on `:3000` — then create a project and
+  copy its keys.
+
+Traces are redacted (no PII, restricted metadata). Ingestion is async, so a trace appears a few
+seconds after the query. Leave the keys unset to run without the observability plane.
 
 ---
 

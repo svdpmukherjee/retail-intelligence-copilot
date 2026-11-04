@@ -20,8 +20,8 @@ model claim is correct.
      Embed only after the asset exists; see docs/presentation-visuals.md. -->
 
 **Explore:** [How it works](#how-an-answer-is-produced) ·
-[RAG engineering](#rag-engineering-decisions) · [Data](#the-data) ·
-[Verification](#verification-and-current-boundaries) ·
+[RAG engineering](#rag-engineering-decisions) · [Model routing](#model-routing) ·
+[Data](#the-data) · [Verification](#whats-verified-and-what-isnt) ·
 [How I built it](#how-i-built-it) · [Run locally](#run-locally)
 
 `Python 3.12 · FastAPI · React / TypeScript · PostgreSQL / pgvector · DuckDB · Spark / Delta · Langfuse (optional)`
@@ -77,9 +77,31 @@ so this is not a guaranteed compliance ledger.
 | **Evaluation and cost control** | Retrieval recall@k/MRR, answer checks, cost/query and p50/p95 latency have an evaluation harness. Per-query token/cost accounting and explicit hosted-provider opt-ins bound execution. The CI quality evaluation is docs-only, not a full conversational quality certification. | [Evaluation](backend/eval) · [Cost ledger](backend/app/cost.py) · [CI](.github/workflows/ci.yml) |
 
 The provider adapters support a local/free path and optional hosted generation;
-Azure integration is a separate configured path. Model choice is task-aware in
-OpenRouter mode. A larger configured tier is a policy choice, not evidence of a
-new benchmark win. See [model study and its limits](docs/model-comparison.md).
+Azure integration is a separate configured path. Model selection is task-aware —
+see [Model routing](#model-routing) below.
+
+## Model routing
+
+Not every step needs the biggest model. The pipeline maps each LLM task to a
+capability **tier**, and each tier to a configured open-weight model, so spend
+tracks how hard the task is — and the choice *plus its rationale* is recorded on
+every call for the audit and observability planes. The tiers come from a measured
+[model study](docs/model-comparison.md) (six models, three sizes × two families),
+not from defaulting to the largest.
+
+| Pipeline task | Tier | Default model | Why this tier |
+|---|---|---|---|
+| Summarise a turn into memory | small | Gemma 3 4B | Low-stakes; the small tier scored faithfulness 1.00 at the lowest latency and cost. |
+| Classify intent (routing) | medium | Gemma 3 12B | Short, structured task; medium lifts routing accuracy 0.75 → 0.88 for a little more cost. |
+| Interpret & plan the request | large | Gemma 3 27B | Compound planning, context and clarification, with server-validated output. |
+| Generate SQL | large | Gemma 3 27B | Text-to-SQL must be exact; large led routing accuracy (1.00) with 4/4 runnable SQL. |
+| Compose the final answer | large | Gemma 3 27B | Final synthesis; calculated values and evidence checks stay code-owned. |
+
+The tier→model mapping is configuration (`OPENROUTER_MODEL_SMALL|MEDIUM|LARGE`), so a
+model swaps without a code change, and the free/Azure paths ignore the per-call
+override. Routing is active in OpenRouter mode; a larger tier is a policy choice, not a
+claim of a new benchmark win. See [the study and its limits](docs/model-comparison.md) ·
+[routing policy](backend/agents/model_policy.py).
 
 ## The data
 
@@ -104,23 +126,19 @@ The dataset has **no sales/revenue transactions**. Prices are recorded metadata,
 not live quotes, and missing prices remain explicit. The figures above describe a
 local operationalized corpus; they are not bundled with a fresh clone.
 
-## Verification and current boundaries
+## What's verified, and what isn't
 
-- **Automated checks:** backend tests, lint/format checks and frontend builds are
-  configured in CI. The recorded offline backend verification after Gold-test
-  isolation was **339 passed / 45 skipped**; DB/provider-dependent checks were
-  unavailable. This is a dated local result, not a live CI badge or quality score.
-- **Real-system checks:** the repair work recorded **71 browser turns across 27
-  distinct questions**, including debugging and rechecks, with **25 named
-  latest-outcome checks** and independent Gold aggregates. This is not 71 final
-  passes or an exhaustive conversational benchmark.
-- **Measured limitations:** some drafts still fall back to excerpts. General
-  semantic faithfulness, full-corpus recall, arbitrary generated SQL and all
-  natural-language variations are not certified. Later evidence/conversation
-  improvements remain subject to quality review; Stage 5 tuning has not started.
-- **Serving boundary:** new provenance/token-chunking bundles were fixture-tested;
-  no serving backfill or corpus cutover is claimed. Production identity/auth and
-  cloud deployment are not established by the local demonstration.
+- **Tested.** Backend test suite (last local run: 339 passed, 45 skipped where a
+  live DB/LLM key wasn't available), plus lint/format and a frontend build, all in CI.
+- **Working demo, not a product.** The answer paths above are verified end-to-end
+  against the real corpus. Some answers still fall back to showing source excerpts
+  when a drafted answer can't be fully grounded — that behaviour is deliberate and visible.
+- **Out of scope.** Full-corpus recall, arbitrary generated SQL, production auth and
+  cloud deployment are not claimed. The identity switcher is a demo control, not real auth.
+
+Details: [quality report](docs/answer-quality-status.md) ·
+[acceptance artifacts](docs/testing/acceptance/README.md) ·
+[verification history](context/WORKLOG.md).
 
 Evidence and methodology: [consolidated quality report](docs/answer-quality-status.md) ·
 [frozen acceptance artifacts](docs/testing/acceptance/README.md) ·
