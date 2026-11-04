@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="880" viewBox="0 0 1600 880" role="img" aria-labelledby="title desc">
+<title id="title">How an answer is produced</title>
+<desc id="desc">Batch preparation produces Gold tables, Silver reviews and a hybrid search index. At query time a capability-aware planner proposes tasks, validated against role permissions before scoped SQL and review/document access. Selected-product source checks and retrieved evidence feed synthesis and citation checks; calculated summaries feed the answer directly. Audit and optional Langfuse traces are separate operator surfaces. Data source labels on tool cards refer to the preparation outputs above.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#0f172a}.heading{font-size:23px;font-weight:700}.label{font-size:18px;font-weight:700}.body{font-size:17px;fill:#334155}.note{font-size:16px;fill:#475569}.wire{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#arrow)}.dashed{stroke-dasharray:6 5}</style>
+<rect width="1600" height="880" rx="18" fill="#ffffff"/>
+
+<rect x="20" y="20" width="1560" height="300" rx="14" fill="#eff6ff" stroke="#cbd5e1"/>
+<text x="42" y="54" class="heading">1 · Data preparation</text><text x="1558" y="53" class="note" text-anchor="end">Batch / build time only</text>
+<rect x="42" y="82" width="246" height="99" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="56" y="109" class="label">Amazon review corpus</text>
+<text x="56" y="135" class="body">Reviews + product metadata</text>
+<rect x="320" y="82" width="360" height="99" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="334" y="109" class="label">Spark / Delta</text>
+<text x="334" y="135" class="body">Bronze → Silver → Gold</text>
+<text x="334" y="158" class="body">Hash reviewers; redact email / phone</text>
+<rect x="718" y="72" width="270" height="126" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="732" y="99" class="label">Prepared review data</text>
+<text x="732" y="125" class="body">Gold: structured tables</text>
+<text x="732" y="148" class="body">Silver: source reviews</text>
+<text x="732" y="171" class="body">Sample: review text</text>
+<rect x="42" y="214" width="246" height="78" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="56" y="241" class="label">Authored documents</text>
+<text x="56" y="267" class="body">Policies + manuals</text>
+<rect x="320" y="214" width="360" height="78" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="334" y="241" class="label">Section-aware chunks</text>
+<text x="334" y="267" class="body">Document text + source metadata</text>
+<rect x="1024" y="119" width="240" height="102" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="1038" y="146" class="label">Embeddings</text>
+<text x="1038" y="172" class="body">Sampled reviews + chunks</text>
+<text x="1038" y="195" class="body">Source metadata retained</text>
+<rect x="1300" y="119" width="258" height="102" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="1314" y="146" class="label">Hybrid search index</text>
+<text x="1314" y="172" class="body">PostgreSQL / pgvector</text>
+<text x="1314" y="195" class="body">+ keyword search</text>
+<path d="M288 131H320" class="wire"/>
+<path d="M680 131H718" class="wire"/>
+<path d="M288 253H320" class="wire"/>
+<path d="M988 174H1024" class="wire"/>
+<path d="M680 253H1004V194H1024" class="wire"/>
+<path d="M1264 170H1300" class="wire"/>
+<text x="718" y="284" class="note">Gold → SQL · Silver → selected-product lookup · Index → search</text>
+<rect x="20" y="342" width="1560" height="386" rx="14" fill="#f0fdfa" stroke="#cbd5e1"/>
+<text x="42" y="376" class="heading">2 · Conversation</text><text x="1558" y="375" class="note" text-anchor="end">Query time · access enforced before synthesis</text>
+<rect x="42" y="408" width="212" height="96" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="56" y="435" class="label">Question</text>
+<text x="56" y="461" class="body">Role + conversation</text>
+<text x="56" y="484" class="body">state</text>
+<rect x="284" y="408" width="222" height="119" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="298" y="435" class="label">Capability-aware plan</text>
+<text x="298" y="461" class="body">Clarify criteria or</text>
+<text x="298" y="484" class="body">propose typed tasks</text>
+<rect x="536" y="408" width="222" height="119" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="550" y="435" class="label">Validate + scope</text>
+<text x="550" y="461" class="body">Intersect tasks with</text>
+<text x="550" y="484" class="body">role permissions</text>
+<text x="550" y="507" class="body">Enforce at data access</text>
+<rect x="788" y="398" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="802" y="425" class="label">SQL tool · Gold</text>
+<text x="802" y="451" class="body">Scoped DuckDB</text>
+<text x="802" y="474" class="body">calculations</text>
+<rect x="788" y="561" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="802" y="588" class="label">Review / doc tools</text>
+<text x="802" y="614" class="body">Index: vector + keyword</text>
+<text x="802" y="637" class="body">RRF; optional reranking</text>
+<rect x="1058" y="398" width="240" height="123" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="1072" y="425" class="label">Selected reviews</text>
+<text x="1072" y="451" class="body">Silver: bounded read</text>
+<text x="1072" y="474" class="body">Verify counts / means</text>
+<text x="1072" y="497" class="body">against SQL selection</text>
+<rect x="1058" y="561" width="240" height="100" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="1072" y="588" class="label">Retrieved evidence</text>
+<text x="1072" y="614" class="body">Retain source evidence</text>
+<text x="1072" y="637" class="body">for synthesis</text>
+<rect x="1328" y="398" width="230" height="123" rx="9" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="1342" y="425" class="label">Synthesis + checks</text>
+<text x="1342" y="451" class="body">Citations / draft guards</text>
+<text x="1342" y="474" class="body">At most one bounded</text>
+<text x="1342" y="497" class="body">repair</text>
+<rect x="1328" y="561" width="230" height="130" rx="9" fill="#ccfbf1" stroke="#5eead4"/>
+<text x="1342" y="588" class="label">Answer / excerpts</text>
+<text x="1342" y="614" class="body">Cited answer or honest</text>
+<text x="1342" y="637" class="body">source excerpts</text>
+<text x="1342" y="660" class="body">Passages + follow-ups</text>
+<path d="M254 455H284" class="wire"/>
+<path d="M506 455H536" class="wire"/>
+<path d="M758 455H788" class="wire"/>
+<path d="M772 455V611H788" class="wire"/>
+<path d="M1028 448H1058" class="wire"/>
+<path d="M1178 521V561" class="wire"/>
+<path d="M1028 611H1058" class="wire"/>
+<path d="M1298 611H1313V460H1328" class="wire"/>
+<path d="M1443 521V561" class="wire"/>
+<path d="M908 498V540H1043V693H1313V650H1328" class="wire"/>
+<text x="930" y="717" class="note">Calculated numeric summaries → answer</text>
+<rect x="20" y="750" width="1560" height="110" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="42" y="784" class="heading">3 · Operator plane</text><text x="1558" y="783" class="note" text-anchor="end">Separate from customer chat</text>
+<text x="42" y="819" class="body">Answer → best-effort audit / admin: query, answer, sources, routing, model calls, tokens, cost, latency</text>
+<text x="42" y="844" class="body">SQL / search / synthesis → optional Langfuse traces: stage timing, token / cost deltas, redacted input / output</text>
+<path d="M1500 691V750" class="wire dashed"/>
+</svg>

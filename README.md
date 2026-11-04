@@ -48,46 +48,9 @@ The system combines **structured analytics and unstructured retrieval**. SQL com
 ratings, counts and recorded prices; review and document tools provide textual
 evidence. Ingestion is a separate batch operation, never a per-question Spark job.
 
-```mermaid
-flowchart TB
-    subgraph PREP["Data preparation · batch / build time"]
-        RAW["Amazon reviews + product metadata"] --> ETL["Spark / Delta: Bronze → Silver → Gold<br/>Reviewer hashing + email / phone redaction"]
-        ETL --> GOLD["Gold structured tables"]
-        ETL --> SILVER["Silver source reviews"]
-        ETL --> SAMPLE["Sampled review text"]
-        DOCS["Authored policies + manuals"] --> CHUNK["Section-aware document chunks"]
-        SAMPLE --> EMB["Embeddings + source metadata"]
-        CHUNK --> EMB
-        EMB --> INDEX["PostgreSQL / pgvector + keyword search"]
-    end
+<a href="docs/img/answer-flow.svg"><img src="docs/img/answer-flow.svg" alt="Answer flow: batch data preparation, permission-scoped conversation tools, checked evidence and separate operator surfaces" width="100%"></a>
 
-    subgraph TURN["Conversation · query time"]
-        Q["Question + role + conversation state"] --> PLAN["Capability-aware planner<br/>Clarify criteria or propose typed tasks"]
-        PLAN --> ACCESS["Validate tasks + intersect role permissions<br/>Enforce scope at data access"]
-        ACCESS --> SQL["SQL tool<br/>Scoped DuckDB calculations"]
-        ACCESS --> SEARCH["Review / document tools<br/>Vector + keyword → RRF → optional reranking"]
-        SQL --> SELECT["Selected product reviews<br/>Bounded source read + aggregate checks"]
-        SQL --> NUM["Calculated numeric summaries"]
-        SELECT --> EVIDENCE["Retain retrieved evidence for synthesis"]
-        SEARCH --> EVIDENCE
-        EVIDENCE --> SYN["Synthesis + citation / draft checks<br/>At most one bounded repair"]
-        SYN --> ANSWER["Cited answer or honest source excerpts<br/>Inspectable passages + follow-up suggestions"]
-        NUM --> ANSWER
-    end
-
-    GOLD --> SQL
-    SILVER --> SELECT
-    INDEX --> SEARCH
-
-    subgraph OPS["Operator plane · separate from customer chat"]
-        AUDIT["Best-effort per-turn audit → admin view<br/>Query, answer, sources, routing, model calls, tokens, cost, latency"]
-        TRACE["Optional Langfuse stage traces<br/>Timing, token / cost deltas, redacted input / output"]
-    end
-    ANSWER -.-> AUDIT
-    SQL -.-> TRACE
-    SEARCH -.-> TRACE
-    SYN -.-> TRACE
-```
+*Click the diagram to open the full-size SVG. [Mermaid source](docs/diagrams/answer-flow.mmd).*
 
 Access restrictions apply before source evidence reaches synthesis. Shared policy
 documents remain separate from category-scoped product/review access. Empty,
