@@ -16,13 +16,13 @@ model claim is correct.
 
 **Watch the demo:** role-scoped queries, supporting evidence, admin audit and Langfuse traces.
 
-<p align="center">
-  <video
-    src="https://github.com/user-attachments/assets/019bc1bd-f163-44f9-9db4-29539c38f7e0"
-    controls
-    width="600">
-  </video>
-</p>
+<table align="center" width="800">
+<tr><td>
+
+https://github.com/user-attachments/assets/019bc1bd-f163-44f9-9db4-29539c38f7e0
+
+</td></tr>
+</table>
 
 **Explore:** [How it works](#how-an-answer-is-produced) ·
 [RAG engineering](#rag-engineering-decisions) · [Model routing](#model-routing) ·
